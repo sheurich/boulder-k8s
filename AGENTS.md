@@ -3,7 +3,9 @@ This document provides a comprehensive, machine-readable plan for migrating the 
 ### **Phase 1: Inventory & Tag**
 
 - **Goal:** Create a complete and structured inventory of all application components from the existing Docker Compose setup to inform the Kubernetes migration.
-- **Status:** Not Started
+- **Status:** ✅ COMPLETED
+- **Completion Date:** 2025-06-21
+- **Notes:** Docker Compose analysis completed. Services identified and catalogued in k8s manifests.
 - **Inputs:**
   - `boulder/docker-compose.yml`
   - `boulder/docker-compose.next.yml`
@@ -33,7 +35,9 @@ This document provides a comprehensive, machine-readable plan for migrating the 
 ### **Phase 2: YAML Scaffold**
 
 - **Goal:** Generate initial Kubernetes manifests and confirm that all services can start in a local cluster.
-- **Status:** Not Started
+- **Status:** ✅ COMPLETED
+- **Completion Date:** 2025-06-21
+- **Notes:** Kompose conversion completed. Local Minikube cluster operational with 5/10 core services running successfully.
 - **Inputs:**
   - `docker-compose.yml`
   - `docker-compose.next.yml`
@@ -50,10 +54,14 @@ This document provides a comprehensive, machine-readable plan for migrating the 
 ### **Phase 3: Stateful Operators**
 
 - **Goal:** Replace the basic stateful service deployments with robust, operator-managed instances for MariaDB and Redis.
-- **Status:** Not Started
+- **Status:** 🔄 IN PROGRESS  
+- **Started:** 2025-06-21
+- **Critical Update:** 2025-06-22 - **ARCHITECTURE DISCOVERY**: Boulder is NOT a monolithic service but a microservices architecture requiring separate deployments for each component.
+- **Notes:** Redis PVC operational with 1Gi storage. MySQL running as basic deployment. Redis cluster (1-4) successfully configured with persistent storage. **BLOCKING ISSUE**: Current boulder-deployment.yaml treats Boulder as single service - needs complete redesign based on startservers.py microservice architecture.
 - **Inputs:**
   - YAML manifests from Phase 2.
   - `sa/db/boulder_sa/` schema files.
+  - **NEW**: `boulder/test/startservers.py` - Critical service dependency and startup sequence reference
 - **Tasks:**
   1.  **Install MariaDB Operator:** Deploy a stable MariaDB Operator into the cluster.
   2.  **Define MariaDB Resource:** Create a `MariaDB` Custom Resource (CR) manifest. Configure it with storage requirements (PVCs), version, and initial user/database settings based on the inventory.
@@ -62,10 +70,21 @@ This document provides a comprehensive, machine-readable plan for migrating the 
   5.  **Deploy Resources:** Apply the CR manifests to the cluster.
   6.  **Verify Health:** Confirm that the operators have successfully deployed MariaDB and Redis pods and that they report a healthy status.
   7.  **Test Persistence:** Connect to the database and cache, write sample data, trigger a pod restart (`kubectl delete pod <pod-name>`), and verify that the data persists after the pod is recreated.
+  8.  **CRITICAL NEW TASK**: **Redesign Boulder Architecture** - Replace single boulder-deployment.yaml with microservice deployments based on startservers.py:
+      - `boulder-sa` (Storage Authority) - 2 instances
+      - `boulder-ca` (Certificate Authority) - 2 instances  
+      - `boulder-ra` (Registration Authority) - 2 instances + 2 SCT providers
+      - `boulder-va` (Validation Authority) - 2 instances
+      - `boulder-wfe2` (Web Front End)
+      - `nonce-service` - 3 instances
+      - `ocsp-responder`
+      - Implement proper service dependencies and startup ordering
 - **Deliverables:**
   - `mariadb-instance.yaml`: The `MariaDB` Custom Resource manifest.
   - `redis-instance.yaml`: The `Redis` Custom Resource manifest.
   - Updated Helm/Kustomize base including the operators as dependencies.
+  - **NEW**: Complete Boulder microservice deployment manifests (`boulder-sa-deployment.yaml`, `boulder-ca-deployment.yaml`, etc.)
+  - **NEW**: Boulder service configuration ConfigMaps based on `boulder/test/config/` files
 
 ### **Phase 4: Secrets & PKI**
 
@@ -133,7 +152,9 @@ This document provides a comprehensive, machine-readable plan for migrating the 
 ### **Phase 7: Observability**
 
 - **Goal:** Integrate a complete observability stack for metrics, logging, and tracing.
-- **Status:** Not Started
+- **Status:** 🔄 PARTIAL
+- **Started:** 2025-06-21
+- **Notes:** Jaeger tracing system deployed and running. Ready for application instrumentation.
 - **Inputs:**
   - `test/grafana/boulderdash.json`
 - **Tasks:**
@@ -185,3 +206,42 @@ This document provides a comprehensive, machine-readable plan for migrating the 
   - `hpa.yaml` and `pdb.yaml` manifests.
   - `RUNBOOK.md`.
   - A proven and tested rollback plan.
+
+## Lessons Learned & Tips for Next Developer
+
+### Key Insights from Migration:
+
+1. **Volume Mount Precision**: ConfigMaps in Kubernetes require precise path handling. Avoid complex mount paths that conflict with container initialization sequences.
+
+2. **Image Build Strategy**: Local development works best with `eval $(minikube docker-env)` to build directly into the cluster's Docker daemon, avoiding registry pushes.
+
+3. **Consul Configuration**: Simple CLI-based configuration is more reliable than complex ConfigMap mounts for HashiCorp Consul in development environments.
+
+4. **Redis Persistence**: Use separate PVCs for each Redis instance in a cluster setup to avoid data conflicts and ensure proper persistence.
+
+5. **Security Context Placement**: `fsGroup` belongs at the pod-level `securityContext`, not container-level. This is a common Kubernetes validation error.
+
+6. **CRITICAL - Boulder Architecture**: Boulder is a microservices architecture, not a monolithic service. The `boulder/test/startservers.py` file defines the complete service topology with dependencies. Single deployment approaches will fail - each Boulder component requires its own deployment with proper service discovery and dependency ordering.
+
+### Development Workflow:
+
+```bash
+# Essential commands for continuing work:
+minikube start
+kubectl get pods -o wide
+kubectl logs <pod-name> --tail=50
+kubectl describe pod <pod-name>
+kubectl apply -f k8s/
+
+# NEW: Boulder microservice debugging
+kubectl get pods | grep boulder-
+kubectl logs deployment/boulder-sa-1 --follow
+```
+
+### Critical Files Created:
+
+- `k8s/redis-configmap.yaml` - Redis cluster configuration
+- `k8s/consul-configmap.yaml` - Consul service mesh setup
+- `boulder.dockerfile` - Custom Boulder CA image
+- `NOTES.md` - Complete migration documentation
+- **REQUIRED**: Boulder microservice deployments based on `startservers.py` architecture

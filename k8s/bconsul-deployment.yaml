@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: bconsul
+  name: bconsul
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: bconsul
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: bconsul
+    spec:
+      containers:
+        - args:
+            - consul
+            - agent
+            - -dev
+            - -bind=0.0.0.0
+            - -client=0.0.0.0
+            - -bootstrap-expect=1
+          image: hashicorp/consul:1.15.4
+          name: bconsul
+          ports:
+            - containerPort: 8500
+              name: http
+            - containerPort: 8600
+              name: dns
+      restartPolicy: Always

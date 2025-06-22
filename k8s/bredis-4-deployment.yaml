@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: bredis-4
+  name: bredis-4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: bredis-4
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: bredis-4
+    spec:
+      containers:
+        - args:
+            - redis-server
+            - /test/redis-ratelimits.config
+          image: redis:6.2.7
+          name: bredis-4
+      restartPolicy: Always

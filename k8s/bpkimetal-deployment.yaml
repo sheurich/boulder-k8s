@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: bpkimetal
+  name: bpkimetal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: bpkimetal
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: bpkimetal
+    spec:
+      containers:
+        - image: ghcr.io/pkimetal/pkimetal:v1.20.0
+          name: bpkimetal
+      restartPolicy: Always

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: bmysql
+  name: bmysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: bmysql
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -f docker-compose.next.yml --out k8s/
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: bmysql
+    spec:
+      containers:
+        - args:
+            - mysqld
+            - --bind-address=0.0.0.0
+            - --slow-query-log
+            - --log-output=TABLE
+            - --log-queries-not-using-indexes=ON
+          env:
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "yes"
+          image: mariadb:10.6.22
+          name: bmysql
+      restartPolicy: Always
