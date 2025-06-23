@@ -42,6 +42,21 @@ spec:
                   key: MYSQL_PASSWORD
             - name: MYSQL_DATABASE
               value: boulder_sa_integration
+            - name: MYSQL_RO_USER
+              value: sa_ro
+            - name: MYSQL_RO_PASSWORD
+              value: example-sa-password
           image: mariadb:10.6.22
           name: bmysql
+          volumeMounts:
+            - name: mariadb-init-sql
+              mountPath: /docker-entrypoint-initdb.d/mariadb-init-sa_ro.sql
+              subPath: mariadb-init-sa_ro.sql
+            - name: mariadb-init-sql
+              mountPath: /docker-entrypoint-initdb.d/mariadb-init-incidents_sa-db.sql
+              subPath: mariadb-init-incidents_sa-db.sql
       restartPolicy: Always
+      volumes:
+        - name: mariadb-init-sql
+          configMap:
+            name: mariadb-init-sql

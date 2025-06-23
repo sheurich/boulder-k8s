@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-init-sql
+  namespace: default
+data:
+  mariadb-init-sa_ro.sql: |
+    CREATE USER IF NOT EXISTS 'sa_ro'@'%' IDENTIFIED BY 'example-sa-password';
+    GRANT ALL PRIVILEGES ON boulder_sa_integration.* TO 'sa_ro'@'%';
+    FLUSH PRIVILEGES;
+  mariadb-init-incidents_sa.sql: |
+    CREATE DATABASE IF NOT EXISTS incidents_sa_integration;
+    CREATE USER IF NOT EXISTS 'incidents_sa'@'%' IDENTIFIED BY 'example-sa-password';
+    GRANT ALL PRIVILEGES ON incidents_sa_integration.* TO 'incidents_sa'@'%';
+    FLUSH PRIVILEGES;

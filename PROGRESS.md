@@ -69,3 +69,21 @@
   - This pattern (using Kubernetes Secrets for DB credentials) should be followed for all Boulder microservices that require database access.
   - If you need to rotate credentials, update the secret and reapply the deployments.
   - Continue rolling out and verifying the remaining Boulder microservices as described in the PRD and previous progress entries.
+
+## **2025-06-23 (continued, agent update 2)**
+
+- **What was done:**
+  - Updated all Boulder microservice DB URLs in `boulder-secrets-configmap.yaml` to include the correct username and password for each service, following the pattern `username:password@tcp(host:port)/database`.
+  - Ensured that all Boulder microservices now receive the correct DB credentials via environment variables from the updated ConfigMap.
+- **What is in progress:**
+  - Apply the updated ConfigMap and restart all Boulder microservice deployments to ensure they pick up the new DB URLs and credentials.
+  - Monitor pod logs to confirm that authentication issues are resolved for all services.
+- **Problems or blockers:**
+  - None at this step, but if authentication still fails, check for typos in DB URLs, missing users in MariaDB, or privilege issues.
+- **Notes, context, or advice for future agents/contributors:**
+  - This update should resolve the "Access denied" errors for all Boulder microservices that use the shared DB credential pattern.
+  - If new microservices are added, ensure their DB URLs in the ConfigMap follow the same pattern and that corresponding users exist in MariaDB with the correct privileges.
+  - After applying the ConfigMap, always restart the affected deployments to propagate changes.
+  - When updating or adding Boulder microservices, always ensure their DB URLs in `boulder-secrets-configmap.yaml` include the correct username and password in the format `username:password@tcp(host:port)/database`.
+  - After editing the ConfigMap, you must reapply it and restart the affected deployments to propagate changes.
+  - If you encounter authentication errors, check for typos in DB URLs, missing users in MariaDB, or privilege issues.
