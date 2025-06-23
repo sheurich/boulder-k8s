@@ -1,0 +1,222 @@
+[
+  {
+    "boulder": {
+      "service_name": "boulder",
+      "image_or_build": "/Users/sheurich/src/sheurich/boulder/test/boulder-tools",
+      "command/entrypoint": "test/entrypoint.sh",
+      "published_ports": "4001:4001, 4002:4002, 4003:4003",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder:/boulder:cached, /Users/sheurich/src/sheurich/boulder/.gocache:/root/.cache/go-build:cached, /Users/sheurich/src/sheurich/boulder/test/certs/.softhsm-tokens:/var/lib/softhsm/tokens/:cached",
+      "env_vars": "FAKE_DNS=<redacted>, BOULDER_CONFIG_DIR=<redacted>, GOCACHE=/boulder/.gocache/go-build-next, GOFLAGS=<redacted>",
+      "depends_on": "bmysql, bproxysql, bredis_1, bredis_2, bredis_3, bredis_4, bconsul, bjaeger, bpkimetal",
+      "networks": "bouldernet, publicnet, publicnet2",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "app",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "Runs SoftHSM2 inside container."
+    }
+  },
+  {
+    "bsetup": {
+      "service_name": "bsetup",
+      "image_or_build": "letsencrypt/boulder-tools:${BOULDER_TOOLS_TAG:-latest}",
+      "command/entrypoint": "test/certs/generate.sh",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder:/boulder:cached, /Users/sheurich/src/sheurich/boulder/.gocache:/root/.cache/go-build:cached, /Users/sheurich/src/sheurich/boulder/test/certs/.softhsm-tokens:/var/lib/softhsm/tokens/:cached",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "none",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "build",
+      "needs_init": true,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "Runs SoftHSM2 inside container."
+    }
+  },
+  {
+    "bmysql": {
+      "service_name": "bmysql",
+      "image_or_build": "mariadb:10.6.22",
+      "command/entrypoint": "mysqld --bind-address=0.0.0.0 --slow-query-log --log-output=TABLE --log-queries-not-using-indexes=ON",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "none",
+      "env_vars": "MYSQL_ALLOW_EMPTY_PASSWORD=<redacted>",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": false,
+      "service_type": "db",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bproxysql": {
+      "service_name": "bproxysql",
+      "image_or_build": "proxysql/proxysql:2.5.4",
+      "command/entrypoint": "proxysql -f --idle-threads -c /test/proxysql/proxysql.cnf --initial",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder/test:/test/:cached",
+      "env_vars": "none",
+      "depends_on": "bmysql",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "support",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bredis_1": {
+      "service_name": "bredis_1",
+      "image_or_build": "redis:6.2.7",
+      "command/entrypoint": "redis-server /test/redis-ocsp.config",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder/test:/test/:cached",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "cache",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bredis_2": {
+      "service_name": "bredis_2",
+      "image_or_build": "redis:6.2.7",
+      "command/entrypoint": "redis-server /test/redis-ocsp.config",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder/test:/test/:cached",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "cache",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bredis_3": {
+      "service_name": "bredis_3",
+      "image_or_build": "redis:6.2.7",
+      "command/entrypoint": "redis-server /test/redis-ratelimits.config",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder/test:/test/:cached",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "cache",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bredis_4": {
+      "service_name": "bredis_4",
+      "image_or_build": "redis:6.2.7",
+      "command/entrypoint": "redis-server /test/redis-ratelimits.config",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder/test:/test/:cached",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "cache",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bconsul": {
+      "service_name": "bconsul",
+      "image_or_build": "hashicorp/consul:1.15.4",
+      "command/entrypoint": "consul agent -dev -config-format=hcl -config-file=/test/consul/config.hcl",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "/Users/sheurich/src/sheurich/boulder/test:/test/:cached",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": true,
+      "service_type": "support",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bjaeger": {
+      "service_name": "bjaeger",
+      "image_or_build": "jaegertracing/all-in-one:1.50",
+      "command/entrypoint": "none",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "none",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": false,
+      "service_type": "support",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  },
+  {
+    "bpkimetal": {
+      "service_name": "bpkimetal",
+      "image_or_build": "ghcr.io/pkimetal/pkimetal:v1.20.0",
+      "command/entrypoint": "none",
+      "published_ports": "none",
+      "exposed_ports": "none",
+      "volumes": "none",
+      "env_vars": "none",
+      "depends_on": "none",
+      "networks": "bouldernet",
+      "restart_policy": "none",
+      "stateful": false,
+      "service_type": "pki",
+      "needs_init": false,
+      "cpu_limits": "none",
+      "memory_limits": "none",
+      "notes": "none"
+    }
+  }
+]
