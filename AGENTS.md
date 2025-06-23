@@ -63,14 +63,15 @@ This document provides a comprehensive, machine-readable plan for migrating the 
   - `sa/db/boulder_sa/` schema files.
   - **NEW**: `boulder/test/startservers.py` - Critical service dependency and startup sequence reference
 - **Tasks:**
-  1.  **Install MariaDB Operator:** Deploy a stable MariaDB Operator into the cluster.
-  2.  **Define MariaDB Resource:** Create a `MariaDB` Custom Resource (CR) manifest. Configure it with storage requirements (PVCs), version, and initial user/database settings based on the inventory.
-  3.  **Install Redis Operator:** Deploy a stable Redis Operator (e.g., one that supports Sentinel for high availability).
-  4.  **Define Redis Resource:** Create a `Redis` Custom Resource (CR) manifest, specifying the version and storage needs.
-  5.  **Deploy Resources:** Apply the CR manifests to the cluster.
-  6.  **Verify Health:** Confirm that the operators have successfully deployed MariaDB and Redis pods and that they report a healthy status.
-  7.  **Test Persistence:** Connect to the database and cache, write sample data, trigger a pod restart (`kubectl delete pod <pod-name>`), and verify that the data persists after the pod is recreated.
-  8.  **CRITICAL NEW TASK**: **Redesign Boulder Architecture** - Replace single boulder-deployment.yaml with microservice deployments based on startservers.py:
+  1.  **Install Consul:** Deploy a Consul agent or server into the cluster for service discovery, as implied by `k8s/consul-configmap.yaml`.
+  2.  **Install MariaDB Operator:** Deploy a stable MariaDB Operator into the cluster.
+  3.  **Define MariaDB Resource:** Create a `MariaDB` Custom Resource (CR) manifest. Configure it with storage requirements (PVCs), version, and initial user/database settings based on the inventory.
+  4.  **Install Redis Operator:** Deploy a stable Redis Operator (e.g., one that supports Sentinel for high availability).
+  5.  **Define Redis Resource:** Create a `Redis` Custom Resource (CR) manifest, specifying the version and storage needs.
+  6.  **Deploy Resources:** Apply the CR manifests to the cluster.
+  7.  **Verify Health:** Confirm that the operators have successfully deployed MariaDB and Redis pods and that they report a healthy status.
+  8.  **Test Persistence:** Connect to the database and cache, write sample data, trigger a pod restart (`kubectl delete pod <pod-name>`), and verify that the data persists after the pod is recreated.
+  9.  **CRITICAL NEW TASK**: **Redesign Boulder Architecture** - Replace single boulder-deployment.yaml with microservice deployments based on startservers.py:
       - `boulder-sa` (Storage Authority) - 2 instances
       - `boulder-ca` (Certificate Authority) - 2 instances  
       - `boulder-ra` (Registration Authority) - 2 instances + 2 SCT providers
