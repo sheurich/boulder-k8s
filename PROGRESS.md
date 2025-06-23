@@ -32,14 +32,19 @@
   - **Critical Insight:** Boulder is not a monolithic application. It is a complex microservice architecture. All future work must treat each component (ca, ra, va, etc.) as a separate service with its own deployment. Refer to startservers.py for service dependencies.
   - The immediate priority is to solve the binary build blocker. After that, roll out the remaining microservice deployments according to the dependency map discovered.
 
-## **2025-06-21**
+## **2025-06-23 (continued)**
 
 - **What was done:**
-  - **Phase 1 (Inventory & Tag) Completed:** Analyzed docker-compose.yml files, identified all services, and created a structured inventory.
-  - **Phase 2 (YAML Scaffold) Completed:** Used kompose to generate initial Kubernetes Deployment and Service manifests. Successfully applied the manifests to a local Minikube cluster and verified that initial pods were created.
-  - **Phase 3 (Stateful Operators) Started:** Deployed MariaDB and Redis operators. Initial work on Redis cluster setup began.
-  - **Phase 7 (Observability) Partially Completed:** Deployed Jaeger for tracing.
+  - Created and applied a Service manifest for ProxySQL (`boulder-proxysql`) to match the DNS name expected by Boulder.
+  - Created and applied a Service manifest for MySQL/MariaDB (`boulder-mysql`) to match the DNS name expected by Boulder.
+  - Verified that the `boulder-sa-1` pod now starts and attempts to connect to both services.
+  - Confirmed that the previous DNS/service name blocker is resolved.
+- **What is in progress:**
+  - Debugging a new application-level error: `Error 1045 (28000): Access denied for user 'sa'@'10.244.0.67' (using password: NO)` when `boulder-sa-1` attempts to connect to MySQL/MariaDB.
 - **Problems or blockers:**
-  - Initial Redis cluster deployment was unstable, with several instances failing to start due to configuration issues. This was later resolved on 2025-06-22.
+  - **Problem:** The Boulder application cannot authenticate to MySQL/MariaDB due to missing or incorrect credentials.
+  - **Analysis:** The pod is now able to resolve and reach the database service, but the required user/password is not set or not being passed. This is likely a configuration or secret management issue.
 - **Notes, context, or advice for future agents/contributors:**
-  - The kompose output provides a good baseline but requires significant modification for a production setup, especially for stateful services and complex applications like Boulder.
+  - The networking and service discovery issues are now fixed. Focus next on ensuring the correct database user and password are created and passed to the Boulder microservices, likely via Kubernetes Secrets and environment variables or mounted files.
+  - Review the Boulder configuration and Kubernetes manifests for how DB credentials are set up and referenced.
+  - Commit all new and changed files after this fix.

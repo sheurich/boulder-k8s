@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-mysql
+  labels:
+    io.kompose.service: bmysql
+spec:
+  selector:
+    io.kompose.service: bmysql
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
