@@ -1,0 +1,43 @@
+apiVersion: v1
+data:
+  proxysql.cnf: "datadir = \"/var/lib/proxysql\";\nerrorlog = \"/test/proxysql/proxysql.log\";\nadmin_variables
+    =\n{\n\t# https://proxysql.com/documentation/global-variables/admin-variables
+    Note\n\t# that while admin variables are documented with an 'admin-' prefix, they\n\t#
+    are specified in the configuration with the prefix stripped.\n\tmysql_ifaces =
+    \"0.0.0.0:6032\";\n\t# admin:admin is only used for local connections. For remote
+    connections,\n\t# use radmin:radmin\n\tadmin_credentials = \"admin:admin;radmin:radmin\";\n\tweb_enabled
+    = \"true\";\n\t# Web UI is disabled by default.\n\tweb_port = 6080;\n\t# These
+    are the credentials used for the web interface.\n\tstats_credentials = \"stats:stats\";\n\tdebug
+    = True;\n};\nmysql_variables =\n{\n\tthreads = 4;\n\tmax_connections = 10240;\n\thave_compress
+    = True;\n\tpoll_timeout = 2000;\n\tinterfaces = \"0.0.0.0:6033\";\n\tstacksize
+    = 1048576;\n\tmax_allowed_packet = 16777216;\n\t# Allow up to 20 seconds to find
+    a server, to limit how many failures\n\t# Boulder sees when we do a primary swap\n\tconnect_timeout_server
+    = 20000;\n\tconnect_timeout_server_max = 20000;\n\tmonitor_username = \"proxysql\";\n\tmonitor_password
+    = \"\";\n\tmonitor_history = 600000;\n\tmonitor_connect_interval = 60000;\n\tmonitor_ping_interval
+    = 10000;\n\tmonitor_read_only_interval = 1000;\n\tmonitor_read_only_timeout =
+    500;\n\tmonitor_writer_is_also_reader = False;\n\tcommands_stats = True;\n\tsessions_sort
+    = True;\n\tconnect_retries_on_failure = 10;\n\t# Keep 90% of configured connections
+    open.\n\tfree_connections_pct = 90;\n\tconnection_warming = True;\n\t# If mysql_query_rules
+    are marked log=1, they will be logged here. If unset,\n\t# no queries are logged.\n\t#
+    eventslog_filename=\"/test/proxysql/events.log\"\n\teventslog_filesize = 104857600;\n\teventslog_default_log
+    = 1;\n\t# The audit logs, if unset, are not logged. If set, every connection gets\n\t#
+    logged. Given Boulder's connection strategy, this can be noisy.\n\t# auditlog_filename=\"/test/proxysql/audit.log\"\n\tauditlog_filesize
+    = 104857600;\n};\nmysql_servers =\n(\n\t{\n\t\taddress = \"boulder-mysql\";\n\t\tport
+    = 3306;\n\t\thostgroup = 0;\n\t\tmax_connections = 100;\n\t\tmax_latency_ms =
+    200;\n\t}\n);\nmysql_users =\n(\n\t{\n\t\tusername = \"root\";\n\t},\n\t{\n\t\tusername
+    = \"policy\";\n\t},\n\t{\n\t\tusername = \"sa\";\n\t},\n\t{\n\t\tusername = \"sa_ro\";\n\t},\n\t{\n\t\tusername
+    = \"ocsp_resp\";\n\t},\n\t{\n\t\tusername = \"revoker\";\n\t},\n\t{\n\t\tusername
+    = \"importer\";\n\t},\n\t{\n\t\tusername = \"mailer\";\n\t},\n\t{\n\t\tusername
+    = \"cert_checker\";\n\t},\n\t{\n\t\tusername = \"test_setup\";\n\t},\n\t{\n\t\tusername
+    = \"badkeyrevoker\";\n\t},\n\t{\n\t\tusername = \"incidents_sa\";\n\t}\n);\nmysql_query_rules
+    =\n(\n\t{\n\t\trule_id = 1;\n\t\tactive = 1;\n\t\tmatch_digest = \".\";\n\t\tlog
+    = 0;\n\t\tapply = 0;\n\t},\n\t{\n\t\trule_id = 10;\n\t\tusername = \"sa\";\n\t\ttimeout
+    = 4900;\n\t},\n\t{\n\t\trule_id = 11;\n\t\tusername = \"sa_ro\";\n\t\ttimeout
+    = 4900;\n\t},\n\t{\n\t\trule_id = 16;\n\t\tusername = \"badkeyrevoker\";\n\t\ttimeout
+    = 3600000;\n\t},\n\t{\n\t\trule_id = 17;\n\t\tusername = \"mailer\";\n\t\ttimeout
+    = 1800000;\n\t},\n\t{\n\t\trule_id = 18;\n\t\tusername = \"ocsp_resp\";\n\t\ttimeout
+    = 4900;\n\t}\n);\nscheduler =\n(\n\n);\n"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: proxysql-config

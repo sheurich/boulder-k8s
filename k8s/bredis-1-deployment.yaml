@@ -39,5 +39,5 @@ spec:
             name: redis-config
         - name: redis-data
           persistentVolumeClaim:
-            claimName: redis-pvc
+            claimName: redis-1-pvc
       restartPolicy: Always

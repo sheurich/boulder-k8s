@@ -25,7 +25,19 @@ spec:
       containers:
         - args:
             - redis-server
-            - /test/redis-ocsp.config
+            - /redis-config/redis.conf
           image: redis:6.2.7
           name: bredis-2
+          volumeMounts:
+            - name: redis-config
+              mountPath: /redis-config
+            - name: redis-data
+              mountPath: /data
+      volumes:
+        - name: redis-config
+          configMap:
+            name: redis-config
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-2-pvc
       restartPolicy: Always

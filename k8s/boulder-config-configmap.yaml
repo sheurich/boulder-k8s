@@ -1,0 +1,629 @@
+apiVersion: v1
+data:
+  admin.json: "{\n\t\"admin\": {\n\t\t\"db\": {\n\t\t\t\"dbConnectFile\": \"test/secrets/revoker_dburl\",\n\t\t\t\"maxOpenConns\":
+    1\n\t\t},\n\t\t\"tls\": {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/admin.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/admin.boulder/key.pem\"\n\t\t},\n\t\t\"raService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ra\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"hostOverride\":
+    \"ra.boulder\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"timeout\": \"15s\"\n\t\t},\n\t\t\"saService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"sa\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"sa.boulder\"\n\t\t},\n\t\t\"features\":
+    {}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  akamai-purger.json: "{\n\t\"akamaiPurger\": {\n\t\t\"purgeRetries\": 10,\n\t\t\"purgeRetryBackoff\":
+    \"50ms\",\n\t\t\"throughput\": {\n\t\t\t\"totalInstances\": 1\n\t\t},\n\t\t\"baseURL\":
+    \"http://localhost:6789\",\n\t\t\"clientToken\": \"its-a-token\",\n\t\t\"clientSecret\":
+    \"its-a-secret\",\n\t\t\"accessToken\": \"idk-how-this-is-different-from-client-token-but-okay\",\n\t\t\"v3Network\":
+    \"staging\",\n\t\t\"tls\": {\n\t\t\t\"caCertfile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/akamai-purger.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/akamai-purger.boulder/key.pem\"\n\t\t},\n\t\t\"grpc\":
+    {\n\t\t\t\"address\": \":9099\",\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\":
+    {\n\t\t\t\t\"akamai.AkamaiPurger\": {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"ra.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t},\n\t\"syslog\":
+    {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  bad-key-revoker.json: "{\n\t\"BadKeyRevoker\": {\n\t\t\"db\": {\n\t\t\t\"dbConnectFile\":
+    \"test/secrets/badkeyrevoker_dburl\",\n\t\t\t\"maxOpenConns\": 10\n\t\t},\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/bad-key-revoker.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/bad-key-revoker.boulder/key.pem\"\n\t\t},\n\t\t\"raService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ra\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"hostOverride\":
+    \"ra.boulder\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"timeout\": \"15s\"\n\t\t},\n\t\t\"maximumRevocations\":
+    15,\n\t\t\"findCertificatesBatchSize\": 10,\n\t\t\"interval\": \"50ms\",\n\t\t\"backoffIntervalMax\":
+    \"2s\"\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\": 4,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  ca.json: "{\n\t\"ca\": {\n\t\t\"tls\": {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/ca.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/ca.boulder/key.pem\"\n\t\t},\n\t\t\"hostnamePolicyFile\":
+    \"test/hostname-policy.yaml\",\n\t\t\"grpcCA\": {\n\t\t\t\"maxConnectionAge\":
+    \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"ca.CertificateAuthority\": {\n\t\t\t\t\t\"clientNames\":
+    [\n\t\t\t\t\t\t\"ra.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"ca.OCSPGenerator\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"ra.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"ca.CRLGenerator\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"crl-updater.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"sctService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ra-sct-provider\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"ra.boulder\"\n\t\t},\n\t\t\"saService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"sa\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"sa.boulder\"\n\t\t},\n\t\t\"issuance\":
+    {\n\t\t\t\"certProfiles\": {\n\t\t\t\t\"legacy\": {\n\t\t\t\t\t\"includeCRLDistributionPoints\":
+    true,\n\t\t\t\t\t\"maxValidityPeriod\": \"7776000s\",\n\t\t\t\t\t\"maxValidityBackdate\":
+    \"1h5m\",\n\t\t\t\t\t\"lintConfig\": \"test/config-next/zlint.toml\",\n\t\t\t\t\t\"ignoredLints\":
+    [\n\t\t\t\t\t\t\"w_subject_common_name_included\",\n\t\t\t\t\t\t\"w_ext_subject_key_identifier_not_recommended_subscriber\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"modern\":
+    {\n\t\t\t\t\t\"omitCommonName\": true,\n\t\t\t\t\t\"omitKeyEncipherment\": true,\n\t\t\t\t\t\"omitClientAuth\":
+    true,\n\t\t\t\t\t\"omitSKID\": true,\n\t\t\t\t\t\"includeCRLDistributionPoints\":
+    true,\n\t\t\t\t\t\"maxValidityPeriod\": \"583200s\",\n\t\t\t\t\t\"maxValidityBackdate\":
+    \"1h5m\",\n\t\t\t\t\t\"lintConfig\": \"test/config-next/zlint.toml\",\n\t\t\t\t\t\"ignoredLints\":
+    [\n\t\t\t\t\t\t\"w_ext_subject_key_identifier_missing_sub_cert\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"shortlived\":
+    {\n\t\t\t\t\t\"omitCommonName\": true,\n\t\t\t\t\t\"omitKeyEncipherment\": true,\n\t\t\t\t\t\"omitClientAuth\":
+    true,\n\t\t\t\t\t\"omitSKID\": true,\n\t\t\t\t\t\"includeCRLDistributionPoints\":
+    true,\n\t\t\t\t\t\"maxValidityPeriod\": \"160h\",\n\t\t\t\t\t\"maxValidityBackdate\":
+    \"1h5m\",\n\t\t\t\t\t\"lintConfig\": \"test/config-next/zlint.toml\",\n\t\t\t\t\t\"ignoredLints\":
+    [\n\t\t\t\t\t\t\"w_ext_subject_key_identifier_missing_sub_cert\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t},\n\t\t\t\"crlProfile\":
+    {\n\t\t\t\t\"validityInterval\": \"216h\",\n\t\t\t\t\"maxBackdate\": \"1h5m\",\n\t\t\t\t\"lintConfig\":
+    \"test/config-next/zlint.toml\"\n\t\t\t},\n\t\t\t\"issuers\": [\n\t\t\t\t{\n\t\t\t\t\t\"active\":
+    true,\n\t\t\t\t\t\"crlShards\": 10,\n\t\t\t\t\t\"issuerURL\": \"http://ca.example.org:4502/int-ecdsa-a\",\n\t\t\t\t\t\"crlURLBase\":
+    \"http://ca.example.org:4501/lets-encrypt-crls/43104258997432926/\",\n\t\t\t\t\t\"location\":
+    {\n\t\t\t\t\t\t\"configFile\": \"test/certs/webpki/int-ecdsa-a.pkcs11.json\",\n\t\t\t\t\t\t\"certFile\":
+    \"test/certs/webpki/int-ecdsa-a.cert.pem\",\n\t\t\t\t\t\t\"numSessions\": 2\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"active\":
+    true,\n\t\t\t\t\t\"crlShards\": 10,\n\t\t\t\t\t\"issuerURL\": \"http://ca.example.org:4502/int-ecdsa-b\",\n\t\t\t\t\t\"crlURLBase\":
+    \"http://ca.example.org:4501/lets-encrypt-crls/17302365692836921/\",\n\t\t\t\t\t\"location\":
+    {\n\t\t\t\t\t\t\"configFile\": \"test/certs/webpki/int-ecdsa-b.pkcs11.json\",\n\t\t\t\t\t\t\"certFile\":
+    \"test/certs/webpki/int-ecdsa-b.cert.pem\",\n\t\t\t\t\t\t\"numSessions\": 2\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"active\":
+    false,\n\t\t\t\t\t\"crlShards\": 10,\n\t\t\t\t\t\"issuerURL\": \"http://ca.example.org:4502/int-ecdsa-c\",\n\t\t\t\t\t\"crlURLBase\":
+    \"http://ca.example.org:4501/lets-encrypt-crls/56560759852043581/\",\n\t\t\t\t\t\"location\":
+    {\n\t\t\t\t\t\t\"configFile\": \"test/certs/webpki/int-ecdsa-c.pkcs11.json\",\n\t\t\t\t\t\t\"certFile\":
+    \"test/certs/webpki/int-ecdsa-c.cert.pem\",\n\t\t\t\t\t\t\"numSessions\": 2\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"active\":
+    true,\n\t\t\t\t\t\"crlShards\": 10,\n\t\t\t\t\t\"issuerURL\": \"http://ca.example.org:4502/int-rsa-a\",\n\t\t\t\t\t\"crlURLBase\":
+    \"http://ca.example.org:4501/lets-encrypt-crls/29947985078257530/\",\n\t\t\t\t\t\"location\":
+    {\n\t\t\t\t\t\t\"configFile\": \"test/certs/webpki/int-rsa-a.pkcs11.json\",\n\t\t\t\t\t\t\"certFile\":
+    \"test/certs/webpki/int-rsa-a.cert.pem\",\n\t\t\t\t\t\t\"numSessions\": 2\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"active\":
+    true,\n\t\t\t\t\t\"crlShards\": 10,\n\t\t\t\t\t\"issuerURL\": \"http://ca.example.org:4502/int-rsa-b\",\n\t\t\t\t\t\"crlURLBase\":
+    \"http://ca.example.org:4501/lets-encrypt-crls/6762885421992935/\",\n\t\t\t\t\t\"location\":
+    {\n\t\t\t\t\t\t\"configFile\": \"test/certs/webpki/int-rsa-b.pkcs11.json\",\n\t\t\t\t\t\t\"certFile\":
+    \"test/certs/webpki/int-rsa-b.cert.pem\",\n\t\t\t\t\t\t\"numSessions\": 2\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"active\":
+    false,\n\t\t\t\t\t\"crlShards\": 10,\n\t\t\t\t\t\"issuerURL\": \"http://ca.example.org:4502/int-rsa-c\",\n\t\t\t\t\t\"crlURLBase\":
+    \"http://ca.example.org:4501/lets-encrypt-crls/56183656833365902/\",\n\t\t\t\t\t\"location\":
+    {\n\t\t\t\t\t\t\"configFile\": \"test/certs/webpki/int-rsa-c.pkcs11.json\",\n\t\t\t\t\t\t\"certFile\":
+    \"test/certs/webpki/int-rsa-c.cert.pem\",\n\t\t\t\t\t\t\"numSessions\": 2\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t\"serialPrefixHex\":
+    \"6e\",\n\t\t\"maxNames\": 100,\n\t\t\"lifespanOCSP\": \"96h\",\n\t\t\"goodkey\":
+    {},\n\t\t\"ocspLogMaxLength\": 4000,\n\t\t\"ocspLogPeriod\": \"500ms\",\n\t\t\"ctLogListFile\":
+    \"test/ct-test-srv/log_list.json\",\n\t\t\"features\": {}\n\t},\n\t\"pa\": {\n\t\t\"challenges\":
+    {\n\t\t\t\"http-01\": true,\n\t\t\t\"dns-01\": true,\n\t\t\t\"tls-alpn-01\": true\n\t\t},\n\t\t\"identifiers\":
+    {\n\t\t\t\"dns\": true,\n\t\t\t\"ip\": true\n\t\t}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\":
+    4,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\": {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\":
+    1\n\t}\n}\n"
+  cert-checker.json: "{\n\t\"certChecker\": {\n\t\t\"db\": {\n\t\t\t\"dbConnectFile\":
+    \"test/secrets/cert_checker_dburl\",\n\t\t\t\"maxOpenConns\": 10\n\t\t},\n\t\t\"hostnamePolicyFile\":
+    \"test/hostname-policy.yaml\",\n\t\t\"workers\": 16,\n\t\t\"unexpiredOnly\": true,\n\t\t\"badResultsOnly\":
+    true,\n\t\t\"checkPeriod\": \"72h\",\n\t\t\"acceptableValidityDurations\": [\n\t\t\t\"7776000s\"\n\t\t],\n\t\t\"lintConfig\":
+    \"test/config-next/zlint.toml\",\n\t\t\"ignoredLints\": [\n\t\t\t\"w_subject_common_name_included\",\n\t\t\t\"w_ext_subject_key_identifier_missing_sub_cert\",\n\t\t\t\"w_ext_subject_key_identifier_not_recommended_subscriber\"\n\t\t],\n\t\t\"ctLogListFile\":
+    \"test/ct-test-srv/log_list.json\",\n\t\t\"features\": {\n\t\t\t\"CertCheckerChecksValidations\":
+    true,\n\t\t\t\"CertCheckerRequiresValidations\": true\n\t\t}\n\t},\n\t\"pa\":
+    {\n\t\t\"challenges\": {\n\t\t\t\"http-01\": true,\n\t\t\t\"dns-01\": true,\n\t\t\t\"tls-alpn-01\":
+    true\n\t\t},\n\t\t\"identifiers\": {\n\t\t\t\"dns\": true,\n\t\t\t\"ip\": true\n\t\t}\n\t},\n\t\"syslog\":
+    {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t}\n}\n"
+  crl-storer.ini: |
+    [default]
+    region=us-west-1
+  crl-storer.json: "{\n\t\"crlStorer\": {\n\t\t\"tls\": {\n\t\t\t\"caCertfile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/crl-storer.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/crl-storer.boulder/key.pem\"\n\t\t},\n\t\t\"grpc\":
+    {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"storer.CRLStorer\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"crl-updater.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"issuerCerts\":
+    [\n\t\t\t\"test/certs/webpki/int-rsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-c.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-c.cert.pem\"\n\t\t],\n\t\t\"s3Endpoint\":
+    \"http://localhost:4501\",\n\t\t\"s3Bucket\": \"lets-encrypt-crls\",\n\t\t\"awsConfigFile\":
+    \"test/config-next/crl-storer.ini\",\n\t\t\"awsCredsFile\": \"test/secrets/aws_creds.ini\"\n\t},\n\t\"syslog\":
+    {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  crl-updater.json: "{\n\t\"crlUpdater\": {\n\t\t\"tls\": {\n\t\t\t\"caCertFile\":
+    \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\": \"test/certs/ipki/crl-updater.boulder/cert.pem\",\n\t\t\t\"keyFile\":
+    \"test/certs/ipki/crl-updater.boulder/key.pem\"\n\t\t},\n\t\t\"saService\": {\n\t\t\t\"dnsAuthority\":
+    \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\": \"sa\",\n\t\t\t\t\"domain\":
+    \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\": \"15s\",\n\t\t\t\"noWaitForReady\":
+    true,\n\t\t\t\"hostOverride\": \"sa.boulder\"\n\t\t},\n\t\t\"crlGeneratorService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ca\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"ca.boulder\"\n\t\t},\n\t\t\"crlStorerService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"crl-storer\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"crl-storer.boulder\"\n\t\t},\n\t\t\"issuerCerts\":
+    [\n\t\t\t\"test/certs/webpki/int-rsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-c.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-c.cert.pem\"\n\t\t],\n\t\t\"numShards\":
+    10,\n\t\t\"shardWidth\": \"240h\",\n\t\t\"lookbackPeriod\": \"24h\",\n\t\t\"updatePeriod\":
+    \"10m\",\n\t\t\"updateTimeout\": \"1m\",\n\t\t\"expiresMargin\": \"5m\",\n\t\t\"cacheControl\":
+    \"stale-if-error=60\",\n\t\t\"temporallyShardedSerialPrefixes\": [\n\t\t\t\"7f\"\n\t\t],\n\t\t\"maxParallelism\":
+    10,\n\t\t\"maxAttempts\": 2,\n\t\t\"features\": {}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\":
+    4,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\": {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\":
+    1\n\t}\n}\n"
+  email-exporter.json: "{\n\t\"emailExporter\": {\n\t\t\"debugAddr\": \":8114\",\n\t\t\"grpc\":
+    {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"address\": \":9603\",\n\t\t\t\"services\":
+    {\n\t\t\t\t\"email.Exporter\": {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"wfe.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/email-exporter.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/email-exporter.boulder/key.pem\"\n\t\t},\n\t\t\"perDayLimit\":
+    999999,\n\t\t\"maxConcurrentRequests\": 5,\n\t\t\"pardotBusinessUnit\": \"test-business-unit\",\n\t\t\"clientId\":
+    {\n\t\t\t\"passwordFile\": \"test/secrets/salesforce_client_id\"\n\t\t},\n\t\t\"clientSecret\":
+    {\n\t\t\t\"passwordFile\": \"test/secrets/salesforce_client_secret\"\n\t\t},\n\t\t\"salesforceBaseURL\":
+    \"http://localhost:9601\",\n\t\t\"pardotBaseURL\": \"http://localhost:9602\",\n\t\t\"emailCacheSize\":
+    100000\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t}\n}\n"
+  expiration-mailer.gotmpl: |
+    Hello,
+
+    Your SSL certificate for names {{.TruncatedDNSNames}}{{if(gt .NumDNSNamesOmitted 0)}} (and {{.NumDNSNamesOmitted}} more){{end}} is going to expire in {{.DaysToExpiration}}
+    days ({{.ExpirationDate}}), make sure you run the renewer before then!
+
+    Regards
+  health-checker.json: "{\n\t\"grpc\": {\n\t\t\"timeout\": \"1s\"\n\t},\n\t\"tls\":
+    {\n\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\"certFile\": \"test/certs/ipki/health-checker.boulder/cert.pem\",\n\t\t\"keyFile\":
+    \"test/certs/ipki/health-checker.boulder/key.pem\"\n\t}\n}\n"
+  log-validator.json: "{\n\t\"syslog\": {\n\t\t\"stdoutLevel\": 7\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t},\n\t\"files\":
+    [\n\t\t\"/var/log/akamai-purger.log\",\n\t\t\"/var/log/bad-key-revoker.log\",\n\t\t\"/var/log/boulder-*.log\",\n\t\t\"/var/log/crl-*.log\",\n\t\t\"/var/log/nonce-service.log\",\n\t\t\"/var/log/ocsp-responder.log\"\n\t]\n}\n"
+  nonce-a.json: "{\n\t\"NonceService\": {\n\t\t\"maxUsed\": 131072,\n\t\t\"nonceHMACKey\":
+    {\n\t\t\t\"keyFile\": \"test/secrets/nonce_prefix_key\"\n\t\t},\n\t\t\"syslog\":
+    {\n\t\t\t\"stdoutLevel\": 6,\n\t\t\t\"syslogLevel\": -1\n\t\t},\n\t\t\"openTelemetry\":
+    {\n\t\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\t\"sampleratio\": 1\n\t\t},\n\t\t\"grpc\":
+    {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"nonce.NonceService\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"wfe.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/nonce.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/nonce.boulder/key.pem\"\n\t\t}\n\t}\n}\n"
+  nonce-b.json: "{\n\t\"NonceService\": {\n\t\t\"maxUsed\": 131072,\n\t\t\"nonceHMACKey\":
+    {\n\t\t\t\"keyFile\": \"test/secrets/nonce_prefix_key\"\n\t\t},\n\t\t\"syslog\":
+    {\n\t\t\t\"stdoutLevel\": 6,\n\t\t\t\"syslogLevel\": -1\n\t\t},\n\t\t\"openTelemetry\":
+    {\n\t\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\t\"sampleratio\": 1\n\t\t},\n\t\t\"grpc\":
+    {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"nonce.NonceService\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"wfe.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/nonce.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/nonce.boulder/key.pem\"\n\t\t}\n\t}\n}\n"
+  observer.yml: |
+    ---
+    buckets: [.001, .002, .005, .01, .02, .05, .1, .2, .5, 1, 2, 5, 10]
+    syslog:
+      stdoutlevel: 6
+      sysloglevel: 6
+    monitors:
+      -
+        period: 5s
+        kind: DNS
+        settings:
+          protocol: udp
+          server: owen.ns.cloudflare.com:53
+          recurse: false
+          query_name: letsencrypt.org
+          query_type: A
+      -
+        period: 5s
+        kind: DNS
+        settings:
+          protocol: udp
+          server: 1.1.1.1:53
+          recurse: true
+          query_name: google.com
+          query_type: A
+      -
+        period: 10s
+        kind: DNS
+        settings:
+          protocol: tcp
+          server: 8.8.8.8:53
+          recurse: true
+          query_name: google.com
+          query_type: A
+      -
+        period: 2s
+        kind: HTTP
+        settings:
+          url: https://letsencrypt.org
+          rcodes: [200]
+          useragent: "letsencrypt/boulder-observer-http-client"
+      -
+        period: 5s
+        kind: DNS
+        settings:
+          protocol: tcp
+          server: owen.ns.cloudflare.com:53
+          recurse: false
+          query_name: letsencrypt.org
+          query_type: A
+      -
+        period: 5s
+        kind: DNS
+        settings:
+          protocol: tcp
+          server: 1.1.1.1:53
+          recurse: true
+          query_name: google.com
+          query_type: A
+      -
+        period: 10s
+        kind: DNS
+        settings:
+          protocol: udp
+          server: 8.8.8.8:53
+          recurse: true
+          query_name: google.com
+          query_type: A
+      -
+        period: 5s
+        kind: DNS
+        settings:
+          protocol: tcp
+          server: "[2606:4700:4700::1111]:53"
+          recurse: true
+          query_name: google.com
+          query_type: A
+      -
+        period: 5s
+        kind: DNS
+        settings:
+          protocol: udp
+          server: "[2606:4700:4700::1111]:53"
+          recurse: true
+          query_name: google.com
+          query_type: A
+      -
+        period: 2s
+        kind: HTTP
+        settings:
+          url: http://letsencrypt.org/foo
+          rcodes: [200, 404]
+          useragent: "letsencrypt/boulder-observer-http-client"
+      -
+        period: 10s
+        kind: TCP
+        settings:
+          hostport: acme-v02.api.letsencrypt.org:443
+  ocsp-responder.json: "{\n\t\"ocspResponder\": {\n\t\t\"redis\": {\n\t\t\t\"username\":
+    \"ocsp-responder\",\n\t\t\t\"passwordFile\": \"test/secrets/ocsp_responder_redis_password\",\n\t\t\t\"shardAddrs\":
+    {\n\t\t\t\t\"shard1\": \"10.77.77.2:4218\",\n\t\t\t\t\"shard2\": \"10.77.77.3:4218\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"5s\",\n\t\t\t\"poolSize\": 100,\n\t\t\t\"routeRandomly\": true,\n\t\t\t\"tls\":
+    {\n\t\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\t\"certFile\":
+    \"test/certs/ipki/ocsp-responder.boulder/cert.pem\",\n\t\t\t\t\"keyFile\": \"test/certs/ipki/ocsp-responder.boulder/key.pem\"\n\t\t\t}\n\t\t},\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/ocsp-responder.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/ocsp-responder.boulder/key.pem\"\n\t\t},\n\t\t\"raService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ra\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"hostOverride\":
+    \"ra.boulder\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"timeout\": \"15s\"\n\t\t},\n\t\t\"saService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"sa\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"sa.boulder\"\n\t\t},\n\t\t\"logSampleRate\":
+    1,\n\t\t\"path\": \"/\",\n\t\t\"issuerCerts\": [\n\t\t\t\"test/certs/webpki/int-rsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-c.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-c.cert.pem\"\n\t\t],\n\t\t\"liveSigningPeriod\":
+    \"60h\",\n\t\t\"timeout\": \"4.9s\",\n\t\t\"shutdownStopTimeout\": \"10s\",\n\t\t\"maxInflightSignings\":
+    20,\n\t\t\"maxSigningWaiters\": 100,\n\t\t\"requiredSerialPrefixes\": [\n\t\t\t\"7f\",\n\t\t\t\"6e\"\n\t\t],\n\t\t\"features\":
+    {}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t},\n\t\"openTelemetryHttpConfig\":
+    {\n\t\t\"trustIncomingSpans\": true\n\t}\n}\n"
+  pardot-test-srv.json: "{\n\t\"oauthAddr\": \":9601\",\n\t\"pardotAddr\": \":9602\",\n\t\"expectedClientId\":
+    \"test-client-id\",\n\t\"expectedClientSecret\": \"you-shall-not-pass\"\n}\n"
+  publisher.json: "{\n\t\"publisher\": {\n\t\t\"userAgent\": \"boulder/1.0\",\n\t\t\"blockProfileRate\":
+    1000000000,\n\t\t\"chains\": [\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-rsa-a.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-rsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-rsa-b.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-rsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-ecdsa-a.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-ecdsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-ecdsa-b.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-ecdsa.cert.pem\"\n\t\t\t]\n\t\t],\n\t\t\"grpc\":
+    {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"Publisher\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"ra.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/publisher.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/publisher.boulder/key.pem\"\n\t\t},\n\t\t\"features\":
+    {}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  ra.json: "{\n\t\"ra\": {\n\t\t\"limiter\": {\n\t\t\t\"redis\": {\n\t\t\t\t\"username\":
+    \"boulder-wfe\",\n\t\t\t\t\"passwordFile\": \"test/secrets/wfe_ratelimits_redis_password\",\n\t\t\t\t\"lookups\":
+    [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Service\": \"redisratelimits\",\n\t\t\t\t\t\t\"Domain\":
+    \"service.consul\"\n\t\t\t\t\t}\n\t\t\t\t],\n\t\t\t\t\"lookupDNSAuthority\": \"consul.service.consul\",\n\t\t\t\t\"readTimeout\":
+    \"250ms\",\n\t\t\t\t\"writeTimeout\": \"250ms\",\n\t\t\t\t\"poolSize\": 100,\n\t\t\t\t\"routeRandomly\":
+    true,\n\t\t\t\t\"tls\": {\n\t\t\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\t\t\"certFile\":
+    \"test/certs/ipki/wfe.boulder/cert.pem\",\n\t\t\t\t\t\"keyFile\": \"test/certs/ipki/wfe.boulder/key.pem\"\n\t\t\t\t}\n\t\t\t},\n\t\t\t\"Defaults\":
+    \"test/config-next/wfe2-ratelimit-defaults.yml\",\n\t\t\t\"Overrides\": \"test/config-next/wfe2-ratelimit-overrides.yml\"\n\t\t},\n\t\t\"maxContactsPerRegistration\":
+    3,\n\t\t\"hostnamePolicyFile\": \"test/hostname-policy.yaml\",\n\t\t\"goodkey\":
+    {},\n\t\t\"finalizeTimeout\": \"30s\",\n\t\t\"issuerCerts\": [\n\t\t\t\"test/certs/webpki/int-rsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-rsa-c.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-a.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-b.cert.pem\",\n\t\t\t\"test/certs/webpki/int-ecdsa-c.cert.pem\"\n\t\t],\n\t\t\"validationProfiles\":
+    {\n\t\t\t\"legacy\": {\n\t\t\t\t\"pendingAuthzLifetime\": \"168h\",\n\t\t\t\t\"validAuthzLifetime\":
+    \"720h\",\n\t\t\t\t\"orderLifetime\": \"168h\",\n\t\t\t\t\"maxNames\": 100,\n\t\t\t\t\"identifierTypes\":
+    [\n\t\t\t\t\t\"dns\"\n\t\t\t\t]\n\t\t\t},\n\t\t\t\"modern\": {\n\t\t\t\t\"pendingAuthzLifetime\":
+    \"7h\",\n\t\t\t\t\"validAuthzLifetime\": \"7h\",\n\t\t\t\t\"orderLifetime\": \"7h\",\n\t\t\t\t\"maxNames\":
+    10,\n\t\t\t\t\"identifierTypes\": [\n\t\t\t\t\t\"dns\"\n\t\t\t\t]\n\t\t\t},\n\t\t\t\"shortlived\":
+    {\n\t\t\t\t\"pendingAuthzLifetime\": \"7h\",\n\t\t\t\t\"validAuthzLifetime\":
+    \"7h\",\n\t\t\t\t\"orderLifetime\": \"7h\",\n\t\t\t\t\"maxNames\": 10,\n\t\t\t\t\"identifierTypes\":
+    [\n\t\t\t\t\t\"dns\",\n\t\t\t\t\t\"ip\"\n\t\t\t\t]\n\t\t\t}\n\t\t},\n\t\t\"defaultProfileName\":
+    \"legacy\",\n\t\t\"tls\": {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/ra.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/ra.boulder/key.pem\"\n\t\t},\n\t\t\"vaService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"va\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"20s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"va.boulder\"\n\t\t},\n\t\t\"caService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ca\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"ca.boulder\"\n\t\t},\n\t\t\"ocspService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ca\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"ca.boulder\"\n\t\t},\n\t\t\"publisherService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"publisher\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"300s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"publisher.boulder\"\n\t\t},\n\t\t\"saService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"sa\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"sa.boulder\"\n\t\t},\n\t\t\"akamaiPurgerService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"akamai-purger\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"akamai-purger.boulder\"\n\t\t},\n\t\t\"grpc\":
+    {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"ra.RegistrationAuthority\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"admin.boulder\",\n\t\t\t\t\t\t\"bad-key-revoker.boulder\",\n\t\t\t\t\t\t\"ocsp-responder.boulder\",\n\t\t\t\t\t\t\"wfe.boulder\",\n\t\t\t\t\t\t\"sfe.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"ra.SCTProvider\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"ca.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"features\":
+    {\n\t\t\t\"AsyncFinalize\": true,\n\t\t\t\"AutomaticallyPauseZombieClients\":
+    true,\n\t\t\t\"NoPendingAuthzReuse\": true\n\t\t},\n\t\t\"ctLogs\": {\n\t\t\t\"stagger\":
+    \"500ms\",\n\t\t\t\"logListFile\": \"test/ct-test-srv/log_list.json\",\n\t\t\t\"sctLogs\":
+    [\n\t\t\t\t\"A1 Current\",\n\t\t\t\t\"A1 Future\",\n\t\t\t\t\"A2 Past\",\n\t\t\t\t\"A2
+    Current\",\n\t\t\t\t\"B1\",\n\t\t\t\t\"B2\",\n\t\t\t\t\"C1\",\n\t\t\t\t\"D1\",\n\t\t\t\t\"E1\"\n\t\t\t],\n\t\t\t\"infoLogs\":
+    [\n\t\t\t\t\"F1\"\n\t\t\t],\n\t\t\t\"finalLogs\": [\n\t\t\t\t\"A1 Current\",\n\t\t\t\t\"A1
+    Future\",\n\t\t\t\t\"C1\",\n\t\t\t\t\"F1\"\n\t\t\t]\n\t\t}\n\t},\n\t\"pa\": {\n\t\t\"challenges\":
+    {\n\t\t\t\"http-01\": true,\n\t\t\t\"dns-01\": true,\n\t\t\t\"tls-alpn-01\": true\n\t\t},\n\t\t\"identifiers\":
+    {\n\t\t\t\"dns\": true,\n\t\t\t\"ip\": true\n\t\t}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\":
+    6,\n\t\t\"sysloglevel\": 6\n\t},\n\t\"openTelemetry\": {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\":
+    1\n\t}\n}\n"
+  remoteva-a.json: "{\n\t\"rva\": {\n\t\t\"userAgent\": \"remoteva-a\",\n\t\t\"dnsTries\":
+    3,\n\t\t\"dnsStaticResolvers\": [\n\t\t\t\"10.77.77.77:8343\",\n\t\t\t\"10.77.77.77:8443\"\n\t\t],\n\t\t\"dnsTimeout\":
+    \"1s\",\n\t\t\"issuerDomain\": \"happy-hacker-ca.invalid\",\n\t\t\"tls\": {\n\t\t\t\"caCertfile\":
+    \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\": \"test/certs/ipki/rva.boulder/cert.pem\",\n\t\t\t\"keyFile\":
+    \"test/certs/ipki/rva.boulder/key.pem\"\n\t\t},\n\t\t\"skipGRPCClientCertVerification\":
+    true,\n\t\t\"grpc\": {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\":
+    {\n\t\t\t\t\"va.VA\": {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"va.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"va.CAA\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"va.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"accountURIPrefixes\":
+    [\n\t\t\t\"http://boulder.service.consul:4000/acme/reg/\",\n\t\t\t\"http://boulder.service.consul:4001/acme/acct/\"\n\t\t],\n\t\t\"perspective\":
+    \"dadaist\",\n\t\t\"rir\": \"ARIN\"\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\":
+    4,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\": {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\":
+    1\n\t}\n}\n"
+  remoteva-b.json: "{\n\t\"rva\": {\n\t\t\"userAgent\": \"remoteva-b\",\n\t\t\"dnsTries\":
+    3,\n\t\t\"dnsStaticResolvers\": [\n\t\t\t\"10.77.77.77:8343\",\n\t\t\t\"10.77.77.77:8443\"\n\t\t],\n\t\t\"dnsTimeout\":
+    \"1s\",\n\t\t\"issuerDomain\": \"happy-hacker-ca.invalid\",\n\t\t\"tls\": {\n\t\t\t\"caCertfile\":
+    \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\": \"test/certs/ipki/rva.boulder/cert.pem\",\n\t\t\t\"keyFile\":
+    \"test/certs/ipki/rva.boulder/key.pem\"\n\t\t},\n\t\t\"skipGRPCClientCertVerification\":
+    true,\n\t\t\"grpc\": {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\":
+    {\n\t\t\t\t\"va.VA\": {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"va.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"va.CAA\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"va.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"accountURIPrefixes\":
+    [\n\t\t\t\"http://boulder.service.consul:4000/acme/reg/\",\n\t\t\t\"http://boulder.service.consul:4001/acme/acct/\"\n\t\t],\n\t\t\"perspective\":
+    \"surrealist\",\n\t\t\"rir\": \"RIPE\"\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\":
+    4,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\": {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\":
+    1\n\t}\n}\n"
+  remoteva-c.json: "{\n\t\"rva\": {\n\t\t\"userAgent\": \"remoteva-c\",\n\t\t\"dnsTries\":
+    3,\n\t\t\"dnsStaticResolvers\": [\n\t\t\t\"10.77.77.77:8343\",\n\t\t\t\"10.77.77.77:8443\"\n\t\t],\n\t\t\"dnsTimeout\":
+    \"1s\",\n\t\t\"issuerDomain\": \"happy-hacker-ca.invalid\",\n\t\t\"tls\": {\n\t\t\t\"caCertfile\":
+    \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\": \"test/certs/ipki/rva.boulder/cert.pem\",\n\t\t\t\"keyFile\":
+    \"test/certs/ipki/rva.boulder/key.pem\"\n\t\t},\n\t\t\"skipGRPCClientCertVerification\":
+    true,\n\t\t\"grpc\": {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\":
+    {\n\t\t\t\t\"va.VA\": {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"va.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"va.CAA\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"va.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"accountURIPrefixes\":
+    [\n\t\t\t\"http://boulder.service.consul:4000/acme/reg/\",\n\t\t\t\"http://boulder.service.consul:4001/acme/acct/\"\n\t\t],\n\t\t\"perspective\":
+    \"cubist\",\n\t\t\"rir\": \"ARIN\"\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\":
+    4,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\": {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\":
+    1\n\t}\n}\n"
+  rocsp-tool.json: "{\n\t\"rocspTool\": {\n\t\t\"redis\": {\n\t\t\t\"username\": \"rocsp-tool\",\n\t\t\t\"passwordFile\":
+    \"test/secrets/rocsp_tool_password\",\n\t\t\t\"shardAddrs\": {\n\t\t\t\t\"shard1\":
+    \"10.77.77.2:4218\",\n\t\t\t\t\"shard2\": \"10.77.77.3:4218\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"5s\",\n\t\t\t\"tls\": {\n\t\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\t\"certFile\":
+    \"test/certs/ipki/rocsp-tool.boulder/cert.pem\",\n\t\t\t\t\"keyFile\": \"test/certs/ipki/rocsp-tool.boulder/key.pem\"\n\t\t\t}\n\t\t}\n\t},\n\t\"syslog\":
+    {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": 6\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  sa.json: "{\n\t\"sa\": {\n\t\t\"db\": {\n\t\t\t\"dbConnectFile\": \"test/secrets/sa_dburl\",\n\t\t\t\"maxOpenConns\":
+    100\n\t\t},\n\t\t\"readOnlyDB\": {\n\t\t\t\"dbConnectFile\": \"test/secrets/sa_ro_dburl\",\n\t\t\t\"maxOpenConns\":
+    100\n\t\t},\n\t\t\"incidentsDB\": {\n\t\t\t\"dbConnectFile\": \"test/secrets/incidents_dburl\",\n\t\t\t\"maxOpenConns\":
+    100\n\t\t},\n\t\t\"ParallelismPerRPC\": 20,\n\t\t\"lagFactor\": \"200ms\",\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/sa.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/sa.boulder/key.pem\"\n\t\t},\n\t\t\"grpc\":
+    {\n\t\t\t\"maxConnectionAge\": \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"sa.StorageAuthority\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"admin.boulder\",\n\t\t\t\t\t\t\"ca.boulder\",\n\t\t\t\t\t\t\"crl-updater.boulder\",\n\t\t\t\t\t\t\"ra.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"sa.StorageAuthorityReadOnly\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"admin.boulder\",\n\t\t\t\t\t\t\"ocsp-responder.boulder\",\n\t\t\t\t\t\t\"wfe.boulder\",\n\t\t\t\t\t\t\"sfe.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\",\n\t\t\t\t\t\t\"consul.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"healthCheckInterval\":
+    \"4s\",\n\t\t\"features\": {\n\t\t\t\"StoreARIReplacesInOrders\": true\n\t\t}\n\t},\n\t\"syslog\":
+    {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  sfe.json: "{\n\t\"sfe\": {\n\t\t\"listenAddress\": \"0.0.0.0:4003\",\n\t\t\"timeout\":
+    \"30s\",\n\t\t\"shutdownStopTimeout\": \"10s\",\n\t\t\"tls\": {\n\t\t\t\"caCertFile\":
+    \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\": \"test/certs/ipki/sfe.boulder/cert.pem\",\n\t\t\t\"keyFile\":
+    \"test/certs/ipki/sfe.boulder/key.pem\"\n\t\t},\n\t\t\"raService\": {\n\t\t\t\"dnsAuthority\":
+    \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\": \"ra\",\n\t\t\t\t\"domain\":
+    \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\": \"15s\",\n\t\t\t\"noWaitForReady\":
+    true,\n\t\t\t\"hostOverride\": \"ra.boulder\"\n\t\t},\n\t\t\"saService\": {\n\t\t\t\"dnsAuthority\":
+    \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\": \"sa\",\n\t\t\t\t\"domain\":
+    \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\": \"15s\",\n\t\t\t\"noWaitForReady\":
+    true,\n\t\t\t\"hostOverride\": \"sa.boulder\"\n\t\t},\n\t\t\"unpauseHMACKey\":
+    {\n\t\t\t\"keyFile\": \"test/secrets/sfe_unpause_key\"\n\t\t},\n\t\t\"features\":
+    {}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\": 4,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t},\n\t\"openTelemetryHttpConfig\":
+    {\n\t\t\"trustIncomingSpans\": true\n\t}\n}\n"
+  va.json: "{\n\t\"va\": {\n\t\t\"userAgent\": \"boulder\",\n\t\t\"dnsTries\": 3,\n\t\t\"dnsProvider\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"doh\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t}\n\t\t},\n\t\t\"dnsTimeout\":
+    \"1s\",\n\t\t\"issuerDomain\": \"happy-hacker-ca.invalid\",\n\t\t\"tls\": {\n\t\t\t\"caCertfile\":
+    \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\": \"test/certs/ipki/va.boulder/cert.pem\",\n\t\t\t\"keyFile\":
+    \"test/certs/ipki/va.boulder/key.pem\"\n\t\t},\n\t\t\"grpc\": {\n\t\t\t\"maxConnectionAge\":
+    \"30s\",\n\t\t\t\"services\": {\n\t\t\t\t\"va.VA\": {\n\t\t\t\t\t\"clientNames\":
+    [\n\t\t\t\t\t\t\"ra.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"va.CAA\": {\n\t\t\t\t\t\"clientNames\":
+    [\n\t\t\t\t\t\t\"ra.boulder\"\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t\"grpc.health.v1.Health\":
+    {\n\t\t\t\t\t\"clientNames\": [\n\t\t\t\t\t\t\"health-checker.boulder\"\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t\"remoteVAs\":
+    [\n\t\t\t{\n\t\t\t\t\"serverAddress\": \"rva1.service.consul:9397\",\n\t\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\t\"hostOverride\": \"rva1.boulder\",\n\t\t\t\t\"perspective\":
+    \"dadaist\",\n\t\t\t\t\"rir\": \"ARIN\"\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"serverAddress\":
+    \"rva1.service.consul:9498\",\n\t\t\t\t\"timeout\": \"15s\",\n\t\t\t\t\"hostOverride\":
+    \"rva1.boulder\",\n\t\t\t\t\"perspective\": \"surrealist\",\n\t\t\t\t\"rir\":
+    \"RIPE\"\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"serverAddress\": \"rva1.service.consul:9499\",\n\t\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\t\"hostOverride\": \"rva1.boulder\",\n\t\t\t\t\"perspective\":
+    \"cubist\",\n\t\t\t\t\"rir\": \"ARIN\"\n\t\t\t}\n\t\t],\n\t\t\"accountURIPrefixes\":
+    [\n\t\t\t\"http://boulder.service.consul:4000/acme/reg/\",\n\t\t\t\"http://boulder.service.consul:4001/acme/acct/\"\n\t\t]\n\t},\n\t\"syslog\":
+    {\n\t\t\"stdoutlevel\": 6,\n\t\t\"sysloglevel\": 6\n\t},\n\t\"openTelemetry\":
+    {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\": 1\n\t}\n}\n"
+  wfe2-ratelimit-defaults.yml: |
+    NewRegistrationsPerIPAddress:
+      count: 10000
+      burst: 10000
+      period: 168h
+    NewRegistrationsPerIPv6Range:
+      count: 99999
+      burst: 99999
+      period: 168h
+    CertificatesPerDomain:
+      count: 2
+      burst: 2
+      period: 2160h
+    FailedAuthorizationsPerDomainPerAccount:
+      count: 3
+      burst: 3
+      period: 5m
+    # The burst represents failing 40 times per day for 90 days. The count and
+    # period grant one "freebie" failure per day. In combination, these parameters
+    # mean that:
+    # - Failing 120 times per day results in being paused after 30.25 days
+    # - Failing 40 times per day results in being paused after 92.3 days
+    # - Failing 20 times per day results in being paused after 6.2 months
+    # - Failing 4 times per day results in being paused after 3.3 years
+    # - Failing once per day results in never being paused
+    FailedAuthorizationsForPausingPerDomainPerAccount:
+      count: 1
+      burst: 3600
+      period: 24h
+    NewOrdersPerAccount:
+      count: 1500
+      burst: 1500
+      period: 3h
+    CertificatesPerFQDNSet:
+      count: 2
+      burst: 2
+      period: 3h
+  wfe2-ratelimit-overrides.yml: |
+    - NewRegistrationsPerIPAddress:
+        burst: 1000000
+        count: 1000000
+        period: 168h
+        ids:
+          - id: 64.112.117.1
+            comment: test
+    - CertificatesPerDomain:
+        burst: 1
+        count: 1
+        period: 2160h
+        ids:
+          - id: ratelimit.me
+            comment: Rate Limit Test Domain
+    - CertificatesPerDomain:
+        burst: 10000
+        count: 10000
+        period: 2160h
+        ids:
+          - id: le.wtf
+            comment: Let's Encrypt Test Domain
+          - id: le1.wtf
+            comment: Let's Encrypt Test Domain 1
+          - id: le2.wtf
+            comment: Let's Encrypt Test Domain 2
+          - id: le3.wtf
+            comment: Let's Encrypt Test Domain 3
+          - id: nginx.wtf
+            comment: Nginx Test Domain
+          - id: good-caa-reserved.com
+            comment: Good CAA Reserved Domain
+          - id: bad-caa-reserved.com
+            comment: Bad CAA Reserved Domain
+          - id: ecdsa.le.wtf
+            comment: ECDSA Let's Encrypt Test Domain
+          - id: must-staple.le.wtf
+            comment: Must-Staple Let's Encrypt Test Domain
+    - CertificatesPerFQDNSet:
+        burst: 10000
+        count: 10000
+        period: 168h
+        ids:
+          - id: le.wtf
+            comment: Let's Encrypt Test Domain
+          - id: le1.wtf
+            comment: Let's Encrypt Test Domain 1
+          - id: le2.wtf
+            comment: Let's Encrypt Test Domain 2
+          - id: le3.wtf
+            comment: Let's Encrypt Test Domain 3
+          - id: le.wtf,le1.wtf
+            comment: Let's Encrypt Test Domain, Let's Encrypt Test Domain 1
+          - id: good-caa-reserved.com
+            comment: Good CAA Reserved Domain
+          - id: nginx.wtf
+            comment: Nginx Test Domain
+          - id: ecdsa.le.wtf
+            comment: ECDSA Let's Encrypt Test Domain
+          - id: must-staple.le.wtf
+            comment: Must-Staple Let's Encrypt Test Domain
+  wfe2.json: "{\n\t\"wfe\": {\n\t\t\"timeout\": \"30s\",\n\t\t\"serverCertificatePath\":
+    \"test/certs/ipki/boulder/cert.pem\",\n\t\t\"serverKeyPath\": \"test/certs/ipki/boulder/key.pem\",\n\t\t\"allowOrigins\":
+    [\n\t\t\t\"*\"\n\t\t],\n\t\t\"shutdownStopTimeout\": \"10s\",\n\t\t\"subscriberAgreementURL\":
+    \"https://boulder.service.consul:4431/terms/v7\",\n\t\t\"directoryCAAIdentity\":
+    \"happy-hacker-ca.invalid\",\n\t\t\"directoryWebsite\": \"https://github.com/letsencrypt/boulder\",\n\t\t\"legacyKeyIDPrefix\":
+    \"http://boulder.service.consul:4000/reg/\",\n\t\t\"goodkey\": {},\n\t\t\"tls\":
+    {\n\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\"certFile\":
+    \"test/certs/ipki/wfe.boulder/cert.pem\",\n\t\t\t\"keyFile\": \"test/certs/ipki/wfe.boulder/key.pem\"\n\t\t},\n\t\t\"raService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"ra\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"ra.boulder\"\n\t\t},\n\t\t\"saService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"sa\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"sa.boulder\"\n\t\t},\n\t\t\"emailExporter\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"email-exporter\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"email-exporter.boulder\"\n\t\t},\n\t\t\"accountCache\":
+    {\n\t\t\t\"size\": 9000,\n\t\t\t\"ttl\": \"5s\"\n\t\t},\n\t\t\"getNonceService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookup\": {\n\t\t\t\t\"service\":
+    \"nonce-taro\",\n\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t},\n\t\t\t\"timeout\":
+    \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\": \"nonce.boulder\"\n\t\t},\n\t\t\"redeemNonceService\":
+    {\n\t\t\t\"dnsAuthority\": \"consul.service.consul\",\n\t\t\t\"srvLookups\": [\n\t\t\t\t{\n\t\t\t\t\t\"service\":
+    \"nonce-taro\",\n\t\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"service\":
+    \"nonce-zinc\",\n\t\t\t\t\t\"domain\": \"service.consul\"\n\t\t\t\t}\n\t\t\t],\n\t\t\t\"srvResolver\":
+    \"nonce-srv\",\n\t\t\t\"timeout\": \"15s\",\n\t\t\t\"noWaitForReady\": true,\n\t\t\t\"hostOverride\":
+    \"nonce.boulder\"\n\t\t},\n\t\t\"nonceHMACKey\": {\n\t\t\t\"keyFile\": \"test/secrets/nonce_prefix_key\"\n\t\t},\n\t\t\"chains\":
+    [\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-rsa-a.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-rsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-rsa-b.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-rsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-ecdsa-a.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-ecdsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-ecdsa-b.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-ecdsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-ecdsa-a-cross.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-rsa.cert.pem\"\n\t\t\t],\n\t\t\t[\n\t\t\t\t\"test/certs/webpki/int-ecdsa-b-cross.cert.pem\",\n\t\t\t\t\"test/certs/webpki/root-rsa.cert.pem\"\n\t\t\t]\n\t\t],\n\t\t\"staleTimeout\":
+    \"5m\",\n\t\t\"limiter\": {\n\t\t\t\"redis\": {\n\t\t\t\t\"username\": \"boulder-wfe\",\n\t\t\t\t\"passwordFile\":
+    \"test/secrets/wfe_ratelimits_redis_password\",\n\t\t\t\t\"lookups\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Service\":
+    \"redisratelimits\",\n\t\t\t\t\t\t\"Domain\": \"service.consul\"\n\t\t\t\t\t}\n\t\t\t\t],\n\t\t\t\t\"lookupDNSAuthority\":
+    \"consul.service.consul\",\n\t\t\t\t\"readTimeout\": \"250ms\",\n\t\t\t\t\"writeTimeout\":
+    \"250ms\",\n\t\t\t\t\"poolSize\": 100,\n\t\t\t\t\"routeRandomly\": true,\n\t\t\t\t\"tls\":
+    {\n\t\t\t\t\t\"caCertFile\": \"test/certs/ipki/minica.pem\",\n\t\t\t\t\t\"certFile\":
+    \"test/certs/ipki/wfe.boulder/cert.pem\",\n\t\t\t\t\t\"keyFile\": \"test/certs/ipki/wfe.boulder/key.pem\"\n\t\t\t\t}\n\t\t\t},\n\t\t\t\"Defaults\":
+    \"test/config-next/wfe2-ratelimit-defaults.yml\",\n\t\t\t\"Overrides\": \"test/config-next/wfe2-ratelimit-overrides.yml\"\n\t\t},\n\t\t\"features\":
+    {\n\t\t\t\"PropagateCancels\": true,\n\t\t\t\"ServeRenewalInfo\": true,\n\t\t\t\"CheckIdentifiersPaused\":
+    true\n\t\t},\n\t\t\"certProfiles\": {\n\t\t\t\"legacy\": \"The normal profile
+    you know and love\",\n\t\t\t\"modern\": \"Profile 2: Electric Boogaloo\",\n\t\t\t\"shortlived\":
+    \"Like modern, but smaller\"\n\t\t},\n\t\t\"unpause\": {\n\t\t\t\"hmacKey\": {\n\t\t\t\t\"keyFile\":
+    \"test/secrets/sfe_unpause_key\"\n\t\t\t},\n\t\t\t\"jwtLifetime\": \"336h\",\n\t\t\t\"url\":
+    \"https://boulder.service.consul:4003\"\n\t\t}\n\t},\n\t\"syslog\": {\n\t\t\"stdoutlevel\":
+    7,\n\t\t\"sysloglevel\": -1\n\t},\n\t\"openTelemetry\": {\n\t\t\"endpoint\": \"bjaeger:4317\",\n\t\t\"sampleratio\":
+    1\n\t},\n\t\"openTelemetryHttpConfig\": {\n\t\t\"trustIncomingSpans\": true\n\t}\n}\n"
+  zlint.toml: |
+    [e_pkimetal_lint_cabf_serverauth_cert]
+    addr = "http://bpkimetal:8080"
+    severity = "notice"
+    timeout = 2000000000 # 2 seconds
+    ignore_lints = [
+      # We continue to include the Common Name in our "classic" profile, but have
+      # removed it from our "tlsserver" and "shortlived" profiles.
+      "pkilint:cabf.serverauth.dv.common_name_attribute_present",
+      "zlint:w_subject_common_name_included",
+      # We continue to include the SKID extension in our "classic" profile, but have
+      # removed it from our "tlsserver" and "shortlived" profiles.
+      "pkilint:cabf.serverauth.subscriber.subject_key_identifier_extension_present",
+      "zlint:w_ext_subject_key_identifier_not_recommended_subscriber",
+      # We continue to include the Key Encipherment Key Usage for RSA certificates
+      # issued under the "classic" profile, but have removed it from our "tlsserver"
+      # and "shortlived" profiles.
+      "pkilint:cabf.serverauth.subscriber_rsa_digitalsignature_and_keyencipherment_present",
+      # Some linters continue to complain about the lack of an AIA OCSP URI, even
+      # when a CRLDP is present.
+      "certlint:br_certificates_must_include_an_http_url_of_the_ocsp_responder",
+      "x509lint:no_ocsp_over_http"
+    ]
+
+    [e_pkimetal_lint_cabf_serverauth_crl]
+    addr = "http://bpkimetal:8080"
+    severity = "notice"
+    timeout = 2000000000 # 2 seconds
+    ignore_lints = []
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: boulder-config

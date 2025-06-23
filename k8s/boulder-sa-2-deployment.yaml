@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sa-2
+  labels:
+    app: boulder-sa-2
+    component: storage-authority
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: boulder-sa-2
+  template:
+    metadata:
+      labels:
+        app: boulder-sa-2
+        component: storage-authority
+    spec:
+      containers:
+        - name: boulder-sa-2
+          image: boulder:binary
+          imagePullPolicy: IfNotPresent
+          workingDir: /boulder-config
+          command:
+            - /boulder
+            - boulder-sa
+            - --config
+            - sa.json
+            - --addr
+            - :9495
+            - --debug-addr
+            - :8103
+          ports:
+            - containerPort: 9495
+              name: grpc
+            - containerPort: 8103
+              name: debug
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: /boulder-config
+            - name: FAKE_DNS
+              value: "64.112.117.122"
+          volumeMounts:
+            - name: boulder-config
+              mountPath: /boulder-config
+            - name: boulder-secrets
+              mountPath: /boulder-config/test/secrets
+      volumes:
+        - name: boulder-config
+          configMap:
+            name: boulder-config
+        - name: boulder-secrets
+          configMap:
+            name: boulder-secrets
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-sa-2
+  labels:
+    app: boulder-sa-2
+spec:
+  ports:
+    - port: 9495
+      targetPort: 9495
+      name: grpc
+    - port: 8103
+      targetPort: 8103
+      name: debug
+  selector:
+    app: boulder-sa-2

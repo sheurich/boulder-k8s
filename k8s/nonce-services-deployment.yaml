@@ -1,0 +1,218 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nonce-service-taro-1
+  labels:
+    app: nonce-service-taro-1
+    component: nonce-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nonce-service-taro-1
+  template:
+    metadata:
+      labels:
+        app: nonce-service-taro-1
+        component: nonce-service
+    spec:
+      containers:
+        - name: nonce-service-taro-1
+          image: boulder:binary
+          imagePullPolicy: IfNotPresent
+          workingDir: /boulder-config
+          command:
+            - /boulder
+            - nonce-service
+            - --config
+            - nonce-a.json
+            - --addr
+            - 10.77.77.77:9301
+            - --debug-addr
+            - :8111
+          ports:
+            - containerPort: 9301
+              name: service
+            - containerPort: 8111
+              name: debug
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: /boulder-config
+            - name: FAKE_DNS
+              value: "64.112.117.122"
+          volumeMounts:
+            - name: boulder-config
+              mountPath: /boulder-config
+            - name: boulder-secrets
+              mountPath: /boulder-config/test/secrets
+      volumes:
+        - name: boulder-config
+          configMap:
+            name: boulder-config
+        - name: boulder-secrets
+          configMap:
+            name: boulder-secrets
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nonce-service-taro-2
+  labels:
+    app: nonce-service-taro-2
+    component: nonce-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nonce-service-taro-2
+  template:
+    metadata:
+      labels:
+        app: nonce-service-taro-2
+        component: nonce-service
+    spec:
+      containers:
+        - name: nonce-service-taro-2
+          image: boulder:binary
+          imagePullPolicy: IfNotPresent
+          workingDir: /boulder-config
+          command:
+            - /boulder
+            - nonce-service
+            - --config
+            - nonce-a.json
+            - --addr
+            - 10.77.77.77:9501
+            - --debug-addr
+            - :8113
+          ports:
+            - containerPort: 9501
+              name: service
+            - containerPort: 8113
+              name: debug
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: /boulder-config
+            - name: FAKE_DNS
+              value: "64.112.117.122"
+          volumeMounts:
+            - name: boulder-config
+              mountPath: /boulder-config
+            - name: boulder-secrets
+              mountPath: /boulder-config/test/secrets
+      volumes:
+        - name: boulder-config
+          configMap:
+            name: boulder-config
+        - name: boulder-secrets
+          configMap:
+            name: boulder-secrets
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nonce-service-zinc-1
+  labels:
+    app: nonce-service-zinc-1
+    component: nonce-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nonce-service-zinc-1
+  template:
+    metadata:
+      labels:
+        app: nonce-service-zinc-1
+        component: nonce-service
+    spec:
+      containers:
+        - name: nonce-service-zinc-1
+          image: boulder:binary
+          imagePullPolicy: IfNotPresent
+          workingDir: /boulder-config
+          command:
+            - /boulder
+            - nonce-service
+            - --config
+            - nonce-b.json
+            - --addr
+            - 10.77.77.77:9401
+            - --debug-addr
+            - :8112
+          ports:
+            - containerPort: 9401
+              name: service
+            - containerPort: 8112
+              name: debug
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: /boulder-config
+            - name: FAKE_DNS
+              value: "64.112.117.122"
+          volumeMounts:
+            - name: boulder-config
+              mountPath: /boulder-config
+            - name: boulder-secrets
+              mountPath: /boulder-config/test/secrets
+      volumes:
+        - name: boulder-config
+          configMap:
+            name: boulder-config
+        - name: boulder-secrets
+          configMap:
+            name: boulder-secrets
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nonce-service-taro-1
+  labels:
+    app: nonce-service-taro-1
+spec:
+  ports:
+    - port: 9301
+      targetPort: 9301
+      name: service
+    - port: 8111
+      targetPort: 8111
+      name: debug
+  selector:
+    app: nonce-service-taro-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nonce-service-taro-2
+  labels:
+    app: nonce-service-taro-2
+spec:
+  ports:
+    - port: 9501
+      targetPort: 9501
+      name: service
+    - port: 8113
+      targetPort: 8113
+      name: debug
+  selector:
+    app: nonce-service-taro-2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nonce-service-zinc-1
+  labels:
+    app: nonce-service-zinc-1
+spec:
+  ports:
+    - port: 9401
+      targetPort: 9401
+      name: service
+    - port: 8112
+      targetPort: 8112
+      name: debug
+  selector:
+    app: nonce-service-zinc-1

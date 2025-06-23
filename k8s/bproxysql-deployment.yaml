@@ -28,8 +28,15 @@ spec:
             - -f
             - --idle-threads
             - -c
-            - /test/proxysql/proxysql.cnf
+            - /etc/proxysql/proxysql.cnf
             - --initial
           image: proxysql/proxysql:2.5.4
           name: bproxysql
+          volumeMounts:
+            - name: proxysql-config
+              mountPath: /etc/proxysql
+      volumes:
+        - name: proxysql-config
+          configMap:
+            name: proxysql-config
       restartPolicy: Always
