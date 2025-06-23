@@ -48,3 +48,24 @@
   - The networking and service discovery issues are now fixed. Focus next on ensuring the correct database user and password are created and passed to the Boulder microservices, likely via Kubernetes Secrets and environment variables or mounted files.
   - Review the Boulder configuration and Kubernetes manifests for how DB credentials are set up and referenced.
   - Commit all new and changed files after this fix.
+
+## **2025-06-23 (continued, agent update)**
+
+- **What was done:**
+  - Created a Kubernetes Secret manifest (`boulder-mysql-sa-secret.yaml`) to store the MySQL 'sa' user and password.
+  - Updated the MariaDB deployment (`bmysql-deployment.yaml`) to use the secret for user/password and to create the `boulder_sa_integration` database.
+  - Updated the Boulder microservice deployment (`boulder-sa-1-deployment.yaml`) to inject the same credentials from the secret as environment variables.
+- **What is in progress:**
+  - Apply the new secret and updated deployments:
+    ```sh
+    kubectl apply -f k8s/boulder-mysql-sa-secret.yaml
+    kubectl apply -f k8s/bmysql-deployment.yaml
+    kubectl apply -f k8s/boulder-sa-1-deployment.yaml
+    ```
+  - Verify that the Boulder microservice can now authenticate to MySQL/MariaDB using the provided credentials.
+- **Problems or blockers:**
+  - None at this step, but if authentication still fails, check that the MariaDB container creates the user with the password from the secret and that the Boulder app uses the correct environment variables.
+- **Notes, context, or advice for future agents/contributors:**
+  - This pattern (using Kubernetes Secrets for DB credentials) should be followed for all Boulder microservices that require database access.
+  - If you need to rotate credentials, update the secret and reapply the deployments.
+  - Continue rolling out and verifying the remaining Boulder microservices as described in the PRD and previous progress entries.

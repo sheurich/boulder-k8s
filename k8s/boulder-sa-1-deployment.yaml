@@ -45,6 +45,16 @@ spec:
               value: /boulder-config
             - name: FAKE_DNS
               value: "64.112.117.122"
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: boulder-mysql-sa-secret
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: boulder-mysql-sa-secret
+                  key: MYSQL_PASSWORD
       volumes:
         - name: boulder-bin
           emptyDir: {}

@@ -29,7 +29,19 @@ spec:
             - --log-queries-not-using-indexes=ON
           env:
             - name: MYSQL_ALLOW_EMPTY_PASSWORD
-              value: "yes"
+              value: "no"
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: boulder-mysql-sa-secret
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: boulder-mysql-sa-secret
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_DATABASE
+              value: boulder_sa_integration
           image: mariadb:10.6.22
           name: bmysql
       restartPolicy: Always
