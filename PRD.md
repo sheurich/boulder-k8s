@@ -10,6 +10,15 @@ To systematically migrate all components of the Boulder application to a Kuberne
 
 ## **3. Phases & Requirements**
 
+### **Phase 0: Foundational Quality**
+
+- **Goal:** Establish linting, testing and CI/CD foundations before infrastructure work begins
+- **Requirements & Deliverables:**
+  - Precommit hooks running kubeval, kube-score and yamllint for Kubernetes manifests
+  - GitHub Actions CI configuration validating all YAML manifests
+  - Developer test script (test.sh) with basic cluster smoke tests
+  - Makefile with lint/test/deploy targets
+
 ### **Phase 1: Inventory & Tag**
 
 - **Goal:** Create a complete and structured inventory of all application components from the existing Docker Compose setup.
@@ -23,6 +32,13 @@ To systematically migrate all components of the Boulder application to a Kuberne
 - **Requirements & Deliverables:**
   - A directory of raw Kubernetes Deployment and Service YAML files for each application component, generated via kompose.
   - Verification that all generated pods can reach a Running state in a local cluster.
+  - **Linting & Validation:**
+    - Add kubeval to CI pipeline for manifest validation
+    - Implement kube-score checks for production readiness
+    - yamllint configuration enforcing YAML standards
+  - **Testing:**
+    - Basic smoke tests verifying pod connectivity
+    - Deployment validation using kubectl health checks
 
 ### **Phase 3: Stateful Operators**
 
@@ -32,6 +48,10 @@ To systematically migrate all components of the Boulder application to a Kuberne
   - A running MariaDB instance managed by a MariaDB Operator.
   - Completed deployment manifests for all Boulder microservices (boulder-sa, boulder-ca, boulder-ra, boulder-va, boulder-wfe2, nonce-service, ocsp-responder) based on the architecture defined in startservers.py.
   - A functional solution for building the Boulder service binaries, either via an init container or a modified build command.
+  - **Integration Testing:**
+    - Redis cluster validation tests verifying data persistence
+    - MariaDB operator health check integration
+    - Automated failover testing scenarios
 
 ### **Phase 4: Secrets & PKI**
 
@@ -59,8 +79,15 @@ To systematically migrate all components of the Boulder application to a Kuberne
 
 - **Goal:** Automate the building, testing, and deployment of the application to a Kubernetes environment.
 - **Requirements & Deliverables:**
-  - A version-controlled Helm chart or Kustomize base containing all Kubernetes manifests.
-  - A GitHub Actions workflow that builds, tests, and deploys the application to a staging environment, and packages the chart for release.
+  - A version-controlled Helm chart or Kustomize base containing all Kubernetes manifests
+  - A GitHub Actions workflow that:
+    * Runs on PRs to main branch
+    * Executes linting (kubeval, kube-score)
+    * Runs smoke tests from test.sh
+    * Builds/pushes container images
+    * Deploys to staging cluster
+  - Security scanning integration (Trivy, Snyk)
+  - Performance benchmarking pipeline
 
 ### **Phase 7: Observability**
 
