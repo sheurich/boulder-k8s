@@ -87,3 +87,19 @@
   - When updating or adding Boulder microservices, always ensure their DB URLs in `boulder-secrets-configmap.yaml` include the correct username and password in the format `username:password@tcp(host:port)/database`.
   - After editing the ConfigMap, you must reapply it and restart the affected deployments to propagate changes.
   - If you encounter authentication errors, check for typos in DB URLs, missing users in MariaDB, or privilege issues.
+
+## **2025-06-23 (continued, agent update 3)**
+
+- **What was done:**
+  - Diagnosed and fixed MariaDB init SQL mount issues; MariaDB now starts and initializes as expected.
+  - Confirmed Boulder microservice pods can now reach the MariaDB service, but Boulder fails to start due to missing `test/certs/ipki/minica.pem` (internal PKI CA cert) required for mTLS.
+  - Researched Boulder PKI requirements and Kubernetes-native solutions for service-to-service mTLS.
+- **What is in progress:**
+  - Planning migration from Docker Compose PKI ("ipki") to Kubernetes-native mTLS using cert-manager for dynamic certificate issuance and rotation.
+  - Next: Integrate cert-manager, create a ClusterIssuer, and update Boulder deployments to mount issued certs for mTLS.
+- **Problems or blockers:**
+  - Boulder expects pre-generated PKI files; Kubernetes-native mTLS requires changes to Boulder config and deployment manifests to use cert-manager-issued certs.
+- **Notes, context, or advice for future agents/contributors:**
+  - See PRD.md for the recommended Kubernetes-native mTLS approach using cert-manager.
+  - All Boulder services must be updated to trust the internal CA and use mounted certs for gRPC and internal communication.
+  - This is a key step for production-grade security and automation in Kubernetes.

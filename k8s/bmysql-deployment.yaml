@@ -53,8 +53,8 @@ spec:
               mountPath: /docker-entrypoint-initdb.d/mariadb-init-sa_ro.sql
               subPath: mariadb-init-sa_ro.sql
             - name: mariadb-init-sql
-              mountPath: /docker-entrypoint-initdb.d/mariadb-init-incidents_sa-db.sql
-              subPath: mariadb-init-incidents_sa-db.sql
+              mountPath: /docker-entrypoint-initdb.d/mariadb-init-incidents_sa.sql
+              subPath: mariadb-init-incidents_sa.sql
       restartPolicy: Always
       volumes:
         - name: mariadb-init-sql

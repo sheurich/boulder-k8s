@@ -40,6 +40,14 @@ To systematically migrate all components of the Boulder application to a Kuberne
   - A Dockerfile and bootstrap script for an Init Container capable of handling the PKI setup with SoftHSMv2.
   - Kubernetes Secret manifests for all sensitive values.
   - A cert-manager Issuer and Certificate manifests to enable mutual TLS (mTLS) for pod-to-pod communication.
+  - **Kubernetes-native mTLS for Boulder microservices:**
+    - Deploy cert-manager to the cluster.
+    - Create a ClusterIssuer or CA Issuer for Boulder internal PKI.
+    - Define a Certificate resource for each Boulder service (or per pod as needed).
+    - cert-manager will generate, sign, and rotate mTLS certs for each service, storing them in Kubernetes Secrets.
+    - Update Boulder Deployments to mount the appropriate Secret as a volume for each service.
+    - Update Boulder configuration to use the mounted certs/keys for gRPC and internal communication, and trust the internal CA.
+    - This approach replaces the Docker Compose `ipki` pattern with automated, production-grade, Kubernetes-native mTLS.
 
 ### **Phase 5: Dev Inner-Loop**
 
