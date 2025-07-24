@@ -14,17 +14,10 @@ spec:
     spec:
       containers:
         - name: boulder-test
-          image: boulder:latest
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - "/boulder"
-            - "-config=/config/development.json"
-            - "-test"
-          volumeMounts:
-            - name: boulder-config
-              mountPath: /config
-      volumes:
-        - name: boulder-config
-          configMap:
-            name: {{ .Release.Name }}-boulder-config
+            - "--version"
       restartPolicy: Never
   backoffLimit: 0
