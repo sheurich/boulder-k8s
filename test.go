@@ -41,7 +41,7 @@ func testMain() int {
 		{"hack/provision-kind.sh"},
 		{"docker", "build", "--file=boulder.dockerfile", "--tag=boulder:local", "."},
 		{"kind", "load", "docker-image", "boulder:local", "--name", "boulder-k8s"},
-		{"helm", "install", "boulder", "charts/boulder", "--wait"},
+		{"helm", "install", "boulder", "charts/boulder", "--wait", "--set", "image.tag=local", "--set", "image.repository=boulder"},
 		{"helm", "test", "boulder", "--logs"},
 	}
 
