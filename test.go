@@ -42,7 +42,7 @@ func testMain() int {
 		{"docker", "build", "--file=boulder.dockerfile", "--tag=boulder:local", "."},
 		{"kind", "load", "docker-image", "boulder:local", "--name", "boulder-k8s"},
 		{"helm", "install", "boulder", "charts/boulder", "--wait"},
-		{"helm", "test", "boulder"},
+		{"helm", "test", "boulder", "--logs"},
 	}
 
 	cleanupCommands := [][]string{
