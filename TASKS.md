@@ -5,8 +5,8 @@ This file tracks high-level tasks and the project backlog. Detailed tasks should
 ## Phase 1: Project Setup & Foundational IaC
 
 - [x] Task-1: Define initial project structure and documentation.
-- [ ] Task-2: Create production-ready Docker images for Boulder components.
-- [ ] Task-3: Set up a test suite for the Boulder Docker images.
+- [x] Task-2: Incorporate MVP Dockerfile for Boulder.
+- [x] Task-3: Incorporate MVP test script for the Boulder Docker image.
 - [ ] Task-4: Create initial Helm chart for deploying Boulder to Kubernetes.
 - [ ] Task-5: Implement a mock HSM for local development.
 

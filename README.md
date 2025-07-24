@@ -24,6 +24,23 @@ Contributors are expected to be able to work within the project's AI-assisted de
 -   **Automation**: The full lifecycle of the CA, from deployment to maintenance, will be automated.
 -   **Portability**: The IaC will be designed to run on various Kubernetes platforms.
 
+## Testing
+
+This project uses a simple shell script to build and test the Boulder Docker image. This serves as a basic integration test.
+
+To run the test:
+
+```sh
+./test
+```
+
+This script will:
+
+1.  Build the Docker image using `boulder.dockerfile`.
+2.  Run the container with the `--version` flag to verify the Boulder binary is executable.
+
+This test should be run before committing any changes to the main branch.
+
 ## Getting Started
 
 As an operator or contributor, your first step is to understand the system architecture and development process.

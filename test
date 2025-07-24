@@ -1,0 +1,5 @@
+#!/bin/sh
+set -x
+
+docker build --file=boulder.dockerfile --tag=boulder:latest .
+docker run boulder:latest --version
