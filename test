@@ -1,4 +1,20 @@
 #!/bin/sh
-set -e
-go run test.go
+set -ex
+
+cleanup() {
+    trap '' INT TERM
+    echo "---"
+    echo "Cleaning up resources..."
+    helm uninstall boulder >/dev/null 2>&1 || true
+    kind delete cluster --name boulder-k8s >/dev/null 2>&1 || true
+    trap - INT TERM
+}
+
+trap cleanup EXIT
+
+hack/provision-kind.sh
+docker build --file=boulder.dockerfile --tag=boulder:local .
+kind load docker-image boulder:local --name boulder-k8s
+helm install boulder charts/boulder --wait --set image.tag=local --set image.repository=boulder
+helm test boulder --logs
 

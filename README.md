@@ -26,18 +26,23 @@ Contributors are expected to be able to work within the project's AI-assisted de
 
 ## Testing
 
-This project uses a simple shell script to build and test the Boulder Docker image. This serves as a basic integration test.
+This project uses a shell script for end-to-end testing. The test provisions a complete environment, deploys Boulder, and verifies its functionality.
 
-To run the test:
+The test requires Docker, `kind`, and `helm` to be installed.
+
+To run the tests:
 
 ```sh
 ./test
 ```
 
-This script will:
+The test script will:
 
-1.  Build the Docker image using `boulder.dockerfile`.
-2.  Run the container with the `--version` flag to verify the Boulder binary is executable.
+1.  Build the Boulder Docker image from `boulder.dockerfile`.
+2.  Provision a local Kubernetes cluster using `kind`.
+3.  Install the Boulder Helm chart.
+4.  Run the Helm chart's tests against the deployment.
+5.  Uninstall the Helm chart and delete the `kind` cluster upon completion or interruption.
 
 This test should be run before committing any changes to the main branch.
 
