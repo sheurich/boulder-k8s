@@ -9,8 +9,12 @@ import (
 
 func main() {
 	commands := [][]string{
-		{"docker", "build", "--file=boulder.dockerfile", "--tag=boulder:latest", "."},
-		{"docker", "run", "boulder:latest", "--version"},
+		{"docker", "build", "--file=boulder.dockerfile", "--tag=boulder:local", "."},
+		{"hack/provision-kind.sh"},
+		{"helm", "install", "boulder", "charts/boulder", "--wait"},
+		{"helm", "test", "boulder"},
+		{"helm", "uninstall", "boulder"},
+		{"kind", "delete", "cluster", "--name", "boulder-k8s"},
 	}
 
 	for _, args := range commands {
