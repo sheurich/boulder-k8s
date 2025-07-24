@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-boulder-test
+  annotations:
+    "helm.sh/hook": test-success
+  labels:
+    app: {{ .Release.Name }}-boulder
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-boulder
+    spec:
+      containers:
+        - name: boulder-test
+          image: boulder:latest
+          command:
+            - "/boulder"
+            - "-config=/config/development.json"
+            - "-test"
+          volumeMounts:
+            - name: boulder-config
+              mountPath: /config
+      volumes:
+        - name: boulder-config
+          configMap:
+            name: {{ .Release.Name }}-boulder-config
+      restartPolicy: Never
+  backoffLimit: 0
