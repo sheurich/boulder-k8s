@@ -41,7 +41,7 @@ The test script will:
 1.  Build the Boulder Docker image from `boulder.dockerfile`.
 2.  Provision a local Kubernetes cluster using `kind`.
 3.  Install the Boulder Helm chart.
-4.  Run the Helm chart's tests against the deployment.
+4.  Run the Helm chart's tests against the deployment. These tests are defined as Kubernetes resources with the `"helm.sh/hook": test` annotation and are located in the `charts/boulder/templates/` directory.
 5.  Uninstall the Helm chart and delete the `kind` cluster upon completion or interruption.
 
 This test should be run before committing any changes to the main branch.
