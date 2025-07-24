@@ -22,11 +22,27 @@ The system is designed to run on Kubernetes. It consists of several key componen
 
 ### Components
 
-- **CA Core Services**: The services responsible for certificate issuance, revocation, and management (e.g., Boulder, CFSSL).
+- **CA Core Services**: The core of the CA will be an instance of Let's Encrypt's Boulder software. Boulder provides the ACME-based services for certificate issuance, revocation, and management.
 - **HSM Integration**: A layer for integrating with Hardware Security Modules (HSMs) for key management. This will have mock and real implementations.
 - **Public-Facing Services**: ACME servers, OCSP responders, CRL distribution points.
 - **Internal Services**: Database, logging, monitoring, and alerting systems.
 - **IaC Tooling**: Terraform, Helm charts, and custom scripts for deployment and management.
+
+### Core CA Software: Boulder
+
+The core of this project is [Let's Encrypt's Boulder](https://github.com/letsencrypt/boulder), an ACME-based Certificate Authority written in Go. It is the same software that runs the Let's Encrypt service.
+
+Boulder has a component-based architecture that separates concerns by security context:
+- Web Front End (WFE)
+- Registration Authority (RA)
+- Validation Authority (VA)
+- Certificate Authority (CA)
+- Storage Authority (SA)
+- Publisher
+- OCSP Responder
+- CRL Updater
+
+This project will treat Boulder as a critical component, likely managed as a git submodule to track a specific version. The IaC specifications will be responsible for configuring and deploying these Boulder components into a Kubernetes cluster.
 
 ## 4. Deployment Environments
 

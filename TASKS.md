@@ -5,16 +5,16 @@ This file tracks high-level tasks and the project backlog. Detailed tasks should
 ## Phase 1: Project Setup & Foundational IaC
 
 - [ ] Task-1: Define initial project structure and documentation.
-- [ ] Task-2: Create a basic Dockerfile for a placeholder CA application.
-- [ ] Task-3: Set up a test suite for the Docker image.
-- [ ] Task-4: Create initial Helm chart for deploying the application to Kubernetes.
+- [ ] Task-2: Create production-ready Docker images for Boulder components.
+- [ ] Task-3: Set up a test suite for the Boulder Docker images.
+- [ ] Task-4: Create initial Helm chart for deploying Boulder to Kubernetes.
 - [ ] Task-5: Implement a mock HSM for local development.
 
 ## Phase 2: Core CA Functionality
 
-- [ ] Implement ACME protocol server.
-- [ ] Implement OCSP responder.
-- [ ] Implement CRL distribution point.
+- [ ] Configure and deploy Boulder's core components (WFE, RA, CA, SA, etc.).
+- [ ] Configure Boulder for production usage (e.g., rate limits, certificate profiles).
+- [ ] Integrate Boulder with the chosen database backend.
 
 ## Backlog
 
