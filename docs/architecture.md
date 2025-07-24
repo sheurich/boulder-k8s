@@ -9,7 +9,7 @@ This project aims to create a complete set of Infrastructure as Code (IaC) speci
 ## 2. Goals and Principles
 
 - **Security**: The highest priority. The system must be secure by design and default.
-- **Auditability**: All actions must be logged and auditable to comply with public trust requirements.
+- **Auditability**: All actions must be logged and auditable to comply with public trust requirements. The contents and history of this repository are considered part of the auditable system.
 - **Automation**: The entire lifecycle of the CA should be automated.
 - **Portability**: The IaC should be adaptable to different environments (local, cloud, bare metal).
 - **Modularity**: Components should be loosely coupled and independently deployable/testable.

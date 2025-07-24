@@ -27,6 +27,7 @@ This document provides guidelines for AI software development agents contributin
 - **Code Style**: Follow established style guides for the relevant languages (e.g., PEP 8 for Python, `shfmt` for shell scripts).
 - **Documentation**: Update documentation (e.g., `docs/architecture.md`, READMEs) when you make changes to the system's behavior or architecture.
 - **Testing**: When adding new features or fixing bugs, add or update tests to cover the changes.
+- **Commit Hygiene**: All changes must be submitted with clear, descriptive commit messages. Commits should be atomic, representing a single logical change. The repository's history is an audit artifact.
 
 ## 4. Communication
 
