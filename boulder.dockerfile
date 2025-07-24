@@ -9,4 +9,4 @@ RUN make
 
 FROM gcr.io/distroless/base-nossl-debian12
 COPY --from=build /go/src/github.com/letsencrypt/boulder/bin/boulder /boulder
-ENTRYPOINT ["/boulder"]
+ENTRYPOINT ["/boulder", "--version"]
