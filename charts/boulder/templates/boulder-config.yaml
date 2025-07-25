@@ -1,0 +1,269 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "boulder.fullname" . }}-config
+  labels:
+    {{- include "boulder.labels" . | nindent 4 }}
+data:
+  # Storage Authority Configuration
+  sa.json: |
+    {
+      "sa": {
+        "debugAddr": ":8003",
+        "dbConfig": {
+          "dbConnect": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ include "boulder.fullname" . }}-proxysql:6032)/{{ .Values.mariadb.auth.database }}",
+          "maxOpenConns": 100,
+          "maxIdleConns": 10
+        },
+        "tls": {
+          "caCertFile": "/boulder/test/certs/ipki/minica.pem",
+          "certFile": "/boulder/test/certs/ipki/sa.boulder/cert.pem",
+          "keyFile": "/boulder/test/certs/ipki/sa.boulder/key.pem"
+        },
+        "grpc": {
+          "maxConnectionAge": "30s",
+          "services": {
+            "sa.StorageAuthority": {
+              "clientNames": [
+                "admin.boulder",
+                "bad-key-revoker.boulder",
+                "ca.boulder",
+                "ra.boulder",
+                "wfe.boulder",
+                "sfe.boulder",
+                "ocsp-responder.boulder"
+              ]
+            },
+            "sa.StorageAuthorityReadOnly": {
+              "clientNames": [
+                "admin.boulder",
+                "bad-key-revoker.boulder",
+                "ca.boulder",
+                "ra.boulder",
+                "wfe.boulder",
+                "sfe.boulder",
+                "ocsp-responder.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
+        "features": {}
+      },
+      "syslog": {
+        "stdoutlevel": 6,
+        "sysloglevel": 6
+      }
+    }
+
+  # Registration Authority Configuration
+  ra.json: |
+    {
+      "ra": {
+        "limiter": {
+          "redis": {
+            "username": "boulder-wfe",
+            "passwordFile": "/boulder/test/secrets/wfe_ratelimits_redis_password",
+            "lookups": [
+              {
+                "Service": "redisratelimits",
+                "Domain": "service.consul"
+              }
+            ],
+            "lookupDNSAuthority": "{{ include "boulder.fullname" . }}-consul.{{ .Release.Namespace }}.svc.cluster.local",
+            "readTimeout": "250ms",
+            "writeTimeout": "250ms",
+            "poolSize": 100,
+            "routeRandomly": true,
+            "tls": {
+              "caCertFile": "/boulder/test/certs/ipki/minica.pem",
+              "certFile": "/boulder/test/certs/ipki/wfe.boulder/cert.pem",
+              "keyFile": "/boulder/test/certs/ipki/wfe.boulder/key.pem"
+            }
+          },
+          "Defaults": "/boulder/config/wfe2-ratelimit-defaults.yml",
+          "Overrides": "/boulder/config/wfe2-ratelimit-overrides.yml"
+        },
+        "maxContactsPerRegistration": 3,
+        "debugAddr": ":8002",
+        "hostnamePolicyFile": "/boulder/test/ident-policy.yaml",
+        "goodkey": {},
+        "issuerCerts": [
+          "/boulder/test/certs/webpki/int-rsa-a.cert.pem",
+          "/boulder/test/certs/webpki/int-rsa-b.cert.pem",
+          "/boulder/test/certs/webpki/int-rsa-c.cert.pem",
+          "/boulder/test/certs/webpki/int-ecdsa-a.cert.pem",
+          "/boulder/test/certs/webpki/int-ecdsa-b.cert.pem",
+          "/boulder/test/certs/webpki/int-ecdsa-c.cert.pem"
+        ],
+        "tls": {
+          "caCertFile": "/boulder/test/certs/ipki/minica.pem",
+          "certFile": "/boulder/test/certs/ipki/ra.boulder/cert.pem",
+          "keyFile": "/boulder/test/certs/ipki/ra.boulder/key.pem"
+        },
+        "vaService": {
+          "dnsAuthority": "{{ include "boulder.fullname" . }}-consul.{{ .Release.Namespace }}.svc.cluster.local",
+          "srvLookup": {
+            "service": "va",
+            "domain": "service.consul"
+          },
+          "timeout": "20s",
+          "noWaitForReady": true,
+          "hostOverride": "va.boulder"
+        },
+        "caService": {
+          "dnsAuthority": "{{ include "boulder.fullname" . }}-consul.{{ .Release.Namespace }}.svc.cluster.local",
+          "srvLookup": {
+            "service": "ca",
+            "domain": "service.consul"
+          },
+          "timeout": "15s",
+          "noWaitForReady": true,
+          "hostOverride": "ca.boulder"
+        },
+        "saService": {
+          "dnsAuthority": "{{ include "boulder.fullname" . }}-consul.{{ .Release.Namespace }}.svc.cluster.local",
+          "srvLookup": {
+            "service": "sa",
+            "domain": "service.consul"
+          },
+          "timeout": "15s",
+          "noWaitForReady": true,
+          "hostOverride": "sa.boulder"
+        },
+        "publisherService": {
+          "dnsAuthority": "{{ include "boulder.fullname" . }}-consul.{{ .Release.Namespace }}.svc.cluster.local",
+          "srvLookup": {
+            "service": "publisher",
+            "domain": "service.consul"
+          },
+          "timeout": "300s",
+          "noWaitForReady": true,
+          "hostOverride": "publisher.boulder"
+        },
+        "grpc": {
+          "maxConnectionAge": "30s",
+          "services": {
+            "ra.RegistrationAuthority": {
+              "clientNames": [
+                "admin.boulder",
+                "bad-key-revoker.boulder",
+                "ocsp-responder.boulder",
+                "wfe.boulder",
+                "sfe.boulder"
+              ]
+            },
+            "ra.SCTProvider": {
+              "clientNames": [
+                "ca.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
+        "features": {
+          "AutomaticallyPauseZombieClients": true,
+          "NoPendingAuthzReuse": true,
+          "EnforceMPIC": true,
+          "UnsplitIssuance": true
+        }
+      },
+      "pa": {
+        "challenges": {
+          "http-01": true,
+          "dns-01": true,
+          "tls-alpn-01": true
+        },
+        "identifiers": {
+          "dns": true,
+          "ip": true
+        }
+      },
+      "syslog": {
+        "stdoutlevel": 6,
+        "sysloglevel": 6
+      }
+    }
+
+  # Web Front End Configuration  
+  wfe2.json: |
+    {
+      "wfe": {
+        "timeout": "30s",
+        "listenAddress": "0.0.0.0:4001",
+        "TLSListenAddress": "0.0.0.0:4431",
+        "serverCertificatePath": "/boulder/test/certs/ipki/boulder/cert.pem",
+        "serverKeyPath": "/boulder/test/certs/ipki/boulder/key.pem",
+        "allowOrigins": [
+          "*"
+        ],
+        "shutdownStopTimeout": "10s",
+        "subscriberAgreementURL": "https://boulder.service.consul:4431/terms/v7",
+        "debugAddr": ":8013",
+        "directoryCAAIdentity": "happy-hacker-ca.invalid",
+        "directoryWebsite": "https://github.com/letsencrypt/boulder",
+        "legacyKeyIDPrefix": "http://boulder.service.consul:4000/reg/",
+        "goodkey": {},
+        "tls": {
+          "caCertFile": "/boulder/test/certs/ipki/minica.pem",
+          "certFile": "/boulder/test/certs/ipki/wfe.boulder/cert.pem",
+          "keyFile": "/boulder/test/certs/ipki/wfe.boulder/key.pem"
+        },
+        "raService": {
+          "dnsAuthority": "{{ include "boulder.fullname" . }}-consul.{{ .Release.Namespace }}.svc.cluster.local",
+          "srvLookup": {
+            "service": "ra",
+            "domain": "service.consul"
+          },
+          "timeout": "15s",
+          "noWaitForReady": true,
+          "hostOverride": "ra.boulder"
+        },
+        "saService": {
+          "dnsAuthority": "{{ include "boulder.fullname" . }}-consul.{{ .Release.Namespace }}.svc.cluster.local",
+          "srvLookup": {
+            "service": "sa",
+            "domain": "service.consul"
+          },
+          "timeout": "15s",
+          "noWaitForReady": true,
+          "hostOverride": "sa.boulder"
+        },
+        "staleTimeout": "5m",
+        "features": {
+          "ServeRenewalInfo": true,
+          "CheckIdentifiersPaused": true
+        }
+      },
+      "syslog": {
+        "stdoutlevel": 7,
+        "sysloglevel": 6
+      }
+    }
+
+  # Rate limiting defaults
+  wfe2-ratelimit-defaults.yml: |
+    certificatesPerName:
+      window: 168h
+      threshold: 5
+    registrationsPerIP:
+      window: 3h
+      threshold: 10
+    pendingAuthorizationsPerAccount:
+      window: 24h
+      threshold: 300
+    invalidAuthorizationsPerAccount:
+      window: 24h  
+      threshold: 5
+
+  # Rate limiting overrides (empty for test environment)
+  wfe2-ratelimit-overrides.yml: |
+    # Test environment overrides

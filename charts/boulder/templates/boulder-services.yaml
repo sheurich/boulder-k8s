@@ -1,0 +1,170 @@
+{{- if .Values.boulder.enabled }}
+---
+# Storage Authority Service 1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "boulder.fullname" . }}-sa-1
+  labels:
+    {{- include "boulder.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/instance: sa-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "boulder.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: storage-authority
+      app.kubernetes.io/instance: sa-1
+  template:
+    metadata:
+      labels:
+        {{- include "boulder.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: storage-authority
+        app.kubernetes.io/instance: sa-1
+    spec:
+      containers:
+      - name: boulder-sa
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /boulder
+        - boulder-sa
+        - --config
+        - /boulder/config/sa.json
+        - --addr
+        - ":9395"
+        - --debug-addr
+        - ":8003"
+        ports:
+        - name: grpc
+          containerPort: 9395
+          protocol: TCP
+        - name: debug
+          containerPort: 8003
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /boulder/config
+        - name: certs
+          mountPath: /boulder/test/certs
+        env:
+        - name: BOULDER_CONFIG_DIR
+          value: /boulder/config
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "boulder.fullname" . }}-config
+      - name: certs
+        configMap:
+          name: {{ include "boulder.fullname" . }}-certs
+---
+# Storage Authority Service 1 - Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "boulder.fullname" . }}-sa-1
+  labels:
+    {{- include "boulder.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/instance: sa-1
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9395
+    targetPort: grpc
+    protocol: TCP
+    name: grpc
+  - port: 8003
+    targetPort: debug
+    protocol: TCP
+    name: debug
+  selector:
+    {{- include "boulder.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/instance: sa-1
+---
+# Storage Authority Service 2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "boulder.fullname" . }}-sa-2
+  labels:
+    {{- include "boulder.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/instance: sa-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "boulder.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: storage-authority
+      app.kubernetes.io/instance: sa-2
+  template:
+    metadata:
+      labels:
+        {{- include "boulder.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: storage-authority
+        app.kubernetes.io/instance: sa-2
+    spec:
+      containers:
+      - name: boulder-sa
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /boulder
+        - boulder-sa
+        - --config
+        - /boulder/config/sa.json
+        - --addr
+        - ":9495"
+        - --debug-addr
+        - ":8103"
+        ports:
+        - name: grpc
+          containerPort: 9495
+          protocol: TCP
+        - name: debug
+          containerPort: 8103
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /boulder/config
+        - name: certs
+          mountPath: /boulder/test/certs
+        env:
+        - name: BOULDER_CONFIG_DIR
+          value: /boulder/config
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "boulder.fullname" . }}-config
+      - name: certs
+        configMap:
+          name: {{ include "boulder.fullname" . }}-certs
+---
+# Storage Authority Service 2 - Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "boulder.fullname" . }}-sa-2
+  labels:
+    {{- include "boulder.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/instance: sa-2
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9495
+    targetPort: grpc
+    protocol: TCP
+    name: grpc
+  - port: 8103
+    targetPort: debug
+    protocol: TCP
+    name: debug
+  selector:
+    {{- include "boulder.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/instance: sa-2
+{{- end }}

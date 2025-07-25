@@ -14,12 +14,19 @@ service:
   type: ClusterIP
   port: 4000
 
+# Boulder microservices configuration
+boulder:
+  enabled: true
+
+# Certificate management
+certManager:
+  enabled: true
 
 config:
   boulder: {}
 
 mariadb:
-  enabled: false
+  enabled: true
   image:
     tag: "11.4"
     pullPolicy: IfNotPresent
@@ -30,7 +37,7 @@ mariadb:
     password: "changeme"
 
 proxysql:
-  enabled: false
+  enabled: true
   auth:
     adminUsername: "admin"
     adminPassword: "changeme"
@@ -41,21 +48,72 @@ proxysql:
     port: 3306
 
 redis:
-  enabled: false
+  enabled: true
   image:
     tag: "7.2"
     pullPolicy: IfNotPresent
   auth:
     password: "changeme"
+  # Redis sharding for OCSP and rate limiting
+  instances:
+    ocsp1:
+      enabled: true
+      port: 6379
+      ip: "10.77.77.2"
+    ocsp2:
+      enabled: true
+      port: 6379
+      ip: "10.77.77.3"
+    ratelimit1:
+      enabled: true
+      port: 6379
+      ip: "10.77.77.4"
+    ratelimit2:
+      enabled: true
+      port: 6379
+      ip: "10.77.77.5"
 
 consul:
-  enabled: false
+  enabled: true
   image:
     tag: "1.18"
     pullPolicy: IfNotPresent
 
 jaeger:
-  enabled: false
+  enabled: true
   image:
     tag: "1.57"
     pullPolicy: IfNotPresent
+
+# SoftHSM configuration for mock HSM
+softhsm:
+  enabled: true
+  tokenPath: "/var/lib/softhsm/tokens"
+
+# Network policies for security isolation
+networkPolicies:
+  enabled: true
+  bouldernet:
+    cidr: "10.77.77.0/24"
+  publicnet:
+    cidr: "64.112.117.0/25"
+  publicnet2:
+    cidr: "64.112.117.128/25"
+
+# Challenge test server
+challengeTestServer:
+  enabled: true
+  ports:
+    http01: 80
+    https01: 443
+    tlsalpn01: 443
+    dns01: 8053
+    management: 8055
+
+# Integration test configuration
+integrationTests:
+  enabled: true
+  python:
+    enabled: true
+  go:
+    enabled: true
