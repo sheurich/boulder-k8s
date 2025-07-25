@@ -1,29 +1,84 @@
 #!/bin/sh
-set -ex
+set -e
+
+# --- Configuration ---
+CLUSTER_NAME="boulder-k8s"
+HELM_RELEASE_NAME="boulder"
+IMAGE_TAG="local"
+IMAGE_NAME="boulder"
+TEST_JOB_LABEL="job-name=${HELM_RELEASE_NAME}-test"
+
+# --- Helper Functions ---
+info() {
+    echo "---"
+    echo "$@"
+    echo "---"
+}
+
+check_dependencies() {
+    info "Checking for dependencies..."
+    if ! command -v docker &> /dev/null; then
+        echo "Error: docker is not installed." >&2
+        exit 1
+    fi
+    if ! command -v helm &> /dev/null; then
+        echo "Error: helm is not installed." >&2
+        exit 1
+    fi
+    if ! command -v kind &> /dev/null; then
+        echo "Error: kind is not installed. See https://kind.sigs.k8s.io/docs/user/quick-start/#installation" >&2
+        exit 1
+    fi
+    echo "All dependencies are installed."
+}
 
 cleanup() {
     EXIT_CODE=$?
     trap '' INT TERM
+
     if [ "$EXIT_CODE" -ne 0 ]; then
-        echo "---"
-        echo "A command failed. Describing test pod:"
-        kubectl describe pod -l job-name=boulder-test || true
-        echo "---"
-        echo "Getting test pod logs:"
-        kubectl logs -l job-name=boulder-test || true
+        info "A command failed. Describing test pod:"
+        kubectl describe pod -l "${TEST_JOB_LABEL}" || true
+        info "Getting test pod logs:"
+        kubectl logs -l "${TEST_JOB_LABEL}" || true
     fi
-    echo "---"
-    echo "Cleaning up resources..."
-    helm uninstall boulder >/dev/null 2>&1 || true
-    kind delete cluster --name boulder-k8s >/dev/null 2>&1 || true
+
+    if [ "${PERFORM_CLEANUP}" = "true" ]; then
+        info "Cleaning up resources..."
+        helm uninstall "${HELM_RELEASE_NAME}" >/dev/null 2>&1 || true
+        kind delete cluster --name "${CLUSTER_NAME}" >/dev/null 2>&1 || true
+    fi
+
     trap - INT TERM
     exit $EXIT_CODE
 }
 
+# --- Main Script ---
 trap cleanup EXIT
 
+PERFORM_CLEANUP="true"
+if [ "$1" = "--no-cleanup" ]; then
+    PERFORM_CLEANUP="false"
+fi
+
+check_dependencies
+
+info "Provisioning cluster..."
 hack/provision-kind.sh
-docker build --file=boulder.dockerfile --tag=boulder:local .
-kind load docker-image boulder:local --name boulder-k8s
-helm install boulder charts/boulder --wait --set image.tag=local --set image.repository=boulder
-helm test boulder --debug
+
+info "Building Docker image..."
+docker build --file=boulder.dockerfile --tag="${IMAGE_NAME}:${IMAGE_TAG}" .
+
+info "Loading Docker image into kind cluster..."
+kind load docker-image "${IMAGE_NAME}:${IMAGE_TAG}" --name "${CLUSTER_NAME}"
+
+info "Installing Helm chart..."
+helm install "${HELM_RELEASE_NAME}" charts/boulder \
+    --wait \
+    --set image.tag="${IMAGE_TAG}" \
+    --set image.repository="${IMAGE_NAME}"
+
+info "Running Helm tests..."
+helm test "${HELM_RELEASE_NAME}" --debug
+
+info "Tests passed!"
