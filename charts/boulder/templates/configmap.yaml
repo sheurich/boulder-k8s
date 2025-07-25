@@ -7,22 +7,3 @@ metadata:
 data:
   development.json: |
 {{ .Files.Get "config/development.json" | nindent 4 }}
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "{{ .Release.Name }}-boulder"
-  labels:
-    app: {{ .Release.Name }}-boulder
-spec:
-  template:
-    spec:
-      containers:
-        - name: boulder
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - "/boulder"
-            - "--version"
-      restartPolicy: Never
-  backoffLimit: 0
