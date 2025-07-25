@@ -25,7 +25,7 @@ appVersion: "1.16.0"
 
 dependencies:
   - name: mariadb
-    version: "11.x.x"
+    version: "21.0.3"
     repository: "https://charts.bitnami.com/bitnami"
     condition: mariadb.enabled
   - name: proxysql
@@ -33,7 +33,7 @@ dependencies:
     repository: "https://dysnix.github.io/charts/"
     condition: proxysql.enabled
   - name: redis
-    version: "17.x.x"
+    version: "21.2.12"
     repository: "https://charts.bitnami.com/bitnami"
     condition: redis.enabled
   - name: consul
