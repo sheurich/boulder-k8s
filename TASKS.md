@@ -25,9 +25,12 @@ This milestone focuses on creating a minimal, end-to-end setup for running Bould
 - [x] **Task-8: Update Test Scripts**
   - Update `test` and `test.go` to perform a full integration test using `kind` and `helm`.
 
-## Backlog
+## In-Flight
 
-- [ ] Configure and deploy Boulder's core components (WFE, RA, CA, SA, etc.).
+- [ ] **Task-9: Configure Core Components**
+  - Configure and deploy Boulder's core components (WFE, RA, CA, SA, etc.).
+
+## Backlog
 - [ ] Configure Boulder for production usage (e.g., rate limits, certificate profiles).
 - [ ] Integrate Boulder with the chosen database backend.
 - [ ] Integrate with a real HSM.
