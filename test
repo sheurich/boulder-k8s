@@ -72,6 +72,9 @@ docker build --file=boulder.dockerfile --tag="${IMAGE_NAME}:${IMAGE_TAG}" .
 info "Loading Docker image into kind cluster..."
 kind load docker-image "${IMAGE_NAME}:${IMAGE_TAG}" --name "${CLUSTER_NAME}"
 
+info "Updating Helm dependencies..."
+helm dependency update charts/boulder
+
 info "Installing Helm chart..."
 helm install "${HELM_RELEASE_NAME}" charts/boulder \
     --wait \
