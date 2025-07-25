@@ -17,7 +17,7 @@ This milestone focuses on creating a minimal, end-to-end setup for running and t
   - [x] **Task-8.1: Deploy Database Services**: Add MariaDB and ProxySQL to the Helm chart.
   - [x] **Task-8.2: Deploy Redis**: Add Redis to the Helm chart for caching and rate limiting.
   - [x] **Task-8.3: Deploy Consul**: Add Consul to the Helm chart for service discovery.
-  - [ ] **Task-8.4: Deploy Jaeger**: Add Jaeger to the Helm chart for distributed tracing.
+  - [x] **Task-8.4: Deploy Jaeger**: Add Jaeger to the Helm chart for distributed tracing.
   - [ ] **Task-8.5: Configure SoftHSM**: Configure the Boulder deployment to use the software-based mock HSM.
   - [x] **Task-8.6: Final Integration**: Update the Boulder configuration in the Helm chart to use all deployed dependencies and execute the integration test suite.
 
