@@ -9,8 +9,8 @@ This milestone focuses on creating a minimal, end-to-end setup for running and t
 - [x] **Task-1: Project Scaffolding**: Set up the repository, initial documentation, and directory structure.
 - [x] **Task-2: Basic Docker Image**: Create a `boulder.dockerfile` that can build a runnable Boulder image.
 - [x] **Task-3: Provision Local Kubernetes Cluster**: Create a script to provision a local `kind` cluster.
-- [ ] **Task-4: Basic Helm Chart**: Develop a Helm chart to deploy Boulder for a `DEVELOPMENT` configuration.
-- [ ] **Task-5: Helm Smoke Test**: Implement a basic `helm test` to verify the Boulder container can be deployed successfully.
+- [x] **Task-4: Basic Helm Chart**: Develop a Helm chart to deploy Boulder for a `DEVELOPMENT` configuration.
+- [x] **Task-5: Helm Smoke Test**: Implement a basic `helm test` to verify the Boulder container can be deployed successfully.
 - [x] **Task-6: Refine Test Script**: Improve the end-to-end `test` script with dependency checks, configuration variables, and optional cleanup.
 - [x] **Task-7: Implement Mock HSM**: Integrated as part of the broader integration testing setup.
 - [ ] **Task-8: Configure for Integration Testing**: Configure the Boulder deployment to run its built-in integration tests against the local `kind` cluster. This requires deploying and configuring several dependencies identified from the upstream Boulder development environment.
