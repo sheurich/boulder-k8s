@@ -1,16 +1,16 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-boulder-test
+  name: "{{ .Release.Name }}-test"
   annotations:
     "helm.sh/hook": test-success
   labels:
-    app: {{ .Release.Name }}-boulder
+    app: "{{ .Release.Name }}"
 spec:
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-boulder
+        app: "{{ .Release.Name }}"
     spec:
       containers:
         - name: boulder-test
