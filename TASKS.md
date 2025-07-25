@@ -25,6 +25,10 @@ This milestone focuses on creating a minimal, end-to-end setup for running Bould
 - [x] **Task-8: Update Test Scripts**
   - Update `test` and `test.go` to perform a full integration test using `kind` and `helm`.
 
+- [x] **Task-8a: Fix Helm Smoke Test**
+  - Resolve conflict between `test-pod.yaml` and `test-job.yaml` to enable `helm test`.
+  - This provides a basic smoke test for the Helm chart deployment.
+
 ## In-Flight
 
 - [ ] **Task-9: Configure Core Components**
