@@ -6,4 +6,34 @@ metadata:
     app: {{ .Release.Name }}-boulder
 data:
   development.json: |
-{{ .Files.Get "config/development.json" | nindent 4 }}
+    {
+      "va": {
+        "portConfig": {
+          "httpPort": 80,
+          "httpsPort": 443,
+          "tlsPort": 5001
+        }
+      },
+      "wfe": {
+        "listenAddress": ":5002"
+      },
+      "publisher": {
+        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-proxysql:6033)/{{ .Values.mariadb.auth.database }}"
+      },
+      "sa": {
+        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-proxysql:6033)/{{ .Values.mariadb.auth.database }}"
+      },
+      "ca": {
+        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-proxysql:6033)/{{ .Values.mariadb.auth.database }}"
+      },
+      "redis": {
+        "address": "{{ .Release.Name }}-redis:6379",
+        "password": "{{ .Values.redis.auth.password }}"
+      },
+      "consul": {
+        "address": "{{ .Release.Name }}-consul:8500"
+      },
+      "jaeger": {
+        "address": "{{ .Release.Name }}-jaeger:16686"
+      }
+    }

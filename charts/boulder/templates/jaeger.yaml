@@ -1,0 +1,37 @@
+{{- if .Values.jaeger.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-jaeger
+  labels:
+    app: {{ .Release.Name }}-jaeger
+spec:
+  ports:
+    - port: 16686
+      targetPort: 16686
+  selector:
+    app: {{ .Release.Name }}-jaeger
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-jaeger
+  labels:
+    app: {{ .Release.Name }}-jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-jaeger
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-jaeger
+    spec:
+      containers:
+        - name: jaeger
+          image: "jaegertracing/all-in-one:{{ .Values.jaeger.image.tag }}"
+          imagePullPolicy: {{ .Values.jaeger.image.pullPolicy }}
+          ports:
+            - containerPort: 16686
+{{- end }}

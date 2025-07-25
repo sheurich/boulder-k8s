@@ -1,0 +1,50 @@
+{{- if .Values.proxysql.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-proxysql
+  labels:
+    app: {{ .Release.Name }}-proxysql
+spec:
+  ports:
+    - port: 6033
+      targetPort: 6033
+  selector:
+    app: {{ .Release.Name }}-proxysql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-proxysql
+  labels:
+    app: {{ .Release.Name }}-proxysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-proxysql
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-proxysql
+    spec:
+      containers:
+        - name: proxysql
+          image: "bitnami/proxysql:{{ .Values.proxysql.image.tag }}"
+          imagePullPolicy: {{ .Values.proxysql.image.pullPolicy }}
+          env:
+            - name: PROXYSQL_ADMIN_USERNAME
+              value: {{ .Values.proxysql.auth.adminUsername | quote }}
+            - name: PROXYSQL_ADMIN_PASSWORD
+              value: {{ .Values.proxysql.auth.adminPassword | quote }}
+            - name: PROXYSQL_MONITOR_USERNAME
+              value: {{ .Values.proxysql.auth.monitorUsername | quote }}
+            - name: PROXYSQL_MONITOR_PASSWORD
+              value: {{ .Values.proxysql.auth.monitorPassword | quote }}
+            - name: PROXYSQL_BACKEND_HOST
+              value: {{ .Values.proxysql.backend.host | quote }}
+            - name: PROXYSQL_BACKEND_PORT
+              value: {{ .Values.proxysql.backend.port | quote }}
+          ports:
+            - containerPort: 6033
+{{- end }}

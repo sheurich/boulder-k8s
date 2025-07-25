@@ -1,0 +1,37 @@
+{{- if .Values.consul.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-consul
+  labels:
+    app: {{ .Release.Name }}-consul
+spec:
+  ports:
+    - port: 8500
+      targetPort: 8500
+  selector:
+    app: {{ .Release.Name }}-consul
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-consul
+  labels:
+    app: {{ .Release.Name }}-consul
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-consul
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-consul
+    spec:
+      containers:
+        - name: consul
+          image: "hashicorp/consul:{{ .Values.consul.image.tag }}"
+          imagePullPolicy: {{ .Values.consul.image.pullPolicy }}
+          ports:
+            - containerPort: 8500
+{{- end }}
