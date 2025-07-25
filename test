@@ -76,7 +76,7 @@ info "Updating Helm dependencies..."
 helm dependency update charts/boulder
 
 info "Installing Helm chart..."
-helm install "${HELM_RELEASE_NAME}" charts/boulder \
+helm upgrade --install "${HELM_RELEASE_NAME}" charts/boulder \
     --wait \
     --set image.tag="${IMAGE_TAG}" \
     --set image.repository="${IMAGE_NAME}"
