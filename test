@@ -2,12 +2,22 @@
 set -ex
 
 cleanup() {
+    EXIT_CODE=$?
     trap '' INT TERM
+    if [ "$EXIT_CODE" -ne 0 ]; then
+        echo "---"
+        echo "A command failed. Describing test pod:"
+        kubectl describe pod boulder-test --ignore-not-found=true
+        echo "---"
+        echo "Getting test pod logs:"
+        kubectl logs boulder-test --ignore-not-found=true
+    fi
     echo "---"
     echo "Cleaning up resources..."
     helm uninstall boulder >/dev/null 2>&1 || true
     kind delete cluster --name boulder-k8s >/dev/null 2>&1 || true
     trap - INT TERM
+    exit $EXIT_CODE
 }
 
 trap cleanup EXIT
@@ -16,4 +26,4 @@ hack/provision-kind.sh
 docker build --file=boulder.dockerfile --tag=boulder:local .
 kind load docker-image boulder:local --name boulder-k8s
 helm install boulder charts/boulder --wait --set image.tag=local --set image.repository=boulder
-helm test boulder --logs --debug
+helm test boulder --debug
