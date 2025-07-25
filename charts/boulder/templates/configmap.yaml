@@ -18,13 +18,13 @@ data:
         "listenAddress": ":5002"
       },
       "publisher": {
-        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-proxysql:6033)/{{ .Values.mariadb.auth.database }}"
+        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-mariadb:3306)/{{ .Values.mariadb.auth.database }}"
       },
       "sa": {
-        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-proxysql:6033)/{{ .Values.mariadb.auth.database }}"
+        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-mariadb:3306)/{{ .Values.mariadb.auth.database }}"
       },
       "ca": {
-        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-proxysql:6033)/{{ .Values.mariadb.auth.database }}"
+        "dbconfig": "{{ .Values.mariadb.auth.username }}:{{ .Values.mariadb.auth.password }}@tcp({{ .Release.Name }}-mariadb:3306)/{{ .Values.mariadb.auth.database }}"
       },
       "redis": {
         "address": "{{ .Release.Name }}-redis:6379",

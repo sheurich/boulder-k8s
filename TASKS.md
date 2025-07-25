@@ -19,7 +19,7 @@ This milestone focuses on creating a minimal, end-to-end setup for running and t
   - [x] **Task-8.3: Deploy Consul**: Add Consul to the Helm chart for service discovery.
   - [ ] **Task-8.4: Deploy Jaeger**: Add Jaeger to the Helm chart for distributed tracing.
   - [ ] **Task-8.5: Configure SoftHSM**: Configure the Boulder deployment to use the software-based mock HSM.
-  - [ ] **Task-8.6: Final Integration**: Update the Boulder configuration in the Helm chart to use all deployed dependencies and execute the integration test suite.
+  - [x] **Task-8.6: Final Integration**: Update the Boulder configuration in the Helm chart to use all deployed dependencies and execute the integration test suite.
 
 ## Milestone 2: Core CA Functionality
 

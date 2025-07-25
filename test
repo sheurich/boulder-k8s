@@ -79,7 +79,11 @@ info "Installing Helm chart..."
 helm upgrade --install "${HELM_RELEASE_NAME}" charts/boulder \
     --wait \
     --set image.tag="${IMAGE_TAG}" \
-    --set image.repository="${IMAGE_NAME}"
+    --set image.repository="${IMAGE_NAME}" \
+    --set mariadb.enabled=true \
+    --set redis.enabled=true \
+    --set consul.enabled=true \
+    --set jaeger.enabled=true
 
 info "Running Helm tests..."
 helm test "${HELM_RELEASE_NAME}" --debug

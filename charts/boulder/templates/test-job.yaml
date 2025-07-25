@@ -12,11 +12,21 @@ spec:
       labels:
         app: {{ .Release.Name }}-boulder
     spec:
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-boulder-config
       containers:
         - name: test
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - "/boulder"
-            - "--version"
+            - "-config"
+            - "/etc/boulder/development.json"
+            - "-test"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder/development.json
+              subPath: development.json
       restartPolicy: Never
