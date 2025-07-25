@@ -5,12 +5,12 @@ metadata:
   annotations:
     "helm.sh/hook": test-success
   labels:
-    app: "{{ .Release.Name }}"
+    app: "{{ .Release.Name }}-test"
 spec:
   template:
     metadata:
       labels:
-        app: "{{ .Release.Name }}"
+        app: "{{ .Release.Name }}-test"
     spec:
       containers:
         - name: boulder-test
