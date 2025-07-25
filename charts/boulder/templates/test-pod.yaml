@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: "{{ .Release.Name }}-test"
   annotations:
-    "helm.sh/hook": test-success
+    "helm.sh/hook": test
   labels:
     app: "{{ .Release.Name }}-test"
 spec:
