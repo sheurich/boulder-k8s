@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-boulder-config
+  labels:
+    app: {{ .Release.Name }}-boulder
+data:
+  development.json: |-
+{{ .Files.Get "config/development.json" | indent 4 }}
