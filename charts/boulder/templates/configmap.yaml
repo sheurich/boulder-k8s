@@ -7,3 +7,54 @@ metadata:
 data:
   development.json: |
 {{ .Files.Get "config/development.json" | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-boulder
+  labels:
+    app: {{ .Release.Name }}-boulder
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-boulder
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-boulder
+    spec:
+      containers:
+        - name: boulder
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # The default boulder entrypoint is the boulder binary. We don't have
+          # a working config for it, so we override the command to just sleep.
+          # This is enough to keep the pod running for a smoke test.
+          command: ["/bin/sh", "-c", "sleep 1d"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-boulder-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-boulder
+  labels:
+    app: {{ .Release.Name }}-boulder
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Release.Name }}-boulder
