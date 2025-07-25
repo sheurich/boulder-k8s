@@ -12,8 +12,14 @@ This milestone focuses on creating a minimal, end-to-end setup for running and t
 - [x] **Task-4: Basic Helm Chart**: Develop a Helm chart to deploy Boulder for a `DEVELOPMENT` configuration.
 - [x] **Task-5: Helm Smoke Test**: Implement a basic `helm test` to verify the Boulder container can be deployed successfully.
 - [x] **Task-6: Refine Test Script**: Improve the end-to-end `test` script with dependency checks, configuration variables, and optional cleanup.
-- [ ] **Task-7: Implement Mock HSM**: Integrate a software-based mock HSM for development and testing, deployed via the Helm chart.
-- [ ] **Task-8: Configure for Integration Testing**: Configure the Boulder deployment to run its built-in integration tests against the local `kind` cluster.
+- [x] **Task-7: Implement Mock HSM**: Integrated as part of the broader integration testing setup.
+- [ ] **Task-8: Configure for Integration Testing**: Configure the Boulder deployment to run its built-in integration tests against the local `kind` cluster. This requires deploying and configuring several dependencies identified from the upstream Boulder development environment.
+  - [x] **Task-8.1: Deploy Database Services**: Add MariaDB and ProxySQL to the Helm chart.
+  - [x] **Task-8.2: Deploy Redis**: Add Redis to the Helm chart for caching and rate limiting.
+  - [x] **Task-8.3: Deploy Consul**: Add Consul to the Helm chart for service discovery.
+  - [ ] **Task-8.4: Deploy Jaeger**: Add Jaeger to the Helm chart for distributed tracing.
+  - [ ] **Task-8.5: Configure SoftHSM**: Configure the Boulder deployment to use the software-based mock HSM.
+  - [ ] **Task-8.6: Final Integration**: Update the Boulder configuration in the Helm chart to use all deployed dependencies and execute the integration test suite.
 
 ## Milestone 2: Core CA Functionality
 

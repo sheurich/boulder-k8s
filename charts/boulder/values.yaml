@@ -13,3 +13,157 @@ image:
 service:
   type: ClusterIP
   port: 4000
+
+
+config:
+  # -- The Boulder configuration to use.
+  # This should be a valid JSON configuration for Boulder.
+  # See https://github.com/letsencrypt/boulder/blob/main/cmd/boulder-ca/boulder-ca.go
+  # for more information.
+  boulder:
+    # -- The log level for Boulder.
+    logLevel: "debug"
+    # -- The port for the ACME API.
+    port: 4000
+    # -- The port for the OCSP responder.
+    ocspPort: 4001
+    # -- The port for the metrics endpoint.
+    metricsPort: 9090
+    # -- The directory where Boulder stores its state.
+    stateDir: "/var/boulder"
+    # -- The directory where Boulder stores its certificates.
+    certDir: "/var/boulder/certs"
+    # -- The directory where Boulder stores its keys.
+    keyDir: "/var/boulder/keys"
+    # -- The directory where Boulder stores its logs.
+    logDir: "/var/boulder/logs"
+    # -- The directory where Boulder stores its ACME accounts.
+    acmeAccountDir: "/var/boulder/acme-accounts"
+    # -- The directory where Boulder stores its ACME orders.
+    acmeOrderDir: "/var/boulder/acme-orders"
+    # -- The directory where Boulder stores its ACME challenges.
+    acmeChallengeDir: "/var/boulder/acme-challenges"
+    # -- The directory where Boulder stores its ACME authorizations.
+    acmeAuthzDir: "/var/boulder/acme-authz"
+    # -- The directory where Boulder stores its ACME certificates.
+    acmeCertDir: "/var/boulder/acme-certs"
+    # -- The directory where Boulder stores its ACME certificate status.
+    acmeCertStatusDir: "/var/boulder/acme-cert-status"
+    # -- The directory where Boulder stores its ACME certificate revocation lists.
+    acmeCertRevocationListDir: "/var/boulder/acme-cert-revocation-lists"
+    # -- The directory where Boulder stores its ACME certificate revocation list status.
+    acmeCertRevocationListStatusDir: "/var/boulder/acme-cert-revocation-list-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entries.
+    acmeCertRevocationListEntryDir: "/var/boulder/acme-cert-revocation-list-entries"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry status.
+    acmeCertRevocationListEntryStatusDir: "/var/boulder/acme-cert-revocation-list-entry-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data.
+    acmeCertRevocationListEntryDataDir: "/var/boulder/acme-cert-revocation-list-entry-data"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data status.
+    acmeCertRevocationListEntryDataStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content.
+    acmeCertRevocationListEntryDataContentDir: "/var/boulder/acme-cert-revocation-list-entry-data-content"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content status.
+    acmeCertRevocationListEntryDataContentStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature.
+    acmeCertRevocationListEntryDataContentSignatureDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature status.
+    acmeCertRevocationListEntryDataContentSignatureStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentStatusDir: "/var/boulder/acame-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-.signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content signature.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content signature status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content signature algorithm.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content signature algorithm status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-status"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters"
+    # -- The directory where Boulder stores its ACME certificate revocation list entry data content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters value content signature algorithm parameters status.
+    acmeCertRevocationListEntryDataContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersValueContentSignatureAlgorithmParametersStatusDir: "/var/boulder/acme-cert-revocation-list-entry-data-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-value-content-signature-algorithm-parameters-status"
+
+mariadb:
+  enabled: false
+  auth:
+    rootPassword: "changeme"
+    database: "boulder"
+    username: "boulder"
+    password: "changeme"
+
+proxysql:
+  enabled: false
+  auth:
+    adminUsername: "admin"
+    adminPassword: "changeme"
+    monitorUsername: "monitor"
+    monitorPassword: "changeme"
+  backend:
+    host: "boulder-mariadb"
+    port: 3306
+
+redis:
+  enabled: false
+  auth:
+    password: "changeme"
+
+consul:
+  enabled: false
+
+jaeger:
+  enabled: false

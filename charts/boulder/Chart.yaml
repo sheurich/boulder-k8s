@@ -22,3 +22,25 @@ version: 0.1.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "1.16.0"
+
+dependencies:
+  - name: mariadb
+    version: "11.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: mariadb.enabled
+  - name: proxysql
+    version: "0.11.2"
+    repository: "https://dysnix.github.io/charts/"
+    condition: proxysql.enabled
+  - name: redis
+    version: "17.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: consul
+    version: "1.2.1"
+    repository: "https://helm.releases.hashicorp.com"
+    condition: consul.enabled
+  - name: jaeger
+    version: "3.4.1"
+    repository: "https://jaegertracing.github.io/helm-charts"
+    condition: jaeger.enabled
