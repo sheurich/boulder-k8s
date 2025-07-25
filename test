@@ -56,9 +56,9 @@ cleanup() {
 # --- Main Script ---
 trap cleanup EXIT
 
-PERFORM_CLEANUP="true"
-if [ "$1" = "--no-cleanup" ]; then
-    PERFORM_CLEANUP="false"
+PERFORM_CLEANUP="false"
+if [ "$1" = "--cleanup" ]; then
+    PERFORM_CLEANUP="true"
 fi
 
 check_dependencies
