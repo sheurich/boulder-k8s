@@ -7,10 +7,10 @@ cleanup() {
     if [ "$EXIT_CODE" -ne 0 ]; then
         echo "---"
         echo "A command failed. Describing test pod:"
-        kubectl describe pod boulder-test --ignore-not-found=true
+        kubectl describe pod boulder-test || true
         echo "---"
         echo "Getting test pod logs:"
-        kubectl logs boulder-test --ignore-not-found=true
+        kubectl logs boulder-test || true
     fi
     echo "---"
     echo "Cleaning up resources..."
