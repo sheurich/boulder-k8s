@@ -28,10 +28,7 @@ dependencies:
     version: "21.0.3"
     repository: "https://charts.bitnami.com/bitnami"
     condition: mariadb.enabled
-  - name: proxysql
-    version: "0.11.2"
-    repository: "https://dysnix.github.io/charts/"
-    condition: proxysql.enabled
+  
   - name: redis
     version: "21.2.12"
     repository: "https://charts.bitnami.com/bitnami"
