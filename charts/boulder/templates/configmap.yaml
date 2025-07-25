@@ -5,5 +5,5 @@ metadata:
   labels:
     app: {{ .Release.Name }}-boulder
 data:
-  development.json: |-
-{{ .Files.Get "config/development.json" | indent 4 }}
+  development.json: |
+{{ .Files.Get "config/development.json" | nindent 4 }}
