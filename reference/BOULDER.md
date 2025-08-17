@@ -37,7 +37,7 @@ Boulder employs a microservice-based architecture, with distinct services commun
 ### High-Level Design
 
 - **Monolithic Binary, Distributed Services:** Core logic is compiled into a single `boulder` binary, which is launched with different sub-commands to run each specific service (e.g., `boulder-ra`, `boulder-ca`).
-- **Service Discovery:** Services register with and discover each other using Consul.
+- **Service Discovery:** Services register with and discover each other using Consul for service registration and DNS-based SRV record lookups.
 - **Data Storage:** MariaDB is the primary database for storing account information, certificate data, and issuance records. Redis is used for rate limiting with two sharded instances for distributed rate limiting.
 - **PKI Management:** Boulder uses two distinct PKI hierarchies: the public certificate hierarchy managed by the `ceremony` tool for issuing certificates, and an internal PKI for service-to-service mTLS authentication.
 - **Asynchronous Workflows:** Many operations, such as certificate issuance and revocation, are handled asynchronously through a series of state transitions managed by different services.
@@ -69,9 +69,13 @@ These are the essential Boulder services required for basic ACME functionality.
 | **Certificate Authority (CA)**  | The heart of the system. It signs certificate requests, generates OCSP responses, and produces Certificate Revocation Lists (CRLs). It is the only component with access to the private keys used for signing certificates.                                                      |
 | **Validation Authority (VA)**   | Performs the domain control validation challenges (e.g., HTTP-01, DNS-01, TLS-ALPN-01) to verify that a client controls the identifiers in a certificate request. Implements Multi-Perspective Issuance Corroboration (MPIC).                                                    |
 | **Storage Authority (SA)**      | The database abstraction layer. It handles all interactions with MariaDB, managing the storage and retrieval of accounts, orders, authorizations, and certificates.                                                                                                              |
-| **Nonce Service**               | Provides single-use nonces that ACME clients must include in their requests to prevent replay attacks. Multiple instances run across datacenters (`nonce-service-taro`, `nonce-service-zinc`) for high availability.                                                             |
+| **Nonce Service**               | Provides single-use nonces that ACME clients must include in their requests to prevent replay attacks. Multiple instances run across datacenters (`nonce-service-taro-1/2`, `nonce-service-zinc-1/2`) for high availability and geographic distribution.                         |
 | **Publisher**                   | Publishes issued certificates and precertificates to Certificate Transparency (CT) logs. Required for CT compliance in production deployments.                                                                                                                                   |
 | **Remote VAs**                  | Additional VA instances (`remoteva-a`, `remoteva-b`, `remoteva-c`) that perform validation from different network perspectives to implement Multi-Perspective Issuance Corroboration (MPIC). Required for security against single-point-of-failure attacks on domain validation. |
+| **CRL Storer**                  | Manages the storage and distribution of Certificate Revocation Lists (CRLs). Handles CRL sharding and ensures CRL availability across multiple distribution points.                                                                                                              |
+| **Bad Key Revoker**             | Monitors for compromised or weak private keys and automatically revokes certificates that were issued for those keys. Essential for maintaining the security and integrity of the certificate ecosystem.                                                                         |
+| **Log Validator**               | Validates Certificate Transparency (CT) log submissions and ensures that submitted certificates appear correctly in CT logs. Monitors CT log health and consistency.                                                                                                             |
+| **Email Exporter**              | Exports email-related metrics and handles email notifications for administrative and operational purposes. Provides integration with external monitoring and alerting systems.                                                                                                   |
 
 ### Supporting Infrastructure
 
@@ -96,15 +100,15 @@ These are the external dependencies required for a Boulder deployment.
 
 The development environment includes additional services specifically for testing and integration validation:
 
-| Service                | Port        | Description                                                                                                                        |
-| :--------------------- | :---------- | :--------------------------------------------------------------------------------------------------------------------------------- |
-| **`chall-test-srv`**   | 8055 (mgmt) | Challenge test server that responds to HTTP-01, DNS-01, and TLS-ALPN-01 challenges. Simulates domain control validation scenarios. |
-| **`aia-test-srv`**     | 4502        | Authority Information Access test server that serves intermediate certificates and OCSP responder URLs.                            |
-| **`ct-test-srv`**      | 4600        | Certificate Transparency test server that simulates CT logs for testing certificate submission and SCT retrieval.                  |
-| **`s3-test-srv`**      | 4501        | S3-compatible object storage test server used for CRL distribution testing.                                                        |
-| **`akamai-test-srv`**  | 6789        | Mock Akamai CDN purging service for testing cache invalidation functionality.                                                      |
-| **`pardot-test-srv`**  | 9601-9602   | Mock Salesforce Pardot API server for testing email marketing integration.                                                         |
-| **`zendesk-test-srv`** | 9701        | Mock Zendesk API server for testing support ticket integration.                                                                    |
+| Service                | Port        | Description                                                                                                                                                                                                                                                                                                                                     |
+| :--------------------- | :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`chall-test-srv`**   | 8055 (mgmt) | Challenge test server that responds to HTTP-01, DNS-01, and TLS-ALPN-01 challenges during Boulder's integration testing. This service simulates domain ownership scenarios and provides controlled responses for validation testing, allowing comprehensive testing of Boulder's domain validation logic without requiring real domain control. |
+| **`aia-test-srv`**     | 4502        | Authority Information Access test server that serves intermediate certificates and OCSP responder URLs.                                                                                                                                                                                                                                         |
+| **`ct-test-srv`**      | 4600        | Certificate Transparency test server that simulates CT logs for testing certificate submission and SCT retrieval.                                                                                                                                                                                                                               |
+| **`s3-test-srv`**      | 4501        | S3-compatible object storage test server used for CRL distribution testing.                                                                                                                                                                                                                                                                     |
+| **`akamai-test-srv`**  | 6789        | Mock Akamai CDN purging service for testing cache invalidation functionality.                                                                                                                                                                                                                                                                   |
+| **`pardot-test-srv`**  | 9601-9602   | Mock Salesforce Pardot API server for testing email marketing integration.                                                                                                                                                                                                                                                                      |
+| **`zendesk-test-srv`** | 9701        | Mock Zendesk API server for testing support ticket integration.                                                                                                                                                                                                                                                                                 |
 
 ## 5. Service Orchestration
 
@@ -148,12 +152,50 @@ The `_service_toposort()` function in [`startservers.py`](boulder/test/startserv
 | **boulder-ca-2**              | 8101       | 9493      | boulder-sa-1, boulder-sa-2, boulder-ra-sct-provider-1, boulder-ra-sct-provider-2                                                            | `./bin/boulder boulder-ca --config test/config/ca.json --addr :9493 --debug-addr :8101`                      |
 | **boulder-ra-1**              | 8002       | 9394      | boulder-sa-1, boulder-sa-2, boulder-ca-1, boulder-ca-2, boulder-va-1, boulder-va-2, akamai-purger, boulder-publisher-1, boulder-publisher-2 | `./bin/boulder boulder-ra --config test/config/ra.json --addr :9394 --debug-addr :8002`                      |
 | **boulder-ra-2**              | 8102       | 9494      | boulder-sa-1, boulder-sa-2, boulder-ca-1, boulder-ca-2, boulder-va-1, boulder-va-2, akamai-purger, boulder-publisher-1, boulder-publisher-2 | `./bin/boulder boulder-ra --config test/config/ra.json --addr :9494 --debug-addr :8102`                      |
-| **boulder-wfe2**              | 8013       | N/A       | boulder-ra-1, boulder-ra-2, boulder-sa-1, boulder-sa-2, nonce-service-taro-1, nonce-service-taro-2, nonce-service-zinc-1, email-exporter    | `./bin/boulder boulder-wfe2 --config test/config/wfe2.json --addr :4001 --tls-addr :4431 --debug-addr :8013` |
+| **nonce-service-taro-1**      | 8021       | 9501      | None                                                                                                                                        | `./bin/boulder nonce-service --config test/config/nonce-service-taro.json --addr :9501 --debug-addr :8021`   |
+| **nonce-service-taro-2**      | 8121       | 9601      | None                                                                                                                                        | `./bin/boulder nonce-service --config test/config/nonce-service-taro.json --addr :9601 --debug-addr :8121`   |
+| **nonce-service-zinc-1**      | 8022       | 9502      | None                                                                                                                                        | `./bin/boulder nonce-service --config test/config/nonce-service-zinc.json --addr :9502 --debug-addr :8022`   |
+| **nonce-service-zinc-2**      | 8122       | 9602      | None                                                                                                                                        | `./bin/boulder nonce-service --config test/config/nonce-service-zinc.json --addr :9602 --debug-addr :8122`   |
+| **crl-storer-1**              | 8024       | 9503      | boulder-sa-1, boulder-sa-2                                                                                                                  | `./bin/boulder crl-storer --config test/config/crl-storer.json --addr :9503 --debug-addr :8024`              |
+| **crl-storer-2**              | 8124       | 9603      | boulder-sa-1, boulder-sa-2                                                                                                                  | `./bin/boulder crl-storer --config test/config/crl-storer.json --addr :9603 --debug-addr :8124`              |
+| **bad-key-revoker-1**         | 8025       | 9504      | boulder-sa-1, boulder-sa-2                                                                                                                  | `./bin/boulder bad-key-revoker --config test/config/bad-key-revoker.json --addr :9504 --debug-addr :8025`    |
+| **log-validator-1**           | 8026       | 9505      | boulder-sa-1, boulder-sa-2                                                                                                                  | `./bin/boulder log-validator --config test/config/log-validator.json --addr :9505 --debug-addr :8026`        |
+| **email-exporter-1**          | 8027       | 9506      | boulder-sa-1, boulder-sa-2                                                                                                                  | `./bin/boulder email-exporter --config test/config/email-exporter.json --addr :9506 --debug-addr :8027`      |
+| **boulder-wfe2**              | 8013       | N/A       | boulder-ra-1, boulder-ra-2, boulder-sa-1, boulder-sa-2, nonce-service-taro-1, nonce-service-taro-2, nonce-service-zinc-1, email-exporter-1  | `./bin/boulder boulder-wfe2 --config test/config/wfe2.json --addr :4001 --tls-addr :4431 --debug-addr :8013` |
 | **sfe**                       | 8015       | N/A       | boulder-ra-1, boulder-ra-2, boulder-sa-1, boulder-sa-2, zendesk-test-srv                                                                    | `./bin/boulder sfe --config test/config/sfe.json --debug-addr :8015`                                         |
+
+### SCT Provider Services
+
+The **`boulder-ra-sct-provider`** services are specialized Registration Authority instances that handle Signed Certificate Timestamp (SCT) operations. These services exist to resolve a circular dependency in Boulder's development environment:
+
+- The CA service needs SCTs from CT logs to include in issued certificates
+- CT logs require valid certificates to be submitted
+- In production, this is resolved through external CT log infrastructure
+- In the development environment, these specialized RA instances act as SCT providers, breaking the circular dependency
+
+The SCT provider services run the same RA code but with specialized configuration that focuses on providing SCT services to the CA components without creating dependency loops.
+
+### Nonce Service IP Binding and Sharding
+
+Boulder's nonce services use IP-based sharding to distribute nonce generation and validation across multiple service instances. The services are configured with specific IP bindings that enable consistent prefix-based nonce routing:
+
+- **`nonce-service-taro`**: Handles nonces with specific prefix patterns calculated from client IP addresses
+- **`nonce-service-zinc`**: Handles nonces with different prefix patterns for load distribution
+
+This sharding approach ensures that:
+
+1. Nonces are consistently routed to the correct service instance for validation
+2. Load is distributed across multiple nonce service instances
+3. Geographic distribution is supported (taro/zinc representing different datacenter locations)
+4. High availability is maintained through redundant service instances
+
+The IP binding configuration uses the client's source IP address to calculate which nonce service should handle the request, ensuring that nonce redemption requests are routed to the same service that originally issued the nonce.
 
 ## 6. Component Configuration
 
 Boulder services are configured primarily through JSON configuration files. Each service requires a comprehensive configuration that includes TLS settings, service discovery, and service-specific parameters.
+
+**Note**: The configuration examples in this section are simplified excerpts from Boulder's development environment. Production deployments require additional configuration sections for security policies, operational monitoring, compliance settings, and environment-specific parameters.
 
 ### Configuration File Structure
 
@@ -424,25 +466,44 @@ boulder boulder-sa --config /etc/boulder/sa.json migrate
 
 The migration scripts are located in the [`sa/db/migrations`](boulder/sa/db/migrations/) directory.
 
-## 9. Production Considerations
+## 9. Boulder-Specific Production Considerations
 
-### Hardware Security Modules (HSMs)
+### Hardware Security Modules (HSMs) for Certificate Authority Operations
 
-- Production CA services require Hardware Security Modules (HSMs) or PKCS#11 devices for secure private key storage
-- The `ceremony` tool is used for secure key generation and certificate signing operations
-- CA configuration must specify PKCS#11 module paths and HSM slot information
+Boulder's CA services are designed to integrate with Hardware Security Modules (HSMs) for secure private key storage and cryptographic operations:
+
+- **PKCS#11 Integration**: Production CA services require PKCS#11-compatible HSMs for secure private key storage
+- **Key Ceremony**: The `ceremony` tool manages secure key generation and certificate signing operations with HSM integration
+- **Multi-HSM Support**: Boulder supports multiple HSM configurations for different intermediate CA certificates
+- **Session Management**: CA configuration specifies the number of HSM sessions per issuer for concurrent signing operations
 
 ### High Availability and Multi-Instance Architecture
 
-- Core services typically run multiple instances for redundancy (e.g., `boulder-sa-1`, `boulder-sa-2`, `boulder-ca-1`, `boulder-ca-2`)
-- Nonce services run multiple instances across datacenters for geographic distribution
-- Load balancing and failover are handled via Consul service discovery and gRPC client-side load balancing
+Boulder's microservice architecture is designed for horizontal scaling and high availability:
 
-### Rate Limiting Implementation
+- **Service Redundancy**: Core services run multiple numbered instances (e.g., `boulder-sa-1`, `boulder-sa-2`, `boulder-ca-1`, `boulder-ca-2`) for load distribution and failover
+- **Geographic Distribution**: Nonce services run across multiple datacenters (`taro`, `zinc`) for geographic redundancy
+- **Load Balancing**: Consul service discovery provides automatic load balancing across service instances
+- **Dependency Management**: Services use health checks and circuit breakers to handle dependency failures gracefully
 
-- Redis is configured in a sharded ring topology for distributed rate limiting
-- Rate limits use TAT (Time After Time) values stored across multiple Redis instances
-- Service discovery for Redis shards uses Consul SRV lookups
+### Rate Limiting Implementation for ACME Compliance
+
+Boulder implements sophisticated rate limiting to prevent abuse while maintaining ACME protocol compliance:
+
+- **TAT-based Rate Limiting**: Uses Time After Time (TAT) values stored in Redis for distributed rate limiting
+- **Sharded Redis Architecture**: Multiple Redis instances in a ring topology distribute rate limiting data
+- **Account-based Limits**: Rate limits are applied per ACME account with configurable thresholds
+- **Domain-based Limits**: Additional rate limiting based on domain names and certificate issuance patterns
+- **Override Mechanisms**: Support for rate limit overrides for specific accounts or domains
+
+### Certificate Transparency (CT) Integration
+
+Boulder maintains comprehensive CT log integration for certificate transparency compliance:
+
+- **Multi-Log Submission**: Certificates are submitted to multiple CT logs for redundancy
+- **SCT Collection**: Signed Certificate Timestamps (SCTs) are collected and embedded in issued certificates
+- **Log Monitoring**: The log-validator service continuously monitors CT log health and consistency
+- **Precertificate Workflow**: Boulder uses precertificate submission to CT logs before final certificate issuance
 
 ## 10. Running in a Containerized Environment (Kubernetes)
 

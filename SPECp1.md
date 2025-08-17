@@ -149,9 +149,13 @@ Boulder services have strict startup dependencies that must be enforced using Ku
 
 ### Supporting Services (Auxiliary Functionality)
 
-| Service | Kubernetes Resources | Dependencies                   | Commands                                     |
-| ------- | -------------------- | ------------------------------ | -------------------------------------------- |
-| **sfe** | Deployment, Service  | boulder-ra-1/2, boulder-sa-1/2 | `boulder sfe --config /etc/boulder/sfe.json` |
+| Service             | Kubernetes Resources | Dependencies                   | Commands                                                             |
+| ------------------- | -------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| **sfe**             | Deployment, Service  | boulder-ra-1/2, boulder-sa-1/2 | `boulder sfe --config /etc/boulder/sfe.json`                         |
+| **crl-storer**      | Deployment, Service  | boulder-sa-1/2                 | `boulder crl-storer --config /etc/boulder/crl-storer.json`           |
+| **bad-key-revoker** | Deployment, Service  | boulder-sa-1/2                 | `boulder bad-key-revoker --config /etc/boulder/bad-key-revoker.json` |
+| **log-validator**   | Deployment, Service  | boulder-sa-1/2                 | `boulder log-validator --config /etc/boulder/log-validator.json`     |
+| **email-exporter**  | Deployment, Service  | boulder-sa-1/2                 | `boulder email-exporter --config /etc/boulder/email-exporter.json`   |
 
 ### Infrastructure Services (Data Layer)
 
