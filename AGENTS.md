@@ -26,6 +26,14 @@ This document outlines standards and practices that all software development age
 - Access to project repositories and integration test scripts
 - MCP (Model Context Protocol) tools for enhanced capabilities e.g. context7, github and repomix servers
 
+## Recommended Tooling
+
+To accelerate the development process, agents should leverage the following tools:
+
+- **Kompose**: For the initial conversion of the reference `docker-compose.yml` into Kubernetes manifests. This provides a strong baseline to build upon.
+  - **Command**: `kompose convert -f reference/boulder/docker-compose.yml`
+- **Tilt**: For iterating on Kubernetes manifests. A `Tiltfile` should be used to watch for changes to YAML files and automatically apply them to the development cluster, providing instant feedback on the state of the system.
+
 ## Development Standards
 
 ### Code Quality

@@ -68,6 +68,8 @@ Ensure you have the following development environment infrastructure installed:
 #### Optional Development Tools
 
 - **Production Kubernetes cluster** - For staging/production deployments (alternative to KinD for production testing)
+- **[Kompose](https://kompose.io/)** - Useful for a one-time conversion of the reference `docker-compose.yml` to bootstrap the initial Kubernetes manifests.
+- **[Tilt](https://tilt.dev/)** - Recommended for streamlining the development loop. It can watch manifest files and automatically apply them to the cluster, providing a live UI to monitor service status and logs.
 
 ### Phase 1 Deployment
 
@@ -213,6 +215,8 @@ Infrastructure → Foundation → Validation → Certificate → Registration �
 ## Development Workflow
 
 ### Implementation Process
+
+> **Tip**: Use [Kompose](https://kompose.io/) to bootstrap the initial Kubernetes manifests from the reference `docker-compose.yml`. Then, use [Tilt](https://tilt.dev/) to automatically deploy and monitor the services on your local KinD cluster as you edit the manifests.
 
 1. **Read Specifications**: Start with [`SPECp1.md`](SPECp1.md) for complete technical requirements
 2. **Follow Agent Guidelines**: Adhere to standards in [`AGENTS.md`](AGENTS.md)
