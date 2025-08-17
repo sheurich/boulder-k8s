@@ -53,6 +53,7 @@ Ensure you have the following development environment infrastructure installed:
 - **KinD (Kubernetes in Docker)** - Local Kubernetes cluster for development and testing Boulder deployments
 - **kubectl** - Kubernetes command-line tool for cluster management and manifest deployment
 - **Go Toolchain** (1.21+) - Compiler and tools for building Boulder binaries and running integration tests
+- **yamllint** - YAML linting tool for validating Kubernetes manifests and configuration files
 
 #### Configuration Management
 
@@ -83,6 +84,7 @@ Ensure you have the following development environment infrastructure installed:
 
 2. **Initialize Git Submodules**:
    This project uses Git submodules to include the Boulder source code. Initialize them with this command:
+
    ```bash
    git submodule update --init --recursive
    ```
