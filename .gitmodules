@@ -1,0 +1,6 @@
+[submodule "vendor/github.com/letsencrypt/boulder"]
+	path = vendor/github.com/letsencrypt/boulder
+	url = https://github.com/letsencrypt/boulder.git
+[submodule "vendor/github.com/letsencrypt/boulder.wiki"]
+	path = vendor/github.com/letsencrypt/boulder.wiki
+	url = https://github.com/letsencrypt/boulder.wiki.git
