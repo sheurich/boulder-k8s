@@ -302,20 +302,20 @@ manifests/
 │   ├── nonce-service.yaml
 │   └── sfe.yaml
 ├── config/
-│   ├── boulder-sa-config.yaml
-│   ├── boulder-ca-config.yaml
-│   ├── boulder-ra-config.yaml
-│   ├── boulder-va-config.yaml
-│   ├── boulder-wfe2-config.yaml
-│   ├── boulder-publisher-config.yaml
-│   ├── boulder-ra-sct-provider-config.yaml
-│   ├── nonce-service-config.yaml
-│   ├── remoteva-config.yaml
-│   ├── sfe-config.yaml
-│   ├── crl-storer-config.yaml
-│   ├── bad-key-revoker-config.yaml
-│   ├── log-validator-config.yaml
-│   ├── email-exporter-config.yaml
+│   ├── boulder-sa.yaml
+│   ├── boulder-ca.yaml
+│   ├── boulder-ra.yaml
+│   ├── boulder-va.yaml
+│   ├── boulder-wfe2.yaml
+│   ├── boulder-publisher.yaml
+│   ├── boulder-ra-sct-provider.yaml
+│   ├── nonce-service.yaml
+│   ├── remoteva.yaml
+│   ├── sfe.yaml
+│   ├── crl-storer.yaml
+│   ├── bad-key-revoker.yaml
+│   ├── log-validator.yaml
+│   ├── email-exporter.yaml
 │   └── boulder-secrets.yaml
 └── tests/
     └── integration-job.yaml
