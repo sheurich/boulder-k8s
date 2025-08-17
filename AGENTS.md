@@ -96,6 +96,15 @@ This document outlines standards and practices that all software development age
 - Document any breaking changes or migration requirements
 - Communicate effectively about progress and blockers
 
+### Version Control
+
+- Commit changes periodically at logical milestones
+- Create atomic commits with single logical changes
+- Write clear, descriptive commit messages following conventional format
+- Group related changes together
+- Avoid mixing unrelated changes in single commits
+- Commit after completing major features or fixing significant issues
+
 ## Project-Specific Exclusions
 
 ### OCSP Functionality Deprecation
