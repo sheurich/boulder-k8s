@@ -12,16 +12,51 @@ This document outlines standards and practices that all software development age
 
 ## Reference Material
 
--
+### `./reference/BOULDER.md`
+
+Technical reference guide for Boulder ACME CA development environment setup, architecture, and deployment. Contains service descriptions, configuration examples, and production considerations.
+
+### `./reference/boulder`
+
+Complete Boulder source code repository with Go modules, Docker setup, test configurations, integration tests, and build scripts.
+
+### `./reference/boulder.wiki`
+
+Boulder project wiki with design documents, implementation guides, coding standards, and deployment best practices.
 
 ## Tools Available
 
 - macOS host with Docker, Go, and Kubernetes (`kind`) installed.
 - Access to Boulder GitHub repository and integration test scripts.
 
+## Boulder-Specific Guidance
+
+### Service Dependencies
+
+Boulder services have strict startup dependencies. Key order:
+
+- Infrastructure first: Redis, PostgreSQL, HSM simulator
+- Core services: `boulder-sa` (database layer)
+- Validation: `boulder-va`, `remoteva-*` instances
+- Certificate services: `boulder-ca`, `boulder-publisher`
+- Registration: `boulder-ra` (depends on SA, VA, CA)
+- Web frontends: `boulder-wfe2`, `sfe` (depend on RA, SA)
+
+### Testing Validation
+
+- Verify service startup order and health checks
+- Test ACME workflow end-to-end before considering deployment complete
+- Ensure Boulder's integration tests pass in the Kubernetes environment
+
 ## Naming & Structure
 
-- Use `k8s/` for Kubernetes manifests.
-- Use `docs/` for specs and prompts.
-- Use `tests/` for test automation.
-- Use `scripts/` for helper scripts (e.g., setup, teardown).
+### Kubernetes Resources
+
+- Use kebab-case for resource names
+- Follow consistent naming patterns
+
+### File Organization
+
+- Group related manifests logically
+- Use clear, descriptive filenames
+- Keep structure simple and maintainable

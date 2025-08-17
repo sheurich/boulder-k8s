@@ -9,13 +9,9 @@ This project enables running Boulder and its supporting services (Redis, Postgre
 ## Quick Start
 
 ```bash
-make kind-deploy
-make run-tests
+
 ```
 
 ## Project Structure
 
-- `k8s/`: Kubernetes YAML for pods, services, configmaps, secrets
-- `tests/`: Integration test automation
-- `scripts/`: Utility scripts
-- `docs/`: Specifications and notes
+- `reference/`: Reference documents
