@@ -15,9 +15,18 @@ clean:
 	@echo "Cleaning up temporary files..."
 	@echo "Not implemented yet"
 
-# Run project tests
-test:
-	@echo "Running Boulder K8s tests..."
-	@echo "Not implemented yet"
+# Run health checks on Boulder services
+test-health:
+	@echo "Running Boulder health checks..."
+	./k8s/scripts/health-check.sh
 
-.PHONY: all lint clean test
+# Run integration tests for Boulder ACME functionality
+test-integration:
+	@echo "Running Boulder integration tests..."
+	./k8s/scripts/run-integration-tests.sh
+
+# Run all tests (health check followed by integration tests)
+test: test-health test-integration
+	@echo "All Boulder tests completed successfully"
+
+.PHONY: all lint clean test test-health test-integration

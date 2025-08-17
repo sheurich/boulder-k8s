@@ -1,0 +1,49 @@
+---
+# yamllint configuration for Kubernetes manifests
+# Reasonable rules that balance strictness with Kubernetes YAML practicality
+
+extends: default
+
+rules:
+  # Allow longer lines for Kubernetes manifests (common for resource specs)
+  line-length:
+    max: 200
+    level: error
+
+  # Require document start markers
+  document-start:
+    present: true
+    level: error
+
+  # Standard 2-space indentation for YAML
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Allow trailing spaces (sometimes needed for multi-line strings)
+  trailing-spaces:
+    level: warning
+
+  # Allow empty lines at document end
+  empty-lines:
+    max-end: 1
+
+  # Allow truthy values (common in Kubernetes)
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    check-keys: false
+
+  # Allow comments indentation
+  comments:
+    min-spaces-from-content: 1
+
+  # Allow brackets for lists (sometimes used in Kubernetes)
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Allow braces for objects
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
