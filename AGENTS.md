@@ -28,6 +28,7 @@ Boulder project wiki with design documents, implementation guides, coding standa
 
 - macOS host with Docker, Go, and Kubernetes (`kind`) installed.
 - Access to Boulder GitHub repository and integration test scripts.
+- MCP tools including context7, github and rfc-server. These allow you to see e.g. /letsencrypt/boulder API, documentation and GitHub issues/pull-requests.
 
 ## Boulder-Specific Guidance
 
