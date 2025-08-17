@@ -72,8 +72,8 @@ Leverage the following resources to inform your implementation:
 
 - **`SPECp1.md`** - Complete phase 1 specification with detailed requirements
 - **`./reference/BOULDER.md`** - Technical reference guide for Boulder setup and architecture
-- **`./reference/boulder/`** - Complete Boulder source code repository
-- **`./reference/boulder.wiki/`** - Design documents and implementation guides
+- **`./vendor/github.com/letsencrypt/boulder/`** - Complete Boulder source code repository
+- **`./vendor/github.com/letsencrypt/boulder.wiki/`** - Design documents and implementation guides
 - **`AGENTS.md`** - Project standards and naming conventions
 
 ## Success Criteria

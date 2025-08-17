@@ -38,8 +38,8 @@ This project uses a phased approach with clear documentation hierarchy. Read doc
 ### Reference Materials
 
 - **[`reference/BOULDER.md`](reference/BOULDER.md)** - Detailed Boulder architecture and technical guide
-- **[`reference/boulder/`](reference/boulder/)** - Complete Boulder source code repository
-- **[`reference/boulder.wiki/`](reference/boulder.wiki/)** - Boulder project wiki and documentation
+- **[`vendor/github.com/letsencrypt/boulder/`](vendor/github.com/letsencrypt/boulder/)** - Complete Boulder source code repository (git submodule)
+- **[`vendor/github.com/letsencrypt/boulder.wiki/`](vendor/github.com/letsencrypt/boulder.wiki/)** - Boulder project wiki and documentation (git submodule)
 
 ## Quick Start Guide
 
@@ -271,9 +271,12 @@ boulder-k8s/
 ├── deploy.sh                   # One-command deployment script
 ├── test.sh                     # Integration test script
 └── reference/                  # Boulder documentation and source
-    ├── BOULDER.md             # Technical architecture guide
-    ├── boulder/               # Boulder source code
-    └── boulder.wiki/          # Additional documentation
+    └── BOULDER.md             # Technical architecture guide
+└── vendor/
+    └── github.com/
+        └── letsencrypt/
+            ├── boulder/       # Boulder source code
+            └── boulder.wiki/  # Additional documentation
 ```
 
 ## Configuration Management
