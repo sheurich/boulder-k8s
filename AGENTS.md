@@ -9,6 +9,7 @@ This document outlines standards and practices that all software development age
 - Keep `README.md` and usage instructions up-to-date.
 - Use declarative configuration files and group them into logical files.
 - Follow project structure and naming conventions.
+- **Update Brewfile**: Maintain the project's `Brewfile` when developer dependencies change, adding new tools or removing obsolete ones. Keep packages sorted alphabetically and ensure all development tools are available via `brew bundle`.
 
 ## Reference Material
 
@@ -36,7 +37,10 @@ This document outlines standards and practices that all software development age
   - Use `kubeconform --strict` for Kubernetes manifest validation (preferred)
   - Use `kubectl --dry-run=client -o yaml` for Kubernetes manifests when cluster is available
   - Use `yamllint` for general YAML validation
-  - Use appropriate linters for each file type (JSON, Shell, etc.)
+  - Use `shellcheck` for shell script validation
+  - Use `markdownlint` for markdown documentation validation
+  - Use `checkmake` for Makefile validation
+  - Use appropriate linters for each file type
   - Fix all linting errors before proceeding
 
 ### Configuration Management
