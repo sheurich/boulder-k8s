@@ -282,44 +282,74 @@ spec:
 
 ## Deployment Structure
 
+Using a **component-based structure** following Kubernetes best practices with Boulder services logically grouped:
+
 ```
 manifests/
 ├── namespace.yaml
 ├── infrastructure/
-│   ├── redis.yaml
-│   ├── mariadb.yaml
-│   └── proxysql.yaml
-├── core-services/
-│   ├── boulder-sa.yaml
-│   ├── boulder-ca.yaml
-│   ├── boulder-ra.yaml
-│   ├── boulder-va.yaml
-│   ├── boulder-wfe2.yaml
-│   ├── boulder-publisher.yaml
-│   ├── boulder-ra-sct-provider.yaml
-│   └── remoteva.yaml
-├── supporting-services/
-│   ├── nonce-service.yaml
-│   └── sfe.yaml
-├── config/
-│   ├── boulder-sa.yaml
-│   ├── boulder-ca.yaml
-│   ├── boulder-ra.yaml
-│   ├── boulder-va.yaml
-│   ├── boulder-wfe2.yaml
-│   ├── boulder-publisher.yaml
-│   ├── boulder-ra-sct-provider.yaml
-│   ├── nonce-service.yaml
-│   ├── remoteva.yaml
-│   ├── sfe.yaml
-│   ├── crl-storer.yaml
-│   ├── bad-key-revoker.yaml
-│   ├── log-validator.yaml
-│   ├── email-exporter.yaml
-│   └── boulder-secrets.yaml
+│   ├── redis/
+│   │   ├── statefulset.yaml
+│   │   └── service.yaml
+│   ├── mariadb/
+│   │   ├── statefulset.yaml
+│   │   └── service.yaml
+│   └── proxysql/
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       └── configmap.yaml
+├── boulder/
+│   ├── sa/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   ├── ca/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   ├── ra/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   ├── va/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   ├── wfe2/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   ├── configmap.yaml
+│   │   └── ingress.yaml
+│   ├── publisher/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   ├── nonce-service/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   ├── remoteva/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   └── configmap.yaml
+│   └── sfe/
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       └── configmap.yaml
+├── shared/
+│   ├── secrets.yaml
+│   ├── rbac.yaml
+│   └── network-policies.yaml
 └── tests/
     └── integration-job.yaml
 ```
+
+**Structure Benefits:**
+- **Logical Grouping**: All Boulder services under `/boulder/` directory for clear organization
+- **Component Isolation**: Each service directory contains all related resources (Deployment, Service, ConfigMap)
+- **Standard Pattern**: Follows widely adopted microservice deployment patterns used by major Kubernetes projects
+- **Maintainable**: Changes to a service affect only its directory, easy to find and modify resources
+- **Phase 1 Focused**: Simple structure optimized for single-cluster deployment on `kind`
 
 ## Deliverables
 
