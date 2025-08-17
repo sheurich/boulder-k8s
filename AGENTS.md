@@ -24,7 +24,7 @@ This document outlines standards and practices that all software development age
 
 - Development environment with appropriate tools and runtimes installed
 - Access to project repositories and integration test scripts
-- MCP (Model Context Protocol) tools for enhanced capabilities
+- MCP (Model Context Protocol) tools for enhanced capabilities e.g. context7, github and repomix servers
 
 ## Development Standards
 

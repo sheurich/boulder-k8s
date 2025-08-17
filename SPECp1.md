@@ -345,6 +345,7 @@ manifests/
 ```
 
 **Structure Benefits:**
+
 - **Logical Grouping**: All Boulder services under `/boulder/` directory for clear organization
 - **Component Isolation**: Each service directory contains all related resources (Deployment, Service, ConfigMap)
 - **Standard Pattern**: Follows widely adopted microservice deployment patterns used by major Kubernetes projects

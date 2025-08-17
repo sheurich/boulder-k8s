@@ -45,12 +45,29 @@ This project uses a phased approach with clear documentation hierarchy. Read doc
 
 ### Prerequisites
 
-Ensure you have the following tools installed:
+Ensure you have the following development environment infrastructure installed:
 
-- **Docker** - For container image management
-- **Go** (1.21+) - For Boulder development and testing
-- **Kubernetes cluster** - Local cluster using [`kind`](https://kind.sigs.k8s.io/) or production cluster
-- **kubectl** - Kubernetes command-line tool
+#### Core Development Tools
+
+- **Docker Engine** - Container runtime for building and running Boulder services in local development
+- **KinD (Kubernetes in Docker)** - Local Kubernetes cluster for development and testing Boulder deployments
+- **kubectl** - Kubernetes command-line tool for cluster management and manifest deployment
+- **Go Toolchain** (1.21+) - Compiler and tools for building Boulder binaries and running integration tests
+
+#### Configuration Management
+
+- **Helm** - Kubernetes package manager for deployment configuration (used in Phase 2 production deployments)
+- **Kustomize** - Kubernetes configuration management tool for environment-specific deployments and overlays
+- **Docker Compose** - Container orchestration for Boulder's original development environment (reference comparison)
+
+#### Database and Migration Tools
+
+- **sql-migrate** - Database schema migration tool used for MariaDB schema management
+- **Python** (3.8+) - Runtime for Boulder's integration test scripts (`test/integration-test.py`) and development tools
+
+#### Optional Development Tools
+
+- **Production Kubernetes cluster** - For staging/production deployments (alternative to KinD for production testing)
 
 ### Phase 1 Deployment
 
@@ -344,8 +361,12 @@ Boulder's comprehensive test suite validates the Kubernetes deployment:
 
 ### Development Environment
 
-- **macOS Host**: Docker, Go, and Kubernetes (`kind`) pre-installed
-- **Boulder Repository**: Complete source code and integration test scripts
+This project requires the **Development Environment Infrastructure** (Tier 4 components) detailed in the [Prerequisites](#prerequisites) section:
+
+- **Container Runtime**: Docker Engine for building Boulder services and KinD for local Kubernetes clusters
+- **Build Toolchain**: Go 1.21+ compiler, Python runtime for integration tests, and sql-migrate for database schema management
+- **Kubernetes Tools**: kubectl for cluster management, Helm for package management, and Kustomize for configuration overlays
+- **Boulder Repository**: Complete source code, integration test scripts, and reference Docker Compose configurations
 - **MCP Tools**: context7, github, and rfc-server for enhanced development support
 
 ### External Resources

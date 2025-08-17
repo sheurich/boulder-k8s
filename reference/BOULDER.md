@@ -54,7 +54,68 @@ The development environment uses three distinct Docker networks as defined in [`
 
 This networking setup allows integration tests to validate challenge responses from what appears to be external internet addresses while maintaining isolation.
 
-## 4. Core Services and Dependencies
+## 4. Component Architecture
+
+### Tier 1 - Boulder Internal Components
+
+Core microservices architected and maintained by Let's Encrypt as the foundational ACME protocol implementation:
+
+- **CA (Certificate Authority)**: Signs certificates, generates CRLs, and is the only component with access to private keys for certificate signing
+- **RA (Registration Authority)**: Manages account creation, validation challenges, and orchestrates the entire certificate issuance workflow
+- **SA (Storage Authority)**: Database abstraction layer handling all interactions with MariaDB for storing accounts, orders, authorizations, and certificates
+- **VA (Validation Authority)**: Performs domain control validation challenges (HTTP-01, DNS-01, TLS-ALPN-01) with Multi-Perspective Issuance Corroboration
+- **Publisher**: Publishes issued certificates and precertificates to Certificate Transparency logs for CT compliance
+- **WFE2 (Web Front End v2)**: Public-facing ACME API endpoint that receives client requests, validates them, and forwards to appropriate backend services
+- **Nonce Service**: Provides single-use nonces for ACME replay attack prevention with geographic distribution across datacenters
+- **Remote VAs**: Additional VA instances (remoteva-a, remoteva-b, remoteva-c) performing validation from different network perspectives for MPIC compliance
+- **Boulder Observer**: Monitoring service that probes Boulder services to ensure health and operational status
+- **CRL Storer**: Manages storage and distribution of Certificate Revocation Lists with sharding support
+- **CRL Updater**: Generates and updates Certificate Revocation Lists based on revoked certificates
+- **SFE (Self-service Front End)**: Web portal for self-service account management and certificate operations
+- **Bad Key Revoker**: Monitors for compromised or weak private keys and automatically revokes associated certificates
+- **Cert Checker**: Validates issued certificates for compliance and correctness
+- **Email Exporter**: Exports email-related metrics and handles email notifications for administrative purposes
+- **Log Validator**: Validates Certificate Transparency log submissions and monitors CT log health
+- **Reversed Hostname Checker**: Validates reverse DNS lookups for certificate issuance policies
+- **Admin**: Administrative interface for privileged operations and system management
+- **CRL Checker**: Validates CRL generation and distribution for compliance
+- **Ceremony**: Tool for managing secure key generation and certificate signing operations with HSM integration
+
+### Tier 2 - Boulder Dependencies
+
+Critical third-party infrastructure services and libraries essential for Boulder's operational functionality:
+
+- **MariaDB**: Primary relational database for persistent storage of all Boulder data
+- **Redis**: Caching layer used for distributed rate limiting with sharded instances
+- **ProxySQL**: Database proxy providing connection pooling, load balancing, and resilience between Boulder services and MariaDB
+- **Internal DNS Infrastructure**: Service discovery system (Consul in Docker Compose, Kubernetes DNS in K8s deployment)
+- **VA DNS Infrastructure**: DNSSEC-validating Internet resolver for domain validation challenges
+- **Internal PKI Infrastructure**: Certificate generation system for TLS/mTLS between Boulder services
+- **PKCS#11 Implementation**: SoftHSM for development, hardware HSM for production key storage
+- **WebPKI Trust Store**: Generated certificates via Boulder ceremony tool for CA operations
+- **Consul**: Service discovery and health checking in Docker Compose environment (replaced by Kubernetes services in K8s)
+- **Jaeger**: Distributed tracing system for monitoring requests across microservice architecture
+
+### Tier 3 - Boulder Integration Test Components
+
+Specialized testing services and mock implementations required exclusively for Boulder's integration test suite:
+
+- **chall-test-srv**: Challenge test server responding to HTTP-01, DNS-01, and TLS-ALPN-01 challenges for integration testing
+- **ct-test-srv**: Mock Certificate Transparency log server for testing certificate submission and SCT retrieval
+- **pardot-test-srv**: Mock Salesforce Pardot API server for testing email marketing integration
+- **load-generator**: Performance testing tool generating load against Boulder services
+- **health-checker**: Service health validation tool for integration test environments
+- **aia-test-srv**: Authority Information Access test server serving intermediate certificates
+- **zendesk-test-srv**: Mock Zendesk API server for testing support ticket integration
+- **s3-test-srv**: S3-compatible object storage test server for CRL distribution testing
+- **boulder-tools**: Development and testing utilities container with Go compiler and dependencies
+- **chall-test-srv-client**: Client library for interacting with challenge test server
+- **list-features**: Tool for listing enabled Boulder feature flags
+- **inmem**: In-memory implementations of Boulder services for lightweight testing
+- **integration**: Integration test suite runner and test case implementations
+- **bsetup**: Certificate generation service creating test PKI hierarchies during environment setup
+
+## 5. Core Services and Dependencies
 
 For a functional Boulder deployment, the following core services and supporting infrastructure are required.
 
@@ -110,7 +171,7 @@ The development environment includes additional services specifically for testin
 | **`pardot-test-srv`**  | 9601-9602   | Mock Salesforce Pardot API server for testing email marketing integration.                                                                                                                                                                                                                                                                      |
 | **`zendesk-test-srv`** | 9701        | Mock Zendesk API server for testing support ticket integration.                                                                                                                                                                                                                                                                                 |
 
-## 5. Service Orchestration
+## 6. Service Orchestration
 
 The Boulder development environment uses a sophisticated service orchestration system to ensure services start in the correct dependency order.
 
@@ -127,7 +188,7 @@ The [`test/startservers.py`](boulder/test/startservers.py) script manages the st
 
 ### Dependency-Based Startup Order
 
-The `_service_toposort()` function in [`startservers.py`](boulder/test/startservers.py:160) performs a topological sort of services based on their dependencies, ensuring that:
+The `_service_toposort()` function in [`startservers.py`](boulder/test/startservers.py) performs a topological sort of services based on their dependencies, ensuring that:
 
 1. No service starts until all its dependencies are healthy
 2. Services are started in dependency order to prevent connection failures
@@ -191,7 +252,7 @@ This sharding approach ensures that:
 
 The IP binding configuration uses the client's source IP address to calculate which nonce service should handle the request, ensuring that nonce redemption requests are routed to the same service that originally issued the nonce.
 
-## 6. Component Configuration
+## 7. Component Configuration
 
 Boulder services are configured primarily through JSON configuration files. Each service requires a comprehensive configuration that includes TLS settings, service discovery, and service-specific parameters.
 
@@ -423,7 +484,7 @@ The WFE2 service provides the public ACME API. Key configuration from [`test/con
 - **`chains`**: Certificate chain configurations for different key types
 - **`certProfiles`**: Available certificate profiles exposed to clients
 
-## 7. Service Discovery and Communication
+## 8. Service Discovery and Communication
 
 Boulder services use Consul for service discovery and communicate via gRPC with mTLS authentication. The development environment uses DNS-based service discovery with SRV record lookups.
 
@@ -456,17 +517,17 @@ _ra._tcp.service.consul
 | CA             | RA (SCT Provider) | `sctService`                            | Signed Certificate Timestamps             |
 | VA             | SA                | `saService`                             | Authorization storage                     |
 
-## 8. Database Schema Management
+## 9. Database Schema Management
 
-Boulder uses the `sql-migrate` tool for database schema migrations. Migrations are applied by the `boulder-sa` component during startup.
+Boulder uses the `sql-migrate` tool for database schema migrations. Migrations must be applied separately using dedicated migration commands before starting the `boulder-sa` service.
 
 ```bash
 boulder boulder-sa --config /etc/boulder/sa.json migrate
 ```
 
-The migration scripts are located in the [`sa/db/migrations`](boulder/sa/db/migrations/) directory.
+The migration scripts are located in the [`sa/db`](boulder/sa/db/) directory.
 
-## 9. Boulder-Specific Production Considerations
+## 10. Boulder-Specific Production Considerations
 
 ### Hardware Security Modules (HSMs) for Certificate Authority Operations
 
@@ -505,7 +566,7 @@ Boulder maintains comprehensive CT log integration for certificate transparency 
 - **Log Monitoring**: The log-validator service continuously monitors CT log health and consistency
 - **Precertificate Workflow**: Boulder uses precertificate submission to CT logs before final certificate issuance
 
-## 10. Running in a Containerized Environment (Kubernetes)
+## 11. Running in a Containerized Environment (Kubernetes)
 
 To deploy Boulder in Kubernetes, you would typically:
 
@@ -516,7 +577,7 @@ To deploy Boulder in Kubernetes, you would typically:
 5. **Manage PKI Secrets:** Store the IPKI and WebPKI certificates and keys in Kubernetes Secrets and mount them into the appropriate pods. For the IPKI, `cert-manager` can be used.
 6. **Configure Ingress:** Create an Ingress resource to expose the WFE2 service to the public internet.
 
-## 11. Local Integration Testing
+## 12. Local Integration Testing
 
 The primary workflow for local development and testing is the [`./t.sh`](boulder/t.sh) script, which uses Docker Compose to run a full integration test suite. This is an excellent resource for understanding how the services interact and for validating changes.
 
