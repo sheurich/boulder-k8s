@@ -302,8 +302,25 @@ manifests/
 │   ├── nonce-service.yaml
 │   └── sfe.yaml
 ├── config/
-│   ├── boulder-configs.yaml (ConfigMaps)
-│   └── boulder-secrets.yaml (Secrets)
+│   ├── configmaps/
+│   │   ├── sa.json
+│   │   ├── ca.json
+│   │   ├── ra.json
+│   │   ├── va.json
+│   │   ├── wfe2.json
+│   │   ├── publisher.json
+│   │   ├── ra-sct-provider.json
+│   │   ├── nonce-service.json
+│   │   ├── remoteva-a.json
+│   │   ├── remoteva-b.json
+│   │   ├── remoteva-c.json
+│   │   ├── sfe.json
+│   │   ├── crl-storer.json
+│   │   ├── bad-key-revoker.json
+│   │   ├── log-validator.json
+│   │   └── email-exporter.json
+│   ├── boulder-configs.yaml (Kubernetes ConfigMap manifests)
+│   └── boulder-secrets.yaml (Kubernetes Secret manifests)
 └── tests/
     └── integration-job.yaml
 ```
