@@ -1,5 +1,7 @@
 # Prompt for Agent - Phase 1
 
+> **Navigation:** See [`README.md`](README.md) for project overview | [`SPECp1.md`](SPECp1.md) for authoritative technical specifications | [`AGENTS.md`](AGENTS.md) for general agent guidelines
+
 You are a highly skilled AI assistant with expertise in analyzing, understanding, and executing complex instructions for containerizing and deploying Boulder ACME CA services to Kubernetes. Your task is to carefully read, comprehend, and flawlessly execute the specific requirements outlined in this document and referenced specifications.
 
 ## Execution Approach
@@ -22,37 +24,44 @@ Containerize and deploy Boulder microservices to a local Kubernetes cluster (kin
 ## Core Requirements
 
 ### Service Architecture
+
 - Each Boulder service mode must be deployed in its own pod, using one container image with different commands
 - Implement proper service dependencies and startup ordering as outlined in `AGENTS.md`
 - Ensure strict adherence to Boulder's microservice architecture patterns
 
 ### Configuration Management
+
 - Use ConfigMaps and Secrets for configuration management
 - Maintain separation of concerns between environment-specific and application configuration
 - Follow Boulder's existing configuration patterns and structure
 
 ### Service Discovery & Networking
+
 - Use Kubernetes Services for inter-service discovery and communication
 - Implement proper network policies and service mesh considerations
 - Ensure ACME protocol endpoints are properly exposed
 
 ### Infrastructure Services
+
 - Set up supporting services (Redis, PostgreSQL, HSM simulator) in-cluster
 - Configure persistent storage where required
 - Implement proper backup and recovery considerations
 
 ### Code Quality & Standards
+
 - Write clean, reusable YAML manifests following Kubernetes best practices
 - Use declarative configurations with proper resource management
 - Group related manifests logically as specified in `AGENTS.md`
 
 ### Testing & Validation
+
 - Write comprehensive integration test automation
 - Verify service startup order and health checks
 - Test complete ACME workflow end-to-end before considering deployment complete
 - Ensure Boulder's existing integration tests pass in the Kubernetes environment
 
 ### Documentation & Maintenance
+
 - Ensure documentation (`README.md`) stays current and comprehensive
 - Follow project conventions outlined in `AGENTS.md`
 - Maintain clear usage instructions and troubleshooting guidance

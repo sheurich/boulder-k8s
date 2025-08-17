@@ -2,62 +2,88 @@
 
 This document outlines standards and practices that all software development agents must follow.
 
+> **Note:** For Boulder-specific technical specifications and implementation details, see [`SPECp1.md`](SPECp1.md).
+
 ## Responsibilities
 
-- Read and follow the appropriate phase spec (e.g., SPECp1.md).
+- Read and follow the appropriate phase specification documents (e.g., SPECp1.md).
 - Maintain test coverage for each deliverable.
 - Keep `README.md` and usage instructions up-to-date.
-- Use declarative Kubernetes YAMLs, and group them into logical files.
+- Use declarative configuration files and group them into logical files.
 - Follow project structure and naming conventions.
 
 ## Reference Material
 
-### `./reference/BOULDER.md`
+### Project Documentation
 
-Technical reference guide for Boulder ACME CA development environment setup, architecture, and deployment. Contains service descriptions, configuration examples, and production considerations.
+- Technical reference guides for project setup, architecture, and deployment
+- Complete source code repositories with build configurations and test suites
+- Project wikis with design documents, implementation guides, and coding standards
 
-### `./reference/boulder`
+### Available Resources
 
-Complete Boulder source code repository with Go modules, Docker setup, test configurations, integration tests, and build scripts.
+- Development environment with appropriate tools and runtimes installed
+- Access to project repositories and integration test scripts
+- MCP (Model Context Protocol) tools for enhanced capabilities
 
-### `./reference/boulder.wiki`
+## Development Standards
 
-Boulder project wiki with design documents, implementation guides, coding standards, and deployment best practices.
+### Code Quality
 
-## Tools Available
+- Follow established coding standards and best practices
+- Implement comprehensive error handling and logging
+- Write clear, maintainable, and well-documented code
+- Ensure proper test coverage for all functionality
 
-- macOS host with Docker, Go, and Kubernetes (`kind`) installed.
-- Access to Boulder GitHub repository and integration test scripts.
-- MCP tools including context7, github and rfc-server. These allow you to see e.g. /letsencrypt/boulder API, documentation and GitHub issues/pull-requests.
+### Configuration Management
 
-## Boulder-Specific Guidance
+- Use declarative configuration approaches where possible
+- Keep configuration separate from code
+- Use environment-specific configurations appropriately
+- Document all configuration requirements and options
 
-### Service Dependencies
+### Testing Requirements
 
-Boulder services have strict startup dependencies. Key order:
-
-- Infrastructure first: Redis, PostgreSQL, HSM simulator
-- Core services: `boulder-sa` (database layer)
-- Validation: `boulder-va`, `remoteva-*` instances
-- Certificate services: `boulder-ca`, `boulder-publisher`
-- Registration: `boulder-ra` (depends on SA, VA, CA)
-- Web frontends: `boulder-wfe2`, `sfe` (depend on RA, SA)
-
-### Testing Validation
-
-- Verify service startup order and health checks
-- Test ACME workflow end-to-end before considering deployment complete
-- Ensure Boulder's integration tests pass in the Kubernetes environment
+- Implement unit tests for individual components
+- Create integration tests for system interactions
+- Perform end-to-end testing for complete workflows
+- Validate all functionality before marking tasks complete
 
 ## Naming & Structure
 
-### Kubernetes Resources
+### Resource Naming
 
-- Use kebab-case for resource names
-- Follow consistent naming patterns
+- Use consistent naming conventions throughout the project
+- Follow kebab-case for file and resource names
+- Use descriptive names that indicate purpose and function
+- Maintain naming consistency across all project components
 
 ### File Organization
 
-- Group related manifests logically
-- Use clear, descriptive filenames
-- Keep structure simple and maintainable
+- Group related files logically in appropriate directories
+- Use clear, descriptive filenames that indicate content
+- Keep directory structure simple and maintainable
+- Document file organization patterns in project README
+
+### Documentation Structure
+
+- Maintain clear separation between different types of documentation
+- Use consistent formatting and style guidelines
+- Ensure documentation is easily navigable and searchable
+- Keep documentation up-to-date with code changes
+
+## Best Practices
+
+### Project Management
+
+- Break complex tasks into manageable, well-defined steps
+- Maintain clear progress tracking and status reporting
+- Document decisions and rationale for future reference
+- Ensure deliverables meet specified acceptance criteria
+
+### Collaboration
+
+- Follow established version control practices
+- Write clear commit messages and pull request descriptions
+- Document any breaking changes or migration requirements
+- Communicate effectively about progress and blockers

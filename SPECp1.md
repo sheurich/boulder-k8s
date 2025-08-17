@@ -1,4 +1,6 @@
-# Phase 1 Spec: Kubernetes-Based Boulder Integration Environment
+# Boulder Kubernetes Implementation - Phase 1 Specification
+
+> **Note:** This document is the authoritative source for all Boulder-specific technical specifications and implementation details.
 
 ## Objective
 
@@ -85,24 +87,71 @@ With Kubernetes service names:
 
 ## Service Mapping & Dependencies
 
+### Service Dependencies
+
+Boulder services have strict startup dependencies that must be enforced using Kubernetes init containers:
+
+**Infrastructure Layer** (start first):
+
+- MariaDB (StatefulSet)
+- ProxySQL (Deployment)
+- Redis instances (2x StatefulSet for sharding)
+
+**Foundation Services**:
+
+- `remoteva-a/b/c` (no dependencies)
+- `boulder-sa-1/2` (depends on ProxySQL → MariaDB)
+- `boulder-publisher-1/2` (no dependencies)
+
+**Validation Services**:
+
+- `boulder-va-1/2` (depends on remoteva-a/b)
+
+**Certificate Services**:
+
+- `boulder-ra-sct-provider-1/2` (specialized RA instances for SCT operations, depends on publisher instances)
+- `boulder-ca-1/2` (depends on SA + SCT providers)
+
+**Registration Services**:
+
+- `boulder-ra-1/2` (depends on SA + CA + VA + Publisher)
+
+**Web Services**:
+
+- `nonce-service-1/2` instances (depends on Redis)
+- `boulder-wfe2` (depends on RA + SA + Nonce services)
+- `sfe` (depends on RA + SA)
+
 ### Core Boulder Services (Essential for ACME Protocol)
 
-| Service               | Kubernetes Resources         | Dependencies                                          | Commands                                                         |
-| --------------------- | ---------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
-| **boulder-sa**        | Deployment, Service          | MariaDB, ProxySQL                                     | `boulder boulder-sa --config /etc/boulder/sa.json`               |
-| **boulder-ca**        | Deployment, Service          | boulder-sa                                            | `boulder boulder-ca --config /etc/boulder/ca.json`               |
-| **boulder-ra**        | Deployment, Service          | boulder-sa, boulder-ca, boulder-va, boulder-publisher | `boulder boulder-ra --config /etc/boulder/ra.json`               |
-| **boulder-va**        | Deployment, Service          | boulder-sa, remoteva-\*                               | `boulder boulder-va --config /etc/boulder/va.json`               |
-| **boulder-wfe2**      | Deployment, Service, Ingress | boulder-ra, boulder-sa, nonce-service                 | `boulder boulder-wfe2 --config /etc/boulder/wfe2.json`           |
-| **boulder-publisher** | Deployment, Service          | -                                                     | `boulder boulder-publisher --config /etc/boulder/publisher.json` |
-| **nonce-service**     | Deployment, Service          | Redis                                                 | `boulder nonce-service --config /etc/boulder/nonce-service.json` |
-| **remoteva-a/b/c**    | Deployment, Service          | -                                                     | `boulder remoteva --config /etc/boulder/remoteva-a.json`         |
+> **Note:** The `boulder-ra-sct-provider` services are specialized instances of the Registration Authority (RA) that are required by Boulder's test environment for SCT (Signed Certificate Timestamp) operations.
+
+| Service                       | Instances | Kubernetes Resources         | Dependencies                                                          | Commands                                                         |
+| ----------------------------- | --------- | ---------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **boulder-sa-1**              | 1         | Deployment, Service          | MariaDB, ProxySQL                                                     | `boulder boulder-sa --config /etc/boulder/sa.json`               |
+| **boulder-sa-2**              | 1         | Deployment, Service          | MariaDB, ProxySQL                                                     | `boulder boulder-sa --config /etc/boulder/sa.json`               |
+| **boulder-ca-1**              | 1         | Deployment, Service          | boulder-sa-1/2                                                        | `boulder boulder-ca --config /etc/boulder/ca.json`               |
+| **boulder-ca-2**              | 1         | Deployment, Service          | boulder-sa-1/2                                                        | `boulder boulder-ca --config /etc/boulder/ca.json`               |
+| **boulder-ra-1**              | 1         | Deployment, Service          | boulder-sa-1/2, boulder-ca-1/2, boulder-va-1/2, boulder-publisher-1/2 | `boulder boulder-ra --config /etc/boulder/ra.json`               |
+| **boulder-ra-2**              | 1         | Deployment, Service          | boulder-sa-1/2, boulder-ca-1/2, boulder-va-1/2, boulder-publisher-1/2 | `boulder boulder-ra --config /etc/boulder/ra.json`               |
+| **boulder-va-1**              | 1         | Deployment, Service          | boulder-sa-1/2, remoteva-a/b/c                                        | `boulder boulder-va --config /etc/boulder/va.json`               |
+| **boulder-va-2**              | 1         | Deployment, Service          | boulder-sa-1/2, remoteva-a/b/c                                        | `boulder boulder-va --config /etc/boulder/va.json`               |
+| **boulder-wfe2**              | 1         | Deployment, Service, Ingress | boulder-ra-1/2, boulder-sa-1/2, nonce-service-1/2                     | `boulder boulder-wfe2 --config /etc/boulder/wfe2.json`           |
+| **boulder-publisher-1**       | 1         | Deployment, Service          | -                                                                     | `boulder boulder-publisher --config /etc/boulder/publisher.json` |
+| **boulder-publisher-2**       | 1         | Deployment, Service          | -                                                                     | `boulder boulder-publisher --config /etc/boulder/publisher.json` |
+| **boulder-ra-sct-provider-1** | 1         | Deployment, Service          | boulder-publisher-1/2                                                 | `boulder boulder-ra --config /etc/boulder/ra-sct-provider.json`  |
+| **boulder-ra-sct-provider-2** | 1         | Deployment, Service          | boulder-publisher-1/2                                                 | `boulder boulder-ra --config /etc/boulder/ra-sct-provider.json`  |
+| **nonce-service-1**           | 1         | Deployment, Service          | Redis                                                                 | `boulder nonce-service --config /etc/boulder/nonce-service.json` |
+| **nonce-service-2**           | 1         | Deployment, Service          | Redis                                                                 | `boulder nonce-service --config /etc/boulder/nonce-service.json` |
+| **remoteva-a**                | 1         | Deployment, Service          | -                                                                     | `boulder remoteva --config /etc/boulder/remoteva-a.json`         |
+| **remoteva-b**                | 1         | Deployment, Service          | -                                                                     | `boulder remoteva --config /etc/boulder/remoteva-b.json`         |
+| **remoteva-c**                | 1         | Deployment, Service          | -                                                                     | `boulder remoteva --config /etc/boulder/remoteva-c.json`         |
 
 ### Supporting Services (Auxiliary Functionality)
 
-| Service | Kubernetes Resources | Dependencies           | Commands                                     |
-| ------- | -------------------- | ---------------------- | -------------------------------------------- |
-| **sfe** | Deployment, Service  | boulder-ra, boulder-sa | `boulder sfe --config /etc/boulder/sfe.json` |
+| Service | Kubernetes Resources | Dependencies                   | Commands                                     |
+| ------- | -------------------- | ------------------------------ | -------------------------------------------- |
+| **sfe** | Deployment, Service  | boulder-ra-1/2, boulder-sa-1/2 | `boulder sfe --config /etc/boulder/sfe.json` |
 
 ### Infrastructure Services (Data Layer)
 
@@ -112,9 +161,19 @@ With Kubernetes service names:
 | **ProxySQL**            | Deployment  | Database proxy/load balancer    |
 | **Redis (2 instances)** | StatefulSet | Rate limiting and nonce storage |
 
-## Configuration Conversion Examples
+## Configuration Conversion Requirements
 
-### Service Discovery Conversion
+When converting Boulder's Docker Compose configuration to Kubernetes:
+
+1. **Service Discovery**: Replace all Consul SRV lookups with Kubernetes service DNS names
+2. **Multi-Instance Services**: Use single Services with multiple pod endpoints instead of separate service instances
+3. **Certificate Paths**: Update file paths to mount points from Secrets/ConfigMaps
+4. **Database URLs**: Store in Secrets, reference via `dbConnectFile` pointing to mounted secret files
+5. **Redis Configuration**: Convert Consul-based Redis discovery to direct Kubernetes service addresses
+
+### Configuration Conversion Examples
+
+#### Service Discovery Conversion
 
 **Before (Consul SRV)**:
 
@@ -141,6 +200,53 @@ With Kubernetes service names:
   }
 }
 ```
+
+#### Multi-Instance Service Conversion
+
+Boulder runs multiple instances of core services for load balancing. In Docker Compose, these are separate containers with different ports. In Kubernetes, we use a single Service with multiple pod endpoints.
+
+**Example - Storage Authority**:
+
+- Docker: `boulder-sa-1` (port 9395) + `boulder-sa-2` (port 9495)
+- Kubernetes: Single `boulder-sa` Service with 2 pod endpoints, Kubernetes handles load balancing
+
+## PKI Certificate Management
+
+Boulder requires two distinct certificate hierarchies:
+
+**WebPKI Hierarchy** (for CA operations):
+
+- Generated using `test/certs/generate.sh`
+- Must include root certs, intermediates, and PKCS#11 configs
+- Mount as Secrets in CA service pods
+
+**Internal PKI** (for mTLS between services):
+
+- Internal CA certificate (`minica.pem`)
+- Service-specific certificates (`sa.boulder`, `ra.boulder`, etc.)
+- Mount in all Boulder service pods for gRPC authentication
+
+### PKI Details
+
+1. **WebPKI Hierarchy** (for certificate issuance):
+
+   - Root certificates (RSA + ECDSA)
+   - Intermediate certificates (multiple RSA + ECDSA)
+   - PKCS#11 configuration files for each issuer
+
+2. **Internal PKI** (for service mTLS):
+   - Internal CA certificate (`minica.pem`)
+   - Per-service certificates (`sa.boulder`, `ra.boulder`, `wfe.boulder`, etc.)
+
+These must be generated using Boulder's `test/certs/generate.sh` script and packaged into Kubernetes Secrets.
+
+## Testing Validation
+
+- Verify service startup order and health checks via init containers
+- Test ACME workflow end-to-end before considering deployment complete
+- Ensure Boulder's integration tests pass using `test/integration-test.py --chisel`
+- Validate load balancing across multiple service instances via metrics endpoints
+- Confirm mTLS communication between all Boulder services
 
 ### Startup Dependencies
 
@@ -186,6 +292,7 @@ manifests/
 │   ├── boulder-va.yaml
 │   ├── boulder-wfe2.yaml
 │   ├── boulder-publisher.yaml
+│   ├── boulder-ra-sct-provider.yaml
 │   └── remoteva.yaml
 ├── supporting-services/
 │   ├── nonce-service.yaml
