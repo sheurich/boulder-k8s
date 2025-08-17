@@ -68,13 +68,13 @@ Containerize and deploy Boulder microservices to a local Kubernetes cluster (kin
 
 ## Reference Materials
 
-Leverage the following resources to inform your implementation:
+Leverage the following resources to inform your implementation. Start with the `BOULDER.md` file as it contains the essential, distilled information for this project.
 
-- **`SPECp1.md`** - Complete phase 1 specification with detailed requirements
-- **`./reference/BOULDER.md`** - Technical reference guide for Boulder setup and architecture
-- **`./vendor/github.com/letsencrypt/boulder/`** - Complete Boulder source code repository
-- **`./vendor/github.com/letsencrypt/boulder.wiki/`** - Design documents and implementation guides
-- **`AGENTS.md`** - Project standards and naming conventions
+- **Primary Technical Reference: `reference/BOULDER.md`** - This is your main guide. It contains a distilled summary of the Boulder architecture, setup, and containerization patterns relevant to this project. **Consult this file first.**
+- **Detailed Specifications: `SPECp1.md`** - Contains the complete and authoritative requirements for the work you are to perform.
+- **Project Conventions: `AGENTS.md`** - Outlines project standards, naming conventions, and agent guidelines.
+- **Full Source Code (for deep dives): `vendor/github.com/letsencrypt/boulder/`** - The complete Boulder source code. Use this for detailed lookups if the information in `BOULDER.md` is insufficient.
+- **Wiki/Design Docs (for context): `vendor/github.com/letsencrypt/boulder.wiki/`** - Additional design documents and implementation guides.
 
 ## Success Criteria
 
