@@ -2,8 +2,6 @@
 
 This document outlines standards and practices that all software development agents must follow.
 
-> **Note:** For Boulder-specific technical specifications and implementation details, see [`SPECp1.md`](SPECp1.md).
-
 ## Responsibilities
 
 - Read and follow the appropriate phase specification documents (e.g., SPECp1.md).
@@ -25,14 +23,6 @@ This document outlines standards and practices that all software development age
 - Development environment with appropriate tools and runtimes installed
 - Access to project repositories and integration test scripts
 - MCP (Model Context Protocol) tools for enhanced capabilities e.g. context7, github and repomix servers
-
-## Recommended Tooling
-
-To accelerate the development process, agents should leverage the following tools:
-
-- **Kompose**: For the initial conversion of the reference `docker-compose.yml` into Kubernetes manifests. This provides a strong baseline to build upon.
-  - **Command**: `kompose convert -f reference/boulder/docker-compose.yml`
-- **Tilt**: For iterating on Kubernetes manifests. A `Tiltfile` should be used to watch for changes to YAML files and automatically apply them to the development cluster, providing instant feedback on the state of the system.
 
 ## Development Standards
 

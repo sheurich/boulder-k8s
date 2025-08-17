@@ -68,8 +68,9 @@ Ensure you have the following development environment infrastructure installed:
 #### Optional Development Tools
 
 - **Production Kubernetes cluster** - For staging/production deployments (alternative to KinD for production testing)
-- **[Kompose](https://kompose.io/)** - Useful for a one-time conversion of the reference `docker-compose.yml` to bootstrap the initial Kubernetes manifests.
-- **[Tilt](https://tilt.dev/)** - Recommended for streamlining the development loop. It can watch manifest files and automatically apply them to the cluster, providing a live UI to monitor service status and logs.
+- **[Kompose](https://kompose.io/)** - For the initial conversion of the reference `docker-compose.yml` into Kubernetes manifests. This provides a strong baseline to build upon.
+  - **Command**: `kompose convert -f vendor/github.com/letsencrypt/boulder/docker-compose.yml`
+- **[Tilt](https://tilt.dev/)** - For iterating on Kubernetes manifests. A `Tiltfile` should be used to watch for changes to YAML files and automatically apply them to the development cluster, providing instant feedback on the state of the system.
 
 ### Phase 1 Deployment
 
