@@ -18,10 +18,10 @@ docker compose build boulder && ./t.sh
 
 This command performs the following operations:
 
-1. **`docker compose build boulder`**: Builds the Boulder Docker images using the [`boulder-tools`](boulder/test/boulder-tools/) container which includes all necessary dependencies (Go compiler, development tools, etc.)
+1. **`docker compose build boulder`**: Builds the Boulder Docker images using the [`boulder-tools`](../vendor/github.com/letsencrypt/boulder/test/boulder-tools/) container which includes all necessary dependencies (Go compiler, development tools, etc.)
 2. **`./t.sh`**: Starts the integration test suite which:
    - Generates test certificates via the `bsetup` service
-   - Starts all Boulder services in dependency order using [`startservers.py`](boulder/test/startservers.py)
+   - Starts all Boulder services in dependency order using [`startservers.py`](../vendor/github.com/letsencrypt/boulder/test/startservers.py)
    - Runs comprehensive integration tests
    - Provides a fully functional ACME environment for development and testing
 
@@ -44,7 +44,7 @@ Boulder employs a microservice-based architecture, with distinct services commun
 
 ### Docker Networking Setup
 
-The development environment uses three distinct Docker networks as defined in [`docker-compose.yml`](boulder/docker-compose.yml):
+The development environment uses three distinct Docker networks as defined in [`docker-compose.yml`](../vendor/github.com/letsencrypt/boulder/docker-compose.yml):
 
 | Network          | Subnet              | Purpose                                                                                                                                                                             |
 | ---------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -153,9 +153,9 @@ These are the external dependencies required for a Boulder deployment.
 
 #### Certificate Setup Service
 
-| Service      | Description                                                                                                                                                                                                                                                                                                                 |
-| :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`bsetup`** | A setup service that generates test certificates by running [`test/certs/generate.sh`](boulder/test/certs/generate.sh). This creates both the Web PKI hierarchy (for certificate issuance) and the internal PKI hierarchy (for service-to-service mTLS). Only runs during environment setup via `docker compose up bsetup`. |
+| Service      | Description                                                                                                                                                                                                                                                                                                                                                  |
+| :----------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`bsetup`** | A setup service that generates test certificates by running [`test/certs/generate.sh`](../vendor/github.com/letsencrypt/boulder/test/certs/generate.sh). This creates both the Web PKI hierarchy (for certificate issuance) and the internal PKI hierarchy (for service-to-service mTLS). Only runs during environment setup via `docker compose up bsetup`. |
 
 ### Test Environment Services
 
@@ -177,7 +177,7 @@ The Boulder development environment uses a sophisticated service orchestration s
 
 ### Service Startup Management
 
-The [`test/startservers.py`](boulder/test/startservers.py) script manages the startup of all Boulder services. It defines services in a `SERVICES` tuple, where each service includes:
+The [`test/startservers.py`](../vendor/github.com/letsencrypt/boulder/test/startservers.py) script manages the startup of all Boulder services. It defines services in a `SERVICES` tuple, where each service includes:
 
 - **Name**: Service identifier
 - **Debug Port**: HTTP port for debugging and metrics
@@ -188,7 +188,7 @@ The [`test/startservers.py`](boulder/test/startservers.py) script manages the st
 
 ### Dependency-Based Startup Order
 
-The `_service_toposort()` function in [`startservers.py`](boulder/test/startservers.py) performs a topological sort of services based on their dependencies, ensuring that:
+The `_service_toposort()` function in [`startservers.py`](../vendor/github.com/letsencrypt/boulder/test/startservers.py) performs a topological sort of services based on their dependencies, ensuring that:
 
 1. No service starts until all its dependencies are healthy
 2. Services are started in dependency order to prevent connection failures
@@ -269,7 +269,7 @@ All configuration files follow a common pattern with these key sections:
 
 ### Registration Authority (RA) Configuration
 
-The RA service coordinates certificate issuance and manages validation workflows. Key configuration from [`test/config/ra.json`](boulder/test/config/ra.json):
+The RA service coordinates certificate issuance and manages validation workflows. Key configuration from [`test/config/ra.json`](../vendor/github.com/letsencrypt/boulder/test/config/ra.json):
 
 ```json
 {
@@ -324,7 +324,7 @@ The RA service coordinates certificate issuance and manages validation workflows
 
 ### Certificate Authority (CA) Configuration
 
-The CA service handles certificate signing and CRL generation. Key configuration from [`test/config/ca.json`](boulder/test/config/ca.json):
+The CA service handles certificate signing and CRL generation. Key configuration from [`test/config/ca.json`](../vendor/github.com/letsencrypt/boulder/test/config/ca.json):
 
 ```json
 {
@@ -373,7 +373,7 @@ The CA service handles certificate signing and CRL generation. Key configuration
 
 ### Validation Authority (VA) Configuration
 
-The VA service performs domain validation challenges. Key configuration from [`test/config/va.json`](boulder/test/config/va.json):
+The VA service performs domain validation challenges. Key configuration from [`test/config/va.json`](../vendor/github.com/letsencrypt/boulder/test/config/va.json):
 
 ```json
 {
@@ -409,7 +409,7 @@ The VA service performs domain validation challenges. Key configuration from [`t
 
 ### Storage Authority (SA) Configuration
 
-The SA service manages database interactions. Key configuration from [`test/config/sa.json`](boulder/test/config/sa.json):
+The SA service manages database interactions. Key configuration from [`test/config/sa.json`](../vendor/github.com/letsencrypt/boulder/test/config/sa.json):
 
 ```json
 {
@@ -442,7 +442,7 @@ The SA service manages database interactions. Key configuration from [`test/conf
 
 ### Web Front End (WFE2) Configuration
 
-The WFE2 service provides the public ACME API. Key configuration from [`test/config/wfe2.json`](boulder/test/config/wfe2.json):
+The WFE2 service provides the public ACME API. Key configuration from [`test/config/wfe2.json`](../vendor/github.com/letsencrypt/boulder/test/config/wfe2.json):
 
 ```json
 {
@@ -525,7 +525,7 @@ Boulder uses the `sql-migrate` tool for database schema migrations. Migrations m
 boulder boulder-sa --config /etc/boulder/sa.json migrate
 ```
 
-The migration scripts are located in the [`sa/db`](boulder/sa/db/) directory.
+The migration scripts are located in the [`sa/db`](../vendor/github.com/letsencrypt/boulder/sa/db/) directory.
 
 ## 10. Boulder-Specific Production Considerations
 
@@ -570,7 +570,7 @@ Boulder maintains comprehensive CT log integration for certificate transparency 
 
 To deploy Boulder in Kubernetes, you would typically:
 
-1. **Containerize the Boulder binary:** Create a Docker image that contains the `boulder` binary. Start with the provided Boulder [`Containerfile`](boulder/Containerfile).
+1. **Containerize the Boulder binary:** Create a Docker image that contains the `boulder` binary. Start with the provided Boulder [`Containerfile`](../vendor/github.com/letsencrypt/boulder/Containerfile).
 2. **Deploy Supporting Infrastructure:** Deploy MariaDB, Redis, and Consul to your Kubernetes cluster.
 3. **Create Kubernetes Services:** For each core Boulder service, create a Kubernetes Deployment and Service.
 4. **Configure Service Discovery:** Configure the Boulder services to use Kubernetes DNS for service discovery. This will involve modifying the `dnsAuthority` and `srvLookup` sections of the configuration files to match your Kubernetes service names and DNS setup.
@@ -579,7 +579,7 @@ To deploy Boulder in Kubernetes, you would typically:
 
 ## 12. Local Integration Testing
 
-The primary workflow for local development and testing is the [`./t.sh`](boulder/t.sh) script, which uses Docker Compose to run a full integration test suite. This is an excellent resource for understanding how the services interact and for validating changes.
+The primary workflow for local development and testing is the [`./t.sh`](../vendor/github.com/letsencrypt/boulder/t.sh) script, which uses Docker Compose to run a full integration test suite. This is an excellent resource for understanding how the services interact and for validating changes.
 
 The integration tests verify:
 
@@ -590,4 +590,4 @@ The integration tests verify:
 - Rate limiting functionality
 - Service health and dependency management
 
-Refer to the [`docker-compose.yml`](boulder/docker-compose.yml) file to see how the services and their dependencies are orchestrated in the test environment.
+Refer to the [`docker-compose.yml`](../vendor/github.com/letsencrypt/boulder/docker-compose.yml) file to see how the services and their dependencies are orchestrated in the test environment.
