@@ -33,7 +33,8 @@ This document outlines standards and practices that all software development age
 - Write clear, maintainable, and well-documented code
 - Ensure proper test coverage for all functionality
 - **MANDATORY: Lint all files upon creation or modification**
-  - Use `kubectl --dry-run=client -o yaml` for Kubernetes manifests
+  - Use `kubeconform --strict` for Kubernetes manifest validation (preferred)
+  - Use `kubectl --dry-run=client -o yaml` for Kubernetes manifests when cluster is available
   - Use `yamllint` for general YAML validation
   - Use appropriate linters for each file type (JSON, Shell, etc.)
   - Fix all linting errors before proceeding

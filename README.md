@@ -52,6 +52,7 @@ Ensure you have the following development environment infrastructure installed:
 - **Docker Engine** - Container runtime for building and running Boulder services in local development
 - **KinD (Kubernetes in Docker)** - Local Kubernetes cluster for development and testing Boulder deployments
 - **kubectl** - Kubernetes command-line tool for cluster management and manifest deployment
+- **kubeconform** - Kubernetes manifest schema validation tool (preferred for manifest validation)
 - **Go Toolchain** (1.21+) - Compiler and tools for building Boulder binaries and running integration tests
 - **yamllint** - YAML linting tool for validating Kubernetes manifests and configuration files
 
