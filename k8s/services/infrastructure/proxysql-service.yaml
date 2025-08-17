@@ -1,0 +1,26 @@
+---
+# ProxySQL Service
+# Provides stable DNS name and load balancing for ProxySQL Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxysql
+  namespace: boulder
+  labels:
+    app: proxysql
+    app.kubernetes.io/name: proxysql
+    app.kubernetes.io/component: database-proxy
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6033
+      targetPort: 6033
+      protocol: TCP
+      name: mysql
+    - port: 6032
+      targetPort: 6032
+      protocol: TCP
+      name: admin
+  selector:
+    app: proxysql

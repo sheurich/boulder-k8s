@@ -1,0 +1,46 @@
+---
+# Redis Service
+# Provides stable DNS name and load balancing for Redis StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: boulder
+  labels:
+    app: redis
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for StatefulSet
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    app: redis
+---
+# Redis Client Service
+# ClusterIP service for client connections with load balancing
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-client
+  namespace: boulder
+  labels:
+    app: redis
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cache-client
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    app: redis
+  sessionAffinity: None  # Allow load balancing across Redis instances

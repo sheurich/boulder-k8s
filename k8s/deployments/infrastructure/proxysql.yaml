@@ -1,0 +1,244 @@
+---
+# ProxySQL Deployment for Boulder
+# Database proxy for connection pooling and load balancing
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxysql
+  namespace: boulder
+  labels:
+    app: proxysql
+    app.kubernetes.io/name: proxysql
+    app.kubernetes.io/component: database-proxy
+    app.kubernetes.io/part-of: boulder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxysql
+  template:
+    metadata:
+      labels:
+        app: proxysql
+        app.kubernetes.io/name: proxysql
+        app.kubernetes.io/component: database-proxy
+    spec:
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      initContainers:
+        - name: wait-for-mariadb
+          image: busybox:1.35
+          command: ['sh', '-c']
+          args:
+            - |
+              echo "Waiting for MariaDB to be ready..."
+              until nslookup mariadb.boulder.svc.cluster.local; do
+                echo "Waiting for MariaDB service..."
+                sleep 2
+              done
+              echo "MariaDB service found, checking connectivity..."
+              until nc -z mariadb 3306; do
+                echo "Waiting for MariaDB port 3306..."
+                sleep 2
+              done
+              echo "MariaDB is ready!"
+      containers:
+        - name: proxysql
+          image: proxysql/proxysql:2.5
+          ports:
+            - containerPort: 6033
+              name: mysql
+            - containerPort: 6032
+              name: admin
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: root-password
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: boulder-password
+            - name: PROXYSQL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: proxysql-admin-password
+          volumeMounts:
+            - name: config
+              mountPath: /etc/proxysql
+            - name: data
+              mountPath: /var/lib/proxysql
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          livenessProbe:
+            tcpSocket:
+              port: 6033
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 6033
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+          startupProbe:
+            tcpSocket:
+              port: 6033
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+      volumes:
+        - name: config
+          configMap:
+            name: proxysql-config
+        - name: data
+          emptyDir: {}
+---
+# ProxySQL Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxysql-config
+  namespace: boulder
+  labels:
+    app: proxysql
+    app.kubernetes.io/name: proxysql
+    app.kubernetes.io/component: database-proxy-config
+data:
+  proxysql.cnf: |
+    # ProxySQL Configuration for Boulder
+    datadir="/var/lib/proxysql"
+    errorlog="/var/lib/proxysql/proxysql.log"
+
+    # Admin interface configuration
+    admin_variables=
+    {
+        admin_credentials="admin:${PROXYSQL_ADMIN_PASSWORD}"
+        mysql_ifaces="0.0.0.0:6032"
+        refresh_interval=2000
+        web_enabled=false
+    }
+
+    # MySQL interface configuration
+    mysql_variables=
+    {
+        threads=4
+        max_connections=2048
+        default_query_delay=0
+        default_query_timeout=36000000
+        have_compress=true
+        poll_timeout=2000
+        interfaces="0.0.0.0:6033"
+        default_schema="boulder"
+        stacksize=1048576
+        server_version="8.0.25"
+        connect_timeout_server=3000
+        monitor_username="root"
+        monitor_password="${MYSQL_ROOT_PASSWORD}"
+        monitor_history=600000
+        monitor_connect_interval=60000
+        monitor_ping_interval=10000
+        monitor_read_only_interval=1500
+        monitor_read_only_timeout=500
+        ping_interval_server_msec=120000
+        ping_timeout_server=500
+        commands_stats=true
+        sessions_sort=true
+    }
+
+    # MySQL Servers configuration
+    mysql_servers =
+    (
+        {
+            address="mariadb"
+            port=3306
+            hostgroup=0
+            weight=1000
+            max_connections=200
+            use_ssl=0
+        }
+    )
+
+    # MySQL Users configuration
+    mysql_users =
+    (
+        {
+            username="boulder"
+            password="${MYSQL_PASSWORD}"
+            default_hostgroup=0
+            max_connections=200
+            active=1
+        },
+        {
+            username="boulder_ro"
+            password="${MYSQL_PASSWORD}"
+            default_hostgroup=0
+            max_connections=100
+            active=1
+        },
+        {
+            username="root"
+            password="${MYSQL_ROOT_PASSWORD}"
+            default_hostgroup=0
+            max_connections=10
+            active=1
+        }
+    )
+
+    # Query Rules for read/write splitting
+    mysql_query_rules =
+    (
+        {
+            rule_id=1
+            active=1
+            match_pattern="^SELECT.*"
+            destination_hostgroup=0
+            apply=1
+        },
+        {
+            rule_id=2
+            active=1
+            match_pattern="^INSERT|UPDATE|DELETE.*"
+            destination_hostgroup=0
+            apply=1
+        }
+    )
+
+    # MySQL Host Groups
+    mysql_replication_hostgroups =
+    (
+        {
+            writer_hostgroup=0
+            reader_hostgroup=0
+            comment="Boulder database cluster"
+        }
+    )
+
+  init-proxysql.sql: |
+    -- ProxySQL initialization script
+    -- Load configuration to runtime and save to disk
+    LOAD MYSQL SERVERS TO RUNTIME;
+    LOAD MYSQL USERS TO RUNTIME;
+    LOAD MYSQL QUERY RULES TO RUNTIME;
+    LOAD MYSQL VARIABLES TO RUNTIME;
+    LOAD ADMIN VARIABLES TO RUNTIME;
+
+    SAVE MYSQL SERVERS TO DISK;
+    SAVE MYSQL USERS TO DISK;
+    SAVE MYSQL QUERY RULES TO DISK;
+    SAVE MYSQL VARIABLES TO DISK;
+    SAVE ADMIN VARIABLES TO DISK;

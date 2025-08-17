@@ -1,0 +1,45 @@
+---
+# MariaDB Service
+# Provides stable DNS name and load balancing for MariaDB StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: boulder
+  labels:
+    app: mariadb
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for StatefulSet
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      name: mysql
+  selector:
+    app: mariadb
+---
+# MariaDB Client Service
+# ClusterIP service for client connections
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-client
+  namespace: boulder
+  labels:
+    app: mariadb
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database-client
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      name: mysql
+  selector:
+    app: mariadb

@@ -1,0 +1,61 @@
+---
+# Boulder Namespace
+# Creates the boulder namespace with proper labels and annotations
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: boulder
+  labels:
+    name: boulder
+    app.kubernetes.io/name: boulder
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Boulder ACME CA - Let's Encrypt compatible CA"
+    contact: "boulder-team@example.com"
+    # Exclude OCSP functionality as per architecture decision
+    boulder.io/ocsp-excluded: "true"
+---
+# Boulder ServiceAccount for all services
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: boulder-service
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder
+    app.kubernetes.io/component: service-account
+automountServiceAccountToken: true
+---
+# Role for Boulder services - minimal permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: boulder-service
+  namespace: boulder
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+---
+# RoleBinding for Boulder services
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: boulder-service
+  namespace: boulder
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: boulder-service
+subjects:
+  - kind: ServiceAccount
+    name: boulder-service
+    namespace: boulder
