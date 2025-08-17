@@ -85,3 +85,37 @@ This document outlines standards and practices that all software development age
 - Write clear commit messages and pull request descriptions
 - Document any breaking changes or migration requirements
 - Communicate effectively about progress and blockers
+
+## Project-Specific Exclusions
+
+### OCSP Functionality Deprecation
+
+**IMPORTANT**: OCSP functionality is deprecated in Boulder and slated for removal. This Boulder Kubernetes implementation specifically excludes all OCSP-related services and functionality.
+
+#### Excluded Services and Components
+
+The following Boulder services/components are **NOT** implemented in this Kubernetes deployment:
+
+- **OCSP Responder** - Service that responds to OCSP status requests
+- **OCSP Generator** - Service that generates OCSP responses
+- **OCSP Updater** - Service that updates OCSP response data
+- **Akamai Purger** - Service for purging OCSP responses from Akamai CDN
+- All OCSP-related configuration options and functionality
+- All OCSP-related database tables and operations
+
+#### Rationale
+
+1. **Deprecated Status**: OCSP functionality is officially deprecated in Boulder
+2. **Removal Timeline**: OCSP services are slated for complete removal from Boulder
+3. **Modern Alternatives**: Certificate Transparency (CT) logs provide superior transparency and monitoring
+4. **Reduced Complexity**: Excluding OCSP simplifies the Kubernetes deployment and reduces operational overhead
+
+#### Implementation Impact
+
+- Kubernetes manifests will not include OCSP service deployments
+- Configuration files will omit OCSP-related settings
+- Database initialization scripts will exclude OCSP tables
+- Integration tests will not validate OCSP functionality
+- Monitoring and alerting will not include OCSP metrics
+
+**Note**: This exclusion does not affect core ACME functionality or certificate issuance capabilities.
