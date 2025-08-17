@@ -81,13 +81,19 @@ Ensure you have the following development environment infrastructure installed:
    cd boulder-k8s
    ```
 
-2. **Set up local Kubernetes cluster** (using kind):
+2. **Initialize Git Submodules**:
+   This project uses Git submodules to include the Boulder source code. Initialize them with this command:
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+3. **Set up local Kubernetes cluster** (using kind):
 
    ```bash
    kind create cluster --name boulder
    ```
 
-3. **Deploy Boulder to Kubernetes** (following [`SPECp1.md`](SPECp1.md)):
+4. **Deploy Boulder to Kubernetes** (following [`SPECp1.md`](SPECp1.md)):
 
    ```bash
    # Deploy infrastructure services first
@@ -100,7 +106,7 @@ Ensure you have the following development environment infrastructure installed:
    kubectl apply -f manifests/supporting-services/
    ```
 
-4. **Verify deployment**:
+5. **Verify deployment**:
 
    ```bash
    # Check all pods are running
