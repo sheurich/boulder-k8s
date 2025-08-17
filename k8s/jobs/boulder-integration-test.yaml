@@ -1,0 +1,201 @@
+---
+# Boulder Integration Test Job
+# Runs Boulder's existing integration-test.py to validate ACME functionality
+# EXCLUDES all OCSP-related tests (deprecated functionality)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: boulder-integration-test
+  namespace: boulder
+  labels:
+    app: boulder-integration-test
+    app.kubernetes.io/name: boulder-integration-test
+    app.kubernetes.io/component: integration-test
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    # Explicitly note OCSP exclusion
+    boulder.io/ocsp-excluded: "true"
+    boulder.io/test-type: "integration"
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 1800  # 30 minutes timeout
+  ttlSecondsAfterFinished: 300  # Keep job for 5 minutes after completion
+  template:
+    metadata:
+      labels:
+        app: boulder-integration-test
+        app.kubernetes.io/name: boulder-integration-test
+        app.kubernetes.io/component: integration-test
+    spec:
+      restartPolicy: Never
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-boulder-ready
+          image: busybox:1.35
+          command: ['sh', '-c']
+          args:
+            - |
+              echo "Waiting for Boulder services to be ready..."
+
+              # Wait for WFE2 (main ACME endpoint)
+              until nslookup boulder-wfe2.boulder.svc.cluster.local; do
+                echo "Waiting for WFE2 DNS..."
+                sleep 2
+              done
+
+              # Wait for WFE2 HTTP endpoint
+              until wget -q --spider --timeout=5 http://boulder-wfe2.boulder.svc.cluster.local:4001/directory; do
+                echo "Waiting for WFE2 HTTP endpoint..."
+                sleep 5
+              done
+
+              # Wait for other critical services
+              until nslookup boulder-ra.boulder.svc.cluster.local; do
+                echo "Waiting for RA service..."
+                sleep 2
+              done
+
+              until nslookup boulder-sa.boulder.svc.cluster.local; do
+                echo "Waiting for SA service..."
+                sleep 2
+              done
+
+              until nslookup boulder-ca.boulder.svc.cluster.local; do
+                echo "Waiting for CA service..."
+                sleep 2
+              done
+
+              until nslookup boulder-va.boulder.svc.cluster.local; do
+                echo "Waiting for VA service..."
+                sleep 2
+              done
+
+              echo "All Boulder services are ready!"
+      containers:
+        - name: integration-test
+          image: boulder:latest
+          command: ["python3"]
+          args:
+            - "/opt/boulder/test/integration-test.py"
+            - "--chisel2"
+            - "--acme-server"
+            - "http://boulder-wfe2.boulder.svc.cluster.local:4001"
+            - "--challSrv"
+            - "http://boulder-wfe2.boulder.svc.cluster.local:4001"
+            - "--domain"
+            - "boulder.local"
+            - "--exclude-ocsp"  # Exclude OCSP tests (deprecated)
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: "/etc/boulder"
+            - name: PYTHONPATH
+              value: "/opt/boulder/test"
+            - name: ACME_SERVER_URL
+              value: "http://boulder-wfe2.boulder.svc.cluster.local:4001"
+            - name: TEST_DOMAIN
+              value: "boulder.local"
+            - name: GRPC_GO_LOG_VERBOSITY_LEVEL
+              value: "2"
+            - name: GRPC_GO_LOG_SEVERITY_LEVEL
+              value: "info"
+            # Exclude OCSP functionality
+            - name: BOULDER_EXCLUDE_OCSP
+              value: "true"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder
+            - name: internal-certs
+              mountPath: /etc/boulder/certs
+              readOnly: true
+            - name: webpki-certs
+              mountPath: /etc/boulder/webpki
+              readOnly: true
+            - name: test-certs
+              mountPath: /tmp/test-certs
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false  # Tests may need to write temp files
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-integration-test-config
+        - name: internal-certs
+          secret:
+            secretName: internal-pki
+        - name: webpki-certs
+          secret:
+            secretName: webpki-certs
+        - name: test-certs
+          emptyDir: {}
+---
+# Boulder Integration Test ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-integration-test-config
+  namespace: boulder
+  labels:
+    app: boulder-integration-test
+    app.kubernetes.io/name: boulder-integration-test
+    app.kubernetes.io/component: integration-test-config
+data:
+  integration-test.json: |
+    {
+      "test": {
+        "acmeServerURL": "http://boulder-wfe2.boulder.svc.cluster.local:4001",
+        "challSrvURL": "http://boulder-wfe2.boulder.svc.cluster.local:4001",
+        "domain": "boulder.local",
+        "excludeOCSP": true,
+        "timeout": "300s",
+        "retries": 3,
+
+        "endpoints": {
+          "wfe2": "http://boulder-wfe2.boulder.svc.cluster.local:4001",
+          "ra": "boulder-ra.boulder.svc.cluster.local:9394",
+          "sa": "boulder-sa.boulder.svc.cluster.local:9395",
+          "ca": "boulder-ca.boulder.svc.cluster.local:9393",
+          "va": "boulder-va.boulder.svc.cluster.local:9392"
+        },
+
+        "challengeTypes": {
+          "http01": {
+            "enabled": true,
+            "timeout": "30s"
+          },
+          "dns01": {
+            "enabled": true,
+            "timeout": "120s"
+          },
+          "tlsALPN01": {
+            "enabled": true,
+            "timeout": "30s"
+          }
+        }
+      },
+
+      "syslog": {
+        "stdoutLevel": 6,
+        "syslogLevel": 6
+      },
+
+      "common": {
+        "dnsResolver": "8.8.8.8:53",
+        "dnsTimeout": "10s",
+        "dnsAllowLoopbackAddresses": true
+      }
+    }
