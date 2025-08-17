@@ -1,0 +1,215 @@
+---
+# Boulder Certificate Authority (CA) Deployment
+# Signs certificates, generates CRLs, manages private keys
+# NOTE: OCSP generation is EXCLUDED (deprecated functionality)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ca
+  namespace: boulder
+  labels:
+    app: boulder-ca
+    app.kubernetes.io/name: boulder-ca
+    app.kubernetes.io/component: certificate-authority
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    # Explicitly note OCSP exclusion
+    boulder.io/ocsp-excluded: "true"
+spec:
+  replicas: 2  # 2 replicas for high availability
+  selector:
+    matchLabels:
+      app: boulder-ca
+  template:
+    metadata:
+      labels:
+        app: boulder-ca
+        app.kubernetes.io/name: boulder-ca
+        app.kubernetes.io/component: certificate-authority
+    spec:
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.35
+          command: ['sh', '-c']
+          args:
+            - |
+              echo "Waiting for dependencies..."
+              until nslookup boulder-sa.boulder.svc.cluster.local; do
+                echo "Waiting for SA service..."
+                sleep 2
+              done
+              until nslookup boulder-ra-sct-provider.boulder.svc.cluster.local;
+              do
+                echo "Waiting for SCT Provider service..."
+                sleep 2
+              done
+              echo "All dependencies ready!"
+      containers:
+        - name: boulder-ca
+          image: boulder:latest
+          command: ["boulder", "boulder-ca"]
+          args: ["--config", "/etc/boulder/ca.json"]
+          ports:
+            - containerPort: 9393
+              name: grpc
+              protocol: TCP
+            - containerPort: 8001
+              name: debug
+              protocol: TCP
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: "/etc/boulder"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder
+            - name: internal-certs
+              mountPath: /etc/boulder/certs
+              readOnly: true
+            - name: webpki-certs
+              mountPath: /etc/boulder/webpki
+              readOnly: true
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1Gi
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+          livenessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8001
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-ca-config
+        - name: internal-certs
+          secret:
+            secretName: internal-pki
+        - name: webpki-certs
+          secret:
+            secretName: webpki-certs
+---
+# Boulder CA Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-ca
+  namespace: boulder
+  labels:
+    app: boulder-ca
+    app.kubernetes.io/name: boulder-ca
+    app.kubernetes.io/component: certificate-authority
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9393
+      targetPort: 9393
+      protocol: TCP
+      name: grpc
+  selector:
+    app: boulder-ca
+---
+# Boulder CA ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-ca-config
+  namespace: boulder
+  labels:
+    app: boulder-ca
+    app.kubernetes.io/name: boulder-ca
+    app.kubernetes.io/component: certificate-authority-config
+data:
+  ca.json: |
+    {
+      "ca": {
+        "grpcAddress": ":9393",
+        "debugAddr": ":8001",
+
+        "saService": {
+          "serverAddress": "boulder-sa:9395",
+          "hostOverride": "sa.boulder",
+          "timeout": "15s"
+        },
+        "sctService": {
+          "serverAddress": "boulder-ra-sct-provider:9594",
+          "hostOverride": "ra.boulder",
+          "timeout": "15s"
+        },
+        "issuance": {
+          "certProfiles": {
+            "legacy": {
+              "maxValidityPeriod": "7776000s",
+              "maxValidityBackdate": "1h5m"
+            }
+          },
+          "issuers": [
+            {
+              "location": {
+                "configFile": "/etc/boulder/pkcs11/int-ecdsa-a.json",
+                "certFile": "/etc/boulder/webpki/int-ecdsa-a.cert.pem",
+                "numSessions": 2
+              }
+            }
+          ]
+        },
+
+        "serialPrefix": "FF00000000000000",
+        "maxNames": 100,
+        "cfssl": {
+          "signing": {
+            "profiles": {
+              "ca": {
+                "usages": [
+                  "cert sign",
+                  "crl sign"
+                ],
+                "ca_constraint": {
+                  "is_ca": true,
+                  "max_path_len": 0,
+                  "max_path_len_zero": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "syslog": {
+        "stdoutLevel": 6,
+        "syslogLevel": 6
+      },
+      "common": {
+        "dnsResolver": "8.8.8.8:53",
+        "dnsTimeout": "10s",
+        "dnsAllowLoopbackAddresses": true,
+        "tls": {
+          "certFile": "/etc/boulder/certs/ca.boulder/cert.pem",
+          "keyFile": "/etc/boulder/certs/ca.boulder/key.pem",
+          "caCertFile": "/etc/boulder/certs/minica.pem"
+        }
+      }
+    }

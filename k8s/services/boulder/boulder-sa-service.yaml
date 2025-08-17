@@ -1,0 +1,28 @@
+---
+# Boulder Storage Authority (SA) Service
+# Service definition for SA - database abstraction layer
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-sa
+  namespace: boulder
+  labels:
+    app: boulder-sa
+    app.kubernetes.io/name: boulder-sa
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    boulder.io/ocsp-excluded: "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9395
+      targetPort: 9395
+      protocol: TCP
+      name: grpc
+    - port: 8003
+      targetPort: 8003
+      protocol: TCP
+      name: debug
+  selector:
+    app: boulder-sa

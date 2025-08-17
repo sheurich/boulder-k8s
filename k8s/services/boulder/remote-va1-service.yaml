@@ -1,0 +1,21 @@
+---
+# Boulder Remote VA1 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: remote-va1
+  namespace: boulder
+  labels:
+    app: boulder-remote-va1
+    app.kubernetes.io/name: boulder-remote-va1
+    app.kubernetes.io/component: remote-validation-authority
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9497
+      targetPort: 9497
+      protocol: TCP
+      name: grpc
+  selector:
+    app: boulder-remote-va1

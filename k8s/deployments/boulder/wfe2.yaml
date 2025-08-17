@@ -1,0 +1,231 @@
+---
+# Boulder Web Front End (WFE2) Deployment
+# Public-facing ACME API endpoint that receives and validates client requests
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-wfe2
+  namespace: boulder
+  labels:
+    app: boulder-wfe2
+    app.kubernetes.io/name: boulder-wfe2
+    app.kubernetes.io/component: web-frontend
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    # Explicitly note OCSP exclusion
+    boulder.io/ocsp-excluded: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: boulder-wfe2
+  template:
+    metadata:
+      labels:
+        app: boulder-wfe2
+        app.kubernetes.io/name: boulder-wfe2
+        app.kubernetes.io/component: web-frontend
+    spec:
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.35
+          command: ['sh', '-c']
+          args:
+            - |
+              echo "Waiting for dependencies..."
+              until nslookup boulder-ra.boulder.svc.cluster.local; do
+                echo "Waiting for RA service..."
+                sleep 2
+              done
+              until nslookup boulder-sa.boulder.svc.cluster.local; do
+                echo "Waiting for SA service..."
+                sleep 2
+              done
+              until nslookup nonce-service.boulder.svc.cluster.local; do
+                echo "Waiting for Nonce service..."
+                sleep 2
+              done
+              echo "All dependencies ready!"
+      containers:
+        - name: boulder-wfe2
+          image: boulder:latest
+          command: ["boulder", "boulder-wfe2"]
+          args: ["--config", "/etc/boulder/wfe2.json"]
+          ports:
+            - containerPort: 4001
+              name: http
+              protocol: TCP
+            - containerPort: 4431
+              name: https
+              protocol: TCP
+            - containerPort: 8013
+              name: debug
+              protocol: TCP
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: "/etc/boulder"
+            - name: GRPC_GO_LOG_VERBOSITY_LEVEL
+              value: "2"
+            - name: GRPC_GO_LOG_SEVERITY_LEVEL
+              value: "info"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder
+            - name: internal-certs
+              mountPath: /etc/boulder/certs
+              readOnly: true
+            - name: webpki-certs
+              mountPath: /etc/boulder/webpki
+              readOnly: true
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8013
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8013
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-wfe2-config
+        - name: internal-certs
+          secret:
+            secretName: internal-pki
+        - name: webpki-certs
+          secret:
+            secretName: webpki-certs
+---
+# Boulder WFE2 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-wfe2
+  namespace: boulder
+  labels:
+    app: boulder-wfe2
+    app.kubernetes.io/name: boulder-wfe2
+    app.kubernetes.io/component: web-frontend
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: LoadBalancer  # External access for ACME clients
+  ports:
+    - port: 4001
+      targetPort: 4001
+      protocol: TCP
+      name: http
+    - port: 4431
+      targetPort: 4431
+      protocol: TCP
+      name: https
+  selector:
+    app: boulder-wfe2
+---
+# Boulder WFE2 ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-wfe2-config
+  namespace: boulder
+  labels:
+    app: boulder-wfe2
+    app.kubernetes.io/name: boulder-wfe2
+    app.kubernetes.io/component: web-frontend-config
+data:
+  wfe2.json: |
+    {
+      "wfe": {
+        "listenAddress": "0.0.0.0:4001",
+        "tlsListenAddress": "0.0.0.0:4431",
+        "serverCertificatePath": "/etc/boulder/webpki/wfe.cert.pem",
+        "serverKeyPath": "/etc/boulder/webpki/wfe.key.pem",
+        "allowOrigins": ["*"],
+        "baseURL": "http://boulder-wfe2:4001",
+
+        "raService": {
+          "serverAddress": "boulder-ra:9394",
+          "hostOverride": "ra.boulder",
+          "timeout": "15s"
+        },
+
+        "saService": {
+          "serverAddress": "boulder-sa:9395",
+          "hostOverride": "sa.boulder",
+          "timeout": "15s"
+        },
+
+        "getNonceService": {
+          "serverAddress": "nonce-service:9501",
+          "hostOverride": "nonce.boulder",
+          "timeout": "15s"
+        },
+
+        "redeemNonceService": {
+          "serverAddresses": [
+            "nonce-service:9501",
+            "nonce-service:9502"
+          ],
+          "hostOverride": "nonce.boulder",
+          "timeout": "15s"
+        },
+
+        "limiter": {
+          "defaults": {
+            "certificatesPerName": {
+              "threshold": 5,
+              "window": "168h"
+            },
+            "registrationsPerIP": {
+              "threshold": 10,
+              "window": "3h"
+            },
+            "pendingAuthorizationsPerAccount": {
+              "threshold": 300,
+              "window": "168h"
+            }
+          }
+        },
+
+        "maxNames": 100,
+        "directoryDetails": {
+          "website": "https://letsencrypt.org",
+          "caaIdentities": ["letsencrypt.org"]
+        }
+      },
+
+      "syslog": {
+        "stdoutLevel": 6,
+        "syslogLevel": 6
+      },
+
+      "common": {
+        "dnsResolver": "8.8.8.8:53",
+        "dnsTimeout": "10s",
+        "dnsAllowLoopbackAddresses": true
+      }
+    }

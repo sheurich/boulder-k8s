@@ -1,0 +1,176 @@
+---
+# Boulder Storage Authority (SA) Deployment
+# Database abstraction layer for all Boulder services
+# Manages certificate, account, and order storage operations
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sa
+  namespace: boulder
+  labels:
+    app: boulder-sa
+    app.kubernetes.io/name: boulder-sa
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    # Explicitly note OCSP exclusion
+    boulder.io/ocsp-excluded: "true"
+spec:
+  replicas: 2  # 2 replicas for high availability
+  selector:
+    matchLabels:
+      app: boulder-sa
+  template:
+    metadata:
+      labels:
+        app: boulder-sa
+        app.kubernetes.io/name: boulder-sa
+        app.kubernetes.io/component: storage-authority
+    spec:
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-database
+          image: busybox:1.35
+          command: ['sh', '-c']
+          args:
+            - |
+              echo "Waiting for database dependencies..."
+              until nslookup mariadb.boulder.svc.cluster.local; do
+                echo "Waiting for MariaDB service..."
+                sleep 2
+              done
+              echo "Database dependencies ready!"
+      containers:
+        - name: boulder-sa
+          image: boulder:latest
+          command: ["boulder", "boulder-sa"]
+          args: ["--config", "/etc/boulder/sa.json"]
+          ports:
+            - containerPort: 9395
+              name: grpc
+              protocol: TCP
+            - containerPort: 8003
+              name: debug
+              protocol: TCP
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: "/etc/boulder"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: boulder-url
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder
+            - name: internal-certs
+              mountPath: /etc/boulder/certs
+              readOnly: true
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8003
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8003
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-sa-config
+        - name: internal-certs
+          secret:
+            secretName: internal-pki
+---
+# Boulder SA Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-sa
+  namespace: boulder
+  labels:
+    app: boulder-sa
+    app.kubernetes.io/name: boulder-sa
+    app.kubernetes.io/component: storage-authority
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9395
+      targetPort: 9395
+      protocol: TCP
+      name: grpc
+  selector:
+    app: boulder-sa
+---
+# Boulder SA ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-sa-config
+  namespace: boulder
+  labels:
+    app: boulder-sa
+    app.kubernetes.io/name: boulder-sa
+    app.kubernetes.io/component: storage-authority-config
+data:
+  sa.json: |
+    {
+      "sa": {
+        "grpcAddress": ":9395",
+        "debugAddr": ":8003",
+
+        "dbConfig": {
+          "dbConnect": "${DATABASE_URL}",
+          "maxOpenConns": 100,
+          "maxIdleConns": 10,
+          "maxConnLifetime": "3600s"
+        },
+
+        "features": {
+          "ServeRenewalInfo": true,
+          "GetAuthorizationsByDomains": true,
+          "CheckCertificateBySerial": true
+        }
+      },
+
+      "syslog": {
+        "stdoutLevel": 6,
+        "syslogLevel": 6
+      },
+
+      "common": {
+        "dnsResolver": "8.8.8.8:53",
+        "dnsTimeout": "10s",
+        "dnsAllowLoopbackAddresses": true,
+        "tls": {
+          "certFile": "/etc/boulder/certs/sa.boulder/cert.pem",
+          "keyFile": "/etc/boulder/certs/sa.boulder/key.pem",
+          "caCertFile": "/etc/boulder/certs/minica.pem"
+        }
+      }
+    }

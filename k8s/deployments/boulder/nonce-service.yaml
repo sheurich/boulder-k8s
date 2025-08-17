@@ -1,0 +1,167 @@
+---
+# Boulder Nonce Service Deployment
+# Generates and validates single-use nonces for replay protection
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nonce-service
+  namespace: boulder
+  labels:
+    app: nonce-service
+    app.kubernetes.io/name: nonce-service
+    app.kubernetes.io/component: nonce-service
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    boulder.io/ocsp-excluded: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nonce-service
+  template:
+    metadata:
+      labels:
+        app: nonce-service
+        app.kubernetes.io/name: nonce-service
+        app.kubernetes.io/component: nonce-service
+    spec:
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-redis
+          image: busybox:1.35
+          command: ['sh', '-c']
+          args:
+            - |
+              echo "Waiting for Redis..."
+              until nslookup redis-client.boulder.svc.cluster.local; do
+                echo "Waiting for Redis service..."
+                sleep 2
+              done
+              echo "Redis is ready!"
+      containers:
+        - name: nonce-service
+          image: boulder:latest
+          command: ["boulder", "nonce-service"]
+          args: ["--config", "/etc/boulder/nonce-service.json"]
+          ports:
+            - containerPort: 9501
+              name: grpc
+              protocol: TCP
+            - containerPort: 8021
+              name: debug
+              protocol: TCP
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: "/etc/boulder"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: redis-password
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder
+            - name: internal-certs
+              mountPath: /etc/boulder/certs
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8021
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8021
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: nonce-service-config
+        - name: internal-certs
+          secret:
+            secretName: internal-pki
+---
+# Nonce Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nonce-service
+  namespace: boulder
+  labels:
+    app: nonce-service
+    app.kubernetes.io/name: nonce-service
+    app.kubernetes.io/component: nonce-service
+    app.kubernetes.io/part-of: boulder
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9501
+      targetPort: 9501
+      protocol: TCP
+      name: grpc
+  selector:
+    app: nonce-service
+---
+# Nonce Service ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nonce-service-config
+  namespace: boulder
+  labels:
+    app: nonce-service
+    app.kubernetes.io/name: nonce-service
+    app.kubernetes.io/component: nonce-service-config
+data:
+  nonce-service.json: |
+    {
+      "nonceService": {
+        "grpcAddress": ":9501",
+        "debugAddr": ":8021",
+        "redis": {
+          "server": "redis-client:6379",
+          "password": "${REDIS_PASSWORD}",
+          "maxRetries": 3,
+          "timeout": "5s"
+        },
+        "prefix": "boulder-k8s",
+        "maxUsed": 65536
+      },
+      "syslog": {
+        "stdoutLevel": 6,
+        "syslogLevel": 6
+      },
+      "common": {
+        "dnsResolver": "8.8.8.8:53",
+        "dnsTimeout": "10s",
+        "dnsAllowLoopbackAddresses": true,
+        "tls": {
+          "certFile": "/etc/boulder/certs/nonce.boulder/cert.pem",
+          "keyFile": "/etc/boulder/certs/nonce.boulder/key.pem",
+          "caCertFile": "/etc/boulder/certs/minica.pem"
+        }
+      }
+    }

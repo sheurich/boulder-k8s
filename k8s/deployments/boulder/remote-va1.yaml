@@ -1,0 +1,144 @@
+---
+# Boulder Remote Validation Authority 1 (Remote VA1) Deployment
+# Provides distributed domain validation for geographic diversity
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-remote-va1
+  namespace: boulder
+  labels:
+    app: boulder-remote-va1
+    app.kubernetes.io/name: boulder-remote-va1
+    app.kubernetes.io/component: remote-validation-authority
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    boulder.letsencrypt.org/ocsp-excluded: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: boulder-remote-va1
+  template:
+    metadata:
+      labels:
+        app: boulder-remote-va1
+        app.kubernetes.io/name: boulder-remote-va1
+        app.kubernetes.io/component: remote-validation-authority
+    spec:
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.35
+          command: ['sh', '-c']
+          args:
+            - |
+              echo "Waiting for dependencies..."
+              until nslookup boulder-sa.boulder.svc.cluster.local; do
+                echo "Waiting for SA service..."
+                sleep 2
+              done
+              echo "All dependencies ready!"
+      containers:
+        - name: boulder-remote-va1
+          image: boulder:latest
+          command: ["boulder", "boulder-va"]
+          args: ["--config", "/etc/boulder/remote-va1.json"]
+          ports:
+            - containerPort: 9497
+              name: grpc
+              protocol: TCP
+            - containerPort: 8004
+              name: debug
+              protocol: TCP
+          env:
+            - name: BOULDER_CONFIG_DIR
+              value: "/etc/boulder"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/boulder
+            - name: internal-certs
+              mountPath: /etc/boulder/certs
+              readOnly: true
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8004
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /debug/health
+              port: 8004
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-remote-va1-config
+        - name: internal-certs
+          secret:
+            secretName: internal-pki
+---
+# Boulder Remote VA1 ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-remote-va1-config
+  namespace: boulder
+  labels:
+    app: boulder-remote-va1
+    app.kubernetes.io/name: boulder-remote-va1
+    app.kubernetes.io/component: remote-validation-authority-config
+data:
+  remote-va1.json: |
+    {
+      "remoteVA": {
+        "grpcAddress": ":9497",
+        "debugAddr": ":8004",
+        "saService": {
+          "serverAddress": "boulder-sa:9395",
+          "hostOverride": "sa.boulder",
+          "timeout": "15s"
+        },
+        "dnsProvider": {
+          "server": "8.8.8.8:53",
+          "timeout": "10s"
+        },
+        "maxChallengeAttempts": 3,
+        "challengeLifetime": "300s"
+      },
+      "syslog": {
+        "stdoutLevel": 6,
+        "syslogLevel": 6
+      },
+      "common": {
+        "dnsResolver": "8.8.8.8:53",
+        "dnsTimeout": "10s",
+        "dnsAllowLoopbackAddresses": true,
+        "tls": {
+          "certFile": "/etc/boulder/certs/rva1.boulder/cert.pem",
+          "keyFile": "/etc/boulder/certs/rva1.boulder/key.pem",
+          "caCertFile": "/etc/boulder/certs/minica.pem"
+        }
+      }
+    }
