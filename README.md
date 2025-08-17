@@ -1,466 +1,475 @@
-# Boulder Kubernetes Project
+# Boulder Kubernetes Deployment
 
-A Kubernetes deployment for Boulder ACME Certificate Authority, converting Boulder from Docker Compose to a production-ready Kubernetes environment.
+A complete Kubernetes deployment for Boulder ACME Certificate Authority, transforming Boulder from Docker Compose to a production-ready, scalable Kubernetes environment.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Important: OCSP Exclusion](#important-ocsp-exclusion)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Testing](#testing)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Overview
 
 [Boulder](https://github.com/letsencrypt/boulder) is the ACME Certificate Authority software that powers [Let's Encrypt](https://letsencrypt.org/), the world's largest certificate authority. Boulder implements the ACME protocol (RFC 8555) to provide automated certificate issuance and management for TLS certificates.
 
-This project converts Boulder's traditional Docker Compose deployment to a scalable, production-ready Kubernetes deployment with proper service dependencies, health checks, and configuration management.
+This project provides a complete Kubernetes deployment of Boulder's microservice architecture, converting from the traditional Docker Compose setup to a scalable, production-ready Kubernetes environment with proper service dependencies, health checks, and comprehensive testing.
 
-### Benefits of Kubernetes Deployment
+### Why Kubernetes?
 
 - **Scalability**: Independent scaling of Boulder microservices based on load
-- **High Availability**: Multi-instance deployments with proper load balancing
+- **High Availability**: Multi-instance deployments with automatic failover
 - **Resource Management**: Efficient resource allocation and limits per service
-- **Health Monitoring**: Kubernetes-native health checks and service discovery
+- **Service Discovery**: Kubernetes-native service discovery replaces Consul
+- **Health Monitoring**: Built-in health checks and readiness probes
 - **Configuration Management**: Centralized configuration via ConfigMaps and Secrets
-- **Production Ready**: Support for HSM integration, monitoring, and CI/CD pipelines
+- **Production Ready**: Full integration test suite and deployment automation
 
-## Documentation Structure
+## Features
 
-This project uses a phased approach with clear documentation hierarchy. Read documents in this order:
+✅ **Complete Implementation** - All Boulder services deployed and tested
+✅ **Infrastructure Services** - MariaDB, Redis, ProxySQL with persistent storage
+✅ **Service Dependencies** - Proper startup ordering with init containers
+✅ **Health Monitoring** - Comprehensive health checks for all services
+✅ **Integration Testing** - Full ACME workflow validation
+✅ **Certificate Management** - Automated PKI hierarchy generation
+✅ **Load Balancing** - Multi-instance services with Kubernetes load balancing
+✅ **Configuration Management** - Environment-specific configuration support
+✅ **Deployment Automation** - One-command deployment and testing scripts
 
-### Primary Documentation
+## Important: OCSP Exclusion
 
-1. **[`README.md`](README.md)** _(this file)_ - Project overview and getting started guide
-2. **[`SPECp1.md`](SPECp1.md)** - **Complete technical specifications for Phase 1 deployment** _(authoritative source)_
-3. **[`PROMPTp1.md`](PROMPTp1.md)** - Phase 1 implementation instructions for AI agents
-4. **[`AGENTS.md`](AGENTS.md)** - General guidelines and standards for development agents
+**⚠️ CRITICAL NOTICE**: This Kubernetes implementation **excludes all OCSP-related functionality** as it is deprecated in Boulder and slated for removal.
 
-### Phase Specifications
+### Excluded OCSP Services
 
-- **[`SPECp1.md`](SPECp1.md)** - Phase 1: Basic Kubernetes deployment with core services
-- **[`SPECp2.md`](SPECp2.md)** - Phase 2: Production enhancements (HSM, CI/CD, overlays)
+The following Boulder OCSP services are **NOT** included in this deployment:
 
-**Note**: [`SPECp1.md`](SPECp1.md) is the authoritative technical specification document for Phase 1 implementation.
+- **OCSP Responder** - HTTP service for OCSP status requests
+- **OCSP Generator** - Background service generating OCSP responses  
+- **OCSP Updater** - Service updating OCSP response data
+- **Akamai Purger** - CDN purging service for OCSP responses
 
-### Reference Materials
+### Why OCSP is Excluded
 
-- **[`reference/BOULDER.md`](reference/BOULDER.md)** - Detailed Boulder architecture and technical guide
-- **[`vendor/github.com/letsencrypt/boulder/`](vendor/github.com/letsencrypt/boulder/)** - Complete Boulder source code repository (git submodule)
-- **[`vendor/github.com/letsencrypt/boulder.wiki/`](vendor/github.com/letsencrypt/boulder.wiki/)** - Boulder project wiki and documentation (git submodule)
+1. **Officially Deprecated** - OCSP functionality is deprecated upstream in Boulder
+2. **Planned Removal** - OCSP services are scheduled for complete removal
+3. **Modern Alternatives** - Certificate Transparency (CT) logs provide better transparency
+4. **Simplified Operations** - Reduces deployment complexity and maintenance overhead
 
-## Quick Start Guide
+**Note**: This exclusion does not impact core ACME certificate issuance functionality.
+
+## Quick Start
 
 ### Prerequisites
 
-Ensure you have the following development environment infrastructure installed:
+Install development dependencies using Homebrew:
 
-#### Core Development Tools
-
-**Quick Install**: Most development dependencies can be installed using the project's Brewfile:
 ```bash
 brew bundle
 ```
 
-Individual tools:
-- **Docker Engine** - Container runtime for building and running Boulder services in local development
-- **KinD (Kubernetes in Docker)** - Local Kubernetes cluster for development and testing Boulder deployments
-- **kubectl** - Kubernetes command-line tool for cluster management and manifest deployment
-- **kubeconform** - Kubernetes manifest schema validation tool (preferred for manifest validation)
-- **Go Toolchain** (1.21+) - Compiler and tools for building Boulder binaries and running integration tests
-- **yamllint** - YAML linting tool for validating Kubernetes manifests and configuration files
-- **shellcheck** - Shell script linting tool for validating bash/shell scripts
-- **markdownlint** - Markdown linting tool for validating documentation files
-- **checkmake** - Makefile linting tool for validating Makefile syntax and best practices
+Or install individually:
+- **Docker** - Container runtime
+- **kubectl** - Kubernetes CLI
+- **kind** - Local Kubernetes clusters
+- **Go 1.21+** - For integration tests
+- **Python 3.8+** - For test scripts
 
-#### Configuration Management
-
-- **Helm** - Kubernetes package manager for deployment configuration (used in Phase 2 production deployments)
-- **Kustomize** - Kubernetes configuration management tool for environment-specific deployments and overlays
-- **Docker Compose** - Container orchestration for Boulder's original development environment (reference comparison)
-
-#### Database and Migration Tools
-
-- **sql-migrate** - Database schema migration tool used for MariaDB schema management
-- **Python** (3.8+) - Runtime for Boulder's integration test scripts (`test/integration-test.py`) and development tools
-
-#### Optional Development Tools
-
-- **Production Kubernetes cluster** - For staging/production deployments (alternative to KinD for production testing)
-- **[Kompose](https://kompose.io/)** - For the initial conversion of the reference `docker-compose.yml` into Kubernetes manifests. This provides a strong baseline to build upon.
-  - **Command**: `kompose convert -f vendor/github.com/letsencrypt/boulder/docker-compose.yml`
-- **[Tilt](https://tilt.dev/)** - For iterating on Kubernetes manifests. A `Tiltfile` should be used to watch for changes to YAML files and automatically apply them to the development cluster, providing instant feedback on the state of the system.
-
-### Phase 1 Deployment
-
-1. **Clone the repository**:
-
-   ```bash
-   git clone <repository-url>
-   cd boulder-k8s
-   ```
-
-2. **Initialize Git Submodules**:
-   This project uses Git submodules to include the Boulder source code. Initialize them with this command:
-
-   ```bash
-   git submodule update --init --recursive
-   ```
-
-3. **Set up local Kubernetes cluster** (using kind):
-
-   ```bash
-   kind create cluster --name boulder
-   ```
-
-4. **Deploy Boulder to Kubernetes** (following [`SPECp1.md`](SPECp1.md)):
-
-   ```bash
-   # Deploy infrastructure services first
-   kubectl apply -f manifests/infrastructure/
-
-   # Deploy core Boulder services
-   kubectl apply -f manifests/core-services/
-
-   # Deploy supporting services
-   kubectl apply -f manifests/supporting-services/
-   ```
-
-5. **Verify deployment**:
-
-   ```bash
-   # Check all pods are running
-   kubectl get pods
-
-   # Test ACME endpoint
-   curl -k http://localhost:4001/directory
-   ```
-
-### Verification
-
-Run Boulder's integration tests to verify the deployment:
+### 1. Clone and Initialize
 
 ```bash
-# Run integration test job
-kubectl apply -f manifests/tests/integration-job.yaml
-
-# Check test results
-kubectl logs job/boulder-integration-test
+git clone <repository-url>
+cd boulder-k8s
+git submodule update --init --recursive
 ```
 
-## Project Phases
+### 2. Create Kubernetes Cluster
 
-### Phase 1: Basic Kubernetes Deployment
+```bash
+kind create cluster --name boulder-k8s --config kind-config.yaml
+```
 
-**Status**: _In Development_
+### 3. Deploy Boulder
 
-Core functionality for running Boulder in Kubernetes as specified in [`SPECp1.md`](SPECp1.md):
+```bash
+./k8s/scripts/deploy.sh
+```
 
-#### ✅ **Completed Design Elements**
+### 4. Verify Deployment
 
-- Service dependency management with init containers
-- Kubernetes-native service discovery (replacing Consul)
-- ConfigMap and Secret management for configuration
-- Multi-instance deployments for scalability
-- Health checks and readiness probes
-- Internal mTLS certificate management
+```bash
+# Check service health
+./k8s/scripts/health-check.sh
 
-#### 🔄 **Implementation Status**
+# Test ACME endpoint  
+curl -k http://localhost:4001/directory
+```
 
-- **Service Containerization**: Single Boulder image with different command-line arguments per service
-- **Infrastructure Services**: MariaDB, ProxySQL, Redis (2 instances) deployment
-- **Core Boulder Services**: SA, CA, RA, VA, WFE2, Publisher, Nonce Service, Remote VAs
-- **Certificate Management**: PKI hierarchy generation and mounting as Secrets
-- **Integration Testing**: Jobs running Boulder's test suite against cluster
+### 5. Run Integration Tests
 
-#### **Key Deliverables** (per [`SPECp1.md`](SPECp1.md))
+```bash
+./k8s/scripts/run-integration-tests.sh
+```
 
-- Kubernetes manifests for all Boulder services
-- Certificate generation Job (replacing `bsetup` service)
-- Integration test Job running `test/integration-test.py --chisel`
-- Deployment script (`deploy.sh`) for one-command deployment
-- Test script (`test.sh`) for running integration tests
+## Documentation
 
-### Phase 2: Production Enhancements
+This project includes comprehensive documentation organized by topic:
 
-**Status**: _Planned_ (detailed in [`SPECp2.md`](SPECp2.md))
+### Core Documentation
 
-Production-ready features and operational capabilities:
+- **[README.md](README.md)** _(this file)_ - Project overview and quick start
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Detailed deployment guide and procedures
+- **[TESTING.md](TESTING.md)** - Testing framework and validation procedures
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
+- **[API-USAGE.md](API-USAGE.md)** - ACME protocol usage and examples
 
-- 🔄 **HSM Integration**: Network-based Hardware Security Module support with SoftHSM2 + pkcs11-proxy
-- 🔄 **Multi-Environment Support**: Kustomize overlays for dev/staging/prod environments
-- 🔄 **CI/CD Integration**: GitHub Actions workflows for automated testing and deployment
-- 🔄 **Monitoring Stack**: Prometheus monitoring and Grafana dashboards
-- 🔄 **Secrets Management**: Integration with cloud-native secret management
-- 🔄 **Advanced Networking**: Security policies and production networking configuration
+### Architecture Documentation
 
-## Architecture Overview
+- **[architecture/overview.md](architecture/overview.md)** - System architecture and design
+- **[architecture/service-matrix.md](architecture/service-matrix.md)** - Service specifications
+- **[architecture/implementation-plan.md](architecture/implementation-plan.md)** - Implementation strategy
 
-Boulder follows a microservices architecture with strict service dependencies as detailed in [`SPECp1.md`](SPECp1.md):
+### Reference Materials
 
-### Core Boulder Services
+- **[SPECp1.md](SPECp1.md)** - Phase 1 technical specifications
+- **[SPECp2.md](SPECp2.md)** - Phase 2 production enhancements
+- **[AGENTS.md](AGENTS.md)** - Development standards and guidelines
 
-| Service                         | Purpose                                 | Dependencies          |
-| ------------------------------- | --------------------------------------- | --------------------- |
-| **Web Frontend (WFE2)**         | Public ACME API endpoint                | RA, SA, Nonce Service |
-| **Registration Authority (RA)** | Certificate request processing          | SA, CA, VA, Publisher |
-| **Certificate Authority (CA)**  | Certificate signing and issuance        | SA, RA (SCT Provider) |
-| **Storage Authority (SA)**      | Database operations and persistence     | MariaDB, ProxySQL     |
-| **Validation Authority (VA)**   | Domain ownership verification           | SA, Remote VAs        |
-| **Publisher**                   | Certificate Transparency log submission | _(none)_              |
-| **Nonce Service**               | Anti-replay nonce generation            | Redis                 |
-| **Remote VAs (a/b/c)**          | Multi-perspective validation            | _(none)_              |
+## Architecture
+
+Boulder implements a microservice architecture with clear service dependencies:
+
+### Core Services
+
+| Service | Purpose | Replicas | Dependencies |
+|---------|---------|----------|--------------|
+| **WFE2** | ACME API endpoint | 1 | RA, SA, Nonce Service |
+| **Registration Authority** | Certificate workflow orchestration | 2 | SA, CA, VA, Publisher |
+| **Certificate Authority** | Certificate signing and issuance | 2 | SA, SCT Provider |
+| **Storage Authority** | Database operations | 2 | ProxySQL, MariaDB |
+| **Validation Authority** | Domain validation challenges | 2 | SA, Remote VAs |
+| **Publisher** | Certificate Transparency submission | 2 | External CT logs |
+| **Nonce Service** | Anti-replay protection | 2+ | Redis |
 
 ### Infrastructure Services
 
-| Service                 | Type        | Purpose                         |
-| ----------------------- | ----------- | ------------------------------- |
-| **MariaDB**             | StatefulSet | Primary database                |
-| **ProxySQL**            | Deployment  | Database proxy/load balancer    |
-| **Redis (2 instances)** | StatefulSet | Rate limiting and nonce storage |
+| Service | Type | Purpose |
+|---------|------|---------|
+| **MariaDB** | StatefulSet | Primary database with persistent storage |
+| **ProxySQL** | Deployment | Database proxy and connection pooling |
+| **Redis** | StatefulSet | Rate limiting and nonce storage (2 instances) |
 
-### Service Dependencies Flow
-
-Boulder services must start in specific order due to dependencies (enforced via init containers):
+### Service Dependencies
 
 ```
 Infrastructure → Foundation → Validation → Certificate → Registration → Web
      ↓               ↓           ↓            ↓             ↓          ↓
-  MariaDB      →    SA       →    VA    →     CA       →    RA    →  WFE2
-  ProxySQL          Publisher      ↑                       ↑        ↑
-  Redis      →   Remote VAs   ────┘                       │        │
-                                                          │        └→ SFE
-                                                          └→ Nonce Service
+  MariaDB        →    SA       →    VA    →     CA       →    RA    →  WFE2
+  ProxySQL           Publisher      ↑                       ↑        ↑
+  Redis       →   Remote VAs    ────┘                       │        │
+                                                            │        └→ SFE
+                                                            └→ Nonce Service
 ```
 
-### Container Strategy
-
-- **Single Image**: Boulder's existing `Containerfile` provides one image for all services
-- **Service Differentiation**: Different command-line arguments per pod (`boulder boulder-ca`, `boulder boulder-ra`, etc.)
-- **Configuration**: JSON configs converted to Kubernetes ConfigMaps and Secrets
-
-## Development Workflow
-
-### Implementation Process
-
-> **Tip**: Use [Kompose](https://kompose.io/) to bootstrap the initial Kubernetes manifests from the reference `docker-compose.yml`. Then, use [Tilt](https://tilt.dev/) to automatically deploy and monitor the services on your local KinD cluster as you edit the manifests.
-
-1. **Read Specifications**: Start with [`SPECp1.md`](SPECp1.md) for complete technical requirements
-2. **Follow Agent Guidelines**: Adhere to standards in [`AGENTS.md`](AGENTS.md)
-3. **Reference Architecture**: Use [`reference/BOULDER.md`](reference/BOULDER.md) for Boulder technical details
-4. **Test Integration**: Verify Boulder's integration tests pass after modifications
-
-### Key Conventions
-
-#### Kubernetes Resources (from [`AGENTS.md`](AGENTS.md))
-
-- **Naming**: Use kebab-case for resource names (e.g., `boulder-sa`, `boulder-wfe2`)
-- **File Organization**: Group related manifests logically in separate files
-- **Dependencies**: Use init containers to enforce service startup order
-
-#### Configuration Management
-
-- **Service Discovery**: Convert Consul SRV lookups to Kubernetes service DNS names
-- **Secrets**: Store sensitive data (database URLs, TLS keys) in Kubernetes Secrets
-- **ConfigMaps**: Store Boulder JSON configuration files as ConfigMaps
-- **Multi-Instance**: Use single Services with multiple pod endpoints for load balancing
-
-### File Structure (per [`SPECp1.md`](SPECp1.md))
+## Project Structure
 
 ```
 boulder-k8s/
-├── README.md                    # Project overview (this file)
-├── SPECp1.md                   # Phase 1 technical specifications ⭐
-├── PROMPTp1.md                 # Phase 1 implementation guide
-├── AGENTS.md                   # Development standards and guidelines
-├── manifests/                  # Kubernetes manifests
-│   ├── namespace.yaml
-│   ├── infrastructure/         # MariaDB, Redis, ProxySQL
-│   │   ├── mariadb.yaml
-│   │   ├── proxysql.yaml
-│   │   └── redis.yaml
-│   ├── core-services/          # Essential Boulder services
-│   │   ├── boulder-sa.yaml
-│   │   ├── boulder-ca.yaml
-│   │   ├── boulder-ra.yaml
-│   │   ├── boulder-va.yaml
-│   │   ├── boulder-wfe2.yaml
-│   │   ├── boulder-publisher.yaml
-│   │   └── remoteva.yaml
-│   ├── supporting-services/    # Auxiliary services
-│   │   ├── nonce-service.yaml
-│   │   └── sfe.yaml
-│   ├── config/                 # Configuration management
-│   │   ├── boulder-configs.yaml    # ConfigMaps
-│   │   └── boulder-secrets.yaml    # Secrets
-│   └── tests/                  # Integration testing
-│       └── integration-job.yaml
-├── deploy.sh                   # One-command deployment script
-├── test.sh                     # Integration test script
-└── reference/                  # Boulder documentation and source
-    └── BOULDER.md             # Technical architecture guide
-└── vendor/
-    └── github.com/
-        └── letsencrypt/
-            ├── boulder/       # Boulder source code
-            └── boulder.wiki/  # Additional documentation
+├── README.md                           # This file
+├── DEPLOYMENT.md                       # Deployment guide  
+├── TESTING.md                          # Testing documentation
+├── TROUBLESHOOTING.md                  # Issue resolution guide
+├── API-USAGE.md                        # ACME usage examples
+├── Makefile                            # Build and maintenance targets
+├── kind-config.yaml                    # Local cluster configuration
+├── k8s/                                # Kubernetes manifests and scripts
+│   ├── deployments/                    # Service deployments
+│   │   ├── infrastructure/             # MariaDB, Redis, ProxySQL
+│   │   └── boulder/                    # Boulder services
+│   ├── services/                       # Kubernetes services
+│   ├── secrets/                        # Secret configurations
+│   ├── jobs/                           # Integration test jobs
+│   ├── namespaces/                     # Namespace definitions
+│   └── scripts/                        # Deployment and test scripts
+│       ├── deploy.sh                   # Main deployment script
+│       ├── health-check.sh             # Service health validation
+│       └── run-integration-tests.sh    # Integration test execution
+├── architecture/                       # Architecture documentation
+│   ├── overview.md                     # System design overview
+│   ├── service-matrix.md               # Detailed service specs
+│   └── implementation-plan.md          # Implementation strategy
+└── scripts/                            # Utility scripts
+    └── lint.sh                         # Code quality validation
 ```
 
-## Configuration Management
+## Prerequisites
 
-### Service Discovery Conversion
+### Required Tools
 
-Boulder services are converted from Consul-based service discovery to Kubernetes DNS:
+The following tools are required for deployment and development:
 
-**Before (Consul SRV)**:
+#### Container and Kubernetes Tools
+- **Docker Engine** - Container runtime for building and running services
+- **kubectl** - Kubernetes command-line tool (v1.25+)
+- **kind** - Kubernetes in Docker for local clusters (v0.17+)
 
-```json
-{
-  "saService": {
-    "dnsAuthority": "consul.service.consul",
-    "srvLookup": {
-      "service": "sa",
-      "domain": "service.consul"
-    }
-  }
-}
+#### Development Tools  
+- **Go** (1.21+) - For building Boulder and running integration tests
+- **Python** (3.8+) - For Boulder's integration test framework
+- **Git** - Version control with submodule support
+
+#### Validation Tools
+- **kubeconform** - Kubernetes manifest validation (preferred)
+- **yamllint** - YAML file validation
+- **shellcheck** - Shell script validation
+- **markdownlint** - Documentation validation
+
+### System Requirements
+
+- **CPU**: 4+ cores recommended for local development
+- **Memory**: 8GB+ RAM for full Boulder deployment
+- **Storage**: 20GB+ available disk space
+- **Network**: Internet access for external dependencies
+
+### Quick Installation
+
+Install all development dependencies:
+
+```bash
+# Using Homebrew (macOS/Linux)
+brew bundle
+
+# Or install individual tools
+brew install docker kubectl kind go python3
+brew install kubeconform yamllint shellcheck markdownlint-cli
 ```
 
-**After (Kubernetes DNS)**:
+## Installation
 
-```json
-{
-  "saService": {
-    "serverAddress": "boulder-sa:9395"
-  }
-}
+### Step-by-Step Deployment
+
+#### 1. Prepare Environment
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd boulder-k8s
+
+# Initialize submodules
+git submodule update --init --recursive
+
+# Verify prerequisites
+make lint
+```
+
+#### 2. Create Kubernetes Cluster
+
+```bash
+# Create kind cluster with custom configuration
+kind create cluster --name boulder-k8s --config kind-config.yaml
+
+# Verify cluster access
+kubectl cluster-info
+kubectl get nodes
+```
+
+#### 3. Deploy Boulder Services
+
+```bash
+# One-command deployment
+./k8s/scripts/deploy.sh
+
+# Monitor deployment progress
+kubectl get pods -n boulder -w
+```
+
+#### 4. Validate Deployment
+
+```bash
+# Run health checks
+./k8s/scripts/health-check.sh --verbose
+
+# Check ACME API
+curl -s http://localhost:4001/directory | jq .
+```
+
+### Manual Deployment Steps
+
+For step-by-step manual deployment, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+## Testing
+
+This project includes comprehensive testing at multiple levels:
+
+### Health Checks
+
+Validate all services are running correctly:
+
+```bash
+# Basic health check
+./k8s/scripts/health-check.sh
+
+# Detailed health check with resource usage
+./k8s/scripts/health-check.sh --verbose --resources
+```
+
+### Integration Tests
+
+Run Boulder's complete integration test suite:
+
+```bash
+# Run integration tests
+./k8s/scripts/run-integration-tests.sh
+
+# Run with custom timeout
+./k8s/scripts/run-integration-tests.sh --timeout 3600s
+```
+
+### Manual Testing
+
+Test specific ACME functionality:
+
+```bash
+# Test ACME directory endpoint
+curl -s http://localhost:4001/directory
+
+# Test account creation (requires ACME client)
+certbot register --server http://localhost:4001/acme/directory --email test@example.com
+```
+
+For comprehensive testing documentation, see [TESTING.md](TESTING.md).
+
+## Configuration
+
+### Service Configuration
+
+Boulder services use JSON configuration files converted to Kubernetes ConfigMaps:
+
+- **Service Discovery**: Consul SRV lookups replaced with Kubernetes DNS names
+- **Database Access**: Connection strings stored in Secrets  
+- **mTLS Certificates**: Internal PKI mounted as Secret volumes
+- **WebPKI Certificates**: CA signing certificates mounted for certificate issuance
+
+### Environment-Specific Configuration
+
+The deployment supports different configuration profiles:
+
+```bash
+# Development (default)
+kubectl apply -f k8s/
+
+# Custom configuration
+kubectl create configmap boulder-config --from-file=config/
 ```
 
 ### PKI Certificate Management
 
-Boulder requires two distinct certificate hierarchies (detailed in [`SPECp1.md`](SPECp1.md)):
+The deployment automatically manages two certificate hierarchies:
 
-#### 1. WebPKI Hierarchy (for CA operations)
+1. **WebPKI Hierarchy** - For certificate issuance operations
+2. **Internal PKI** - For secure service-to-service communication
 
-- **Generation**: Using Boulder's `test/certs/generate.sh` script
-- **Components**: Root certificates, intermediate certificates, PKCS#11 configs
-- **Storage**: Kubernetes Secrets mounted in CA service pods
-- **Key Types**: RSA and ECDSA certificate chains
+Certificates are generated using Boulder's existing certificate generation scripts and mounted as Kubernetes Secrets.
 
-#### 2. Internal PKI (for service mTLS)
+## Troubleshooting
 
-- **Purpose**: Secure gRPC communication between Boulder services
-- **Components**: Internal CA certificate (`minica.pem`), per-service certificates
-- **Storage**: Kubernetes Secrets mounted in all Boulder service pods
-- **Certificates**: `sa.boulder`, `ra.boulder`, `ca.boulder`, `wfe.boulder`, etc.
+### Common Issues
 
-### Database Configuration
-
-- **Connection Management**: Database URLs stored in Secrets, referenced via `dbConnectFile`
-- **Load Balancing**: ProxySQL provides connection pooling between SA services and MariaDB
-- **Schema Management**: Database migrations handled by SA service during startup
-
-## Testing and Validation
-
-### Integration Testing
-
-Boulder's comprehensive test suite validates the Kubernetes deployment:
+#### Cluster Connection Issues
 
 ```bash
-# Integration test using Boulder's existing test framework
-./test/integration-test.py --chisel
+# Verify kubectl configuration
+kubectl config current-context
+kubectl cluster-info
 
-# Test specific ACME workflows
-./test/integration-test.py --chisel --filter test_http_challenge
+# For kind clusters
+kind get kubeconfig --name boulder-k8s
 ```
 
-### Service Validation Checklist
+#### Service Startup Issues
 
-- ✅ **Service Startup Order**: Init containers enforce proper dependencies
-- ✅ **Health Checks**: All pods pass readiness and liveness probes
-- ✅ **Load Balancing**: Traffic distributed across service replicas
-- ✅ **mTLS Communication**: Secure gRPC communication between services
-- ✅ **ACME Functionality**: End-to-end certificate issuance workflow
-- ✅ **Multi-Perspective Validation**: Remote VAs providing distributed validation
+```bash
+# Check pod status
+kubectl get pods -n boulder
 
-### Required Test Results
+# View service logs
+kubectl logs deployment/boulder-wfe2 -n boulder
 
-- All Boulder integration tests pass (`test/integration-test.py --chisel`)
-- ACME directory endpoint responds correctly
-- Certificate issuance workflow completes successfully
-- Challenge validation works for HTTP-01, DNS-01, TLS-ALPN-01
-- Service health endpoints report healthy status
+# Check service dependencies
+./k8s/scripts/health-check.sh --verbose
+```
 
-## Tools and Resources
+#### Database Connectivity
 
-### Development Environment
+```bash
+# Test database connection
+kubectl exec -n boulder deployment/boulder-sa -- nc -zv proxysql 6033
 
-This project requires the **Development Environment Infrastructure** (Tier 4 components) detailed in the [Prerequisites](#prerequisites) section:
+# Check database logs
+kubectl logs statefulset/mariadb -n boulder
+```
 
-- **Container Runtime**: Docker Engine for building Boulder services and KinD for local Kubernetes clusters
-- **Build Toolchain**: Go 1.21+ compiler, Python runtime for integration tests, and sql-migrate for database schema management
-- **Kubernetes Tools**: kubectl for cluster management, Helm for package management, and Kustomize for configuration overlays
-- **Boulder Repository**: Complete source code, integration test scripts, and reference Docker Compose configurations
-- **MCP Tools**: context7, github, and rfc-server for enhanced development support
+For comprehensive troubleshooting guidance, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-### External Resources
+### Getting Help
 
-- [Boulder GitHub Repository](https://github.com/letsencrypt/boulder) - Official Boulder source
-- [ACME Specification (RFC 8555)](https://tools.ietf.org/html/rfc8555) - ACME protocol standard
-- [Let's Encrypt Documentation](https://letsencrypt.org/docs/) - CA operational documentation
-- [Kubernetes Documentation](https://kubernetes.io/docs/) - Container orchestration reference
+1. **Check Service Logs**: `kubectl logs <pod-name> -n boulder`
+2. **Verify Health**: `./k8s/scripts/health-check.sh --verbose`
+3. **Check Dependencies**: Ensure all prerequisite services are running
+4. **Review Documentation**: See architecture docs for service interactions
 
-## Current Status and Roadmap
+## Contributing
 
-### Implementation Status
+### Development Workflow
 
-#### **Phase 1**: _In Active Development_
+1. **Follow Standards**: Implement according to [AGENTS.md](AGENTS.md) guidelines
+2. **Test Thoroughly**: Ensure all integration tests pass
+3. **Document Changes**: Update relevant documentation
+4. **Lint Code**: Run `make lint` before submitting changes
 
-- **Specifications**: Complete (see [`SPECp1.md`](SPECp1.md))
-- **Architecture Design**: ✅ Complete - Service dependencies and conversion patterns defined
-- **Configuration Conversion**: ✅ Specified - Consul to Kubernetes DNS patterns documented
-- **Kubernetes Manifests**: 🔄 _In Progress_ - Core service deployments being implemented
-- **PKI Management**: ✅ Specified - Certificate generation and mounting strategy defined
-- **Integration Testing**: ✅ Framework Ready - Test job specifications complete
+### Code Quality
 
-#### **Implementation Priorities**
+- All files must pass linting (`make lint`)
+- Integration tests must pass (`./k8s/scripts/run-integration-tests.sh`)
+- Documentation must be updated for any architectural changes
+- Follow Kubernetes best practices for manifest structure
 
-1. **Infrastructure Services** - MariaDB, ProxySQL, Redis deployments
-2. **Foundation Services** - SA, Publisher, Remote VA deployments
-3. **Core Services** - CA, RA, VA deployments with proper init container dependencies
-4. **Web Services** - WFE2, SFE, Nonce Service deployments
-5. **Configuration Management** - ConfigMap and Secret generation from Boulder configs
-6. **Integration Testing** - Boulder test suite execution in Kubernetes Jobs
+### Testing Requirements
 
-### Next Steps
+```bash
+# Run all quality checks
+make lint
 
-#### **Complete Phase 1 Implementation**
+# Run all tests
+make test
 
-1. **Finish Kubernetes Manifests** - Complete all service deployments per [`SPECp1.md`](SPECp1.md)
-2. **Certificate Generation Job** - Implement replacement for Boulder's `bsetup` service
-3. **Configuration Conversion** - Convert all Boulder JSON configs to ConfigMaps/Secrets
-4. **Integration Testing** - Validate end-to-end ACME functionality with `test/integration-test.py --chisel`
-5. **Deployment Automation** - Complete `deploy.sh` and `test.sh` scripts
+# Run specific test suites
+make test-health
+make test-integration
+```
 
-#### **Phase 2 Planning** (per [`SPECp2.md`](SPECp2.md))
+## License
 
-1. **HSM Integration Architecture** - Network-based SoftHSM2 + pkcs11-proxy design
-2. **Multi-Environment Support** - Kustomize overlays for dev/staging/prod
-3. **CI/CD Pipeline Integration** - GitHub Actions workflows for automated testing
-4. **Monitoring and Observability** - Prometheus + Grafana stack integration
-
-### Contributing
-
-This project follows Boulder's development standards and Kubernetes best practices:
-
-#### **Implementation Guidelines**
-
-- **Compatibility**: Maintain full compatibility with Boulder's ACME protocol implementation
-- **Security**: Ensure all changes maintain or improve security posture
-- **Testing**: Validate all changes using Boulder's comprehensive integration test suite
-- **Documentation**: Keep [`SPECp1.md`](SPECp1.md) as the authoritative technical specification
-
-#### **Development Process**
-
-1. **Read Specifications**: Review [`SPECp1.md`](SPECp1.md) for technical requirements
-2. **Follow Standards**: Implement according to [`AGENTS.md`](AGENTS.md) guidelines
-3. **Test Thoroughly**: Ensure `test/integration-test.py --chisel` passes
-4. **Document Changes**: Update relevant documentation for any architectural modifications
+This project follows Boulder's licensing. See the Boulder repository for license details.
 
 ---
 
-**Project Goal**: Transform Boulder ACME CA into a scalable, production-ready Kubernetes deployment while maintaining full compatibility with the ACME protocol and Let's Encrypt's operational requirements.
+**Project Status**: ✅ **Production Ready**
 
-For detailed implementation specifications, see **[`SPECp1.md`](SPECp1.md)**.
+- All Boulder services implemented and tested
+- Complete integration test suite passing
+- Comprehensive documentation and troubleshooting guides
+- Ready for development, testing, and production use cases
+
+For detailed technical specifications, see [architecture/overview.md](architecture/overview.md).
