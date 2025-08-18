@@ -1,0 +1,108 @@
+---
+# Boulder mTLS Configuration ConfigMap
+# Provides shared configuration for mutual TLS authentication across all Boulder services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-mtls-config
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-mtls-config
+    app.kubernetes.io/component: mtls-configuration
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    description: "Shared mTLS configuration for Boulder service-to-service communication"
+data:
+  # Common mTLS settings that can be referenced by all Boulder services
+  mtls-common.json: |
+    {
+      "grpc": {
+        "tls": {
+          "serverAuth": true,
+          "clientAuth": true,
+          "requireClientCert": true,
+          "verifyClientCert": true,
+          "cipherSuites": [
+            "TLS_AES_256_GCM_SHA384",
+            "TLS_AES_128_GCM_SHA256",
+            "TLS_CHACHA20_POLY1305_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+          ],
+          "minVersion": "1.3",
+          "maxVersion": "1.3"
+        }
+      }
+    }
+
+  # Environment variables template for mTLS configuration
+  mtls-env-template: |
+    # mTLS Environment Variables Template
+    # These should be set in each service deployment:
+
+    # Server-side TLS configuration
+    BOULDER_GRPC_TLS_CERT=/etc/boulder/tls/server/tls.crt
+    BOULDER_GRPC_TLS_KEY=/etc/boulder/tls/server/tls.key
+    BOULDER_GRPC_TLS_CA=/etc/boulder/tls/ca/tls.crt
+
+    # Client-side TLS configuration for outgoing connections
+    BOULDER_GRPC_CLIENT_CERT=/etc/boulder/tls/server/tls.crt
+    BOULDER_GRPC_CLIENT_KEY=/etc/boulder/tls/server/tls.key
+    BOULDER_GRPC_CLIENT_CA=/etc/boulder/tls/ca/tls.crt
+
+    # gRPC specific settings
+    GRPC_GO_LOG_VERBOSITY_LEVEL=99
+    GRPC_GO_LOG_SEVERITY_LEVEL=info
+
+  # Certificate mount paths configuration
+  cert-paths.json: |
+    {
+      "paths": {
+        "serverCert": "/etc/boulder/tls/server/tls.crt",
+        "serverKey": "/etc/boulder/tls/server/tls.key",
+        "caCert": "/etc/boulder/tls/ca/tls.crt",
+        "clientCert": "/etc/boulder/tls/server/tls.crt",
+        "clientKey": "/etc/boulder/tls/server/tls.key"
+      },
+      "permissions": {
+        "certificateFiles": "0444",
+        "privateKeyFiles": "0400"
+      }
+    }
+
+  # Service certificate mapping
+  service-certs.yaml: |
+    # Mapping of Boulder services to their gRPC TLS secrets
+    services:
+      boulder-ca:
+        secretName: boulder-ca-grpc-tls
+        hostOverride: ca.boulder
+      boulder-ra:
+        secretName: boulder-ra-grpc-tls
+        hostOverride: ra.boulder
+      boulder-sa:
+        secretName: boulder-sa-grpc-tls
+        hostOverride: sa.boulder
+      boulder-va:
+        secretName: boulder-va-grpc-tls
+        hostOverride: va.boulder
+      boulder-wfe2:
+        secretName: boulder-wfe2-grpc-tls
+        hostOverride: wfe2.boulder
+      boulder-publisher:
+        secretName: boulder-publisher-grpc-tls
+        hostOverride: publisher.boulder
+      nonce-service:
+        secretName: nonce-service-grpc-tls
+        hostOverride: nonce.boulder
+      sct-provider:
+        secretName: sct-provider-grpc-tls
+        hostOverride: sct-provider.boulder
+      remote-va1:
+        secretName: remote-va1-grpc-tls
+        hostOverride: rva1.boulder
+      remote-va2:
+        secretName: remote-va2-grpc-tls
+        hostOverride: rva2.boulder

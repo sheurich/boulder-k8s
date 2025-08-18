@@ -61,6 +61,13 @@ spec:
               mountPath: /etc/mysql/conf.d
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
+            # TLS Certificate Mounts
+            - name: server-tls
+              mountPath: /etc/mysql/tls/server
+              readOnly: true
+            - name: ca-tls
+              mountPath: /etc/mysql/tls/ca
+              readOnly: true
           resources:
             requests:
               cpu: 1000m
@@ -103,6 +110,15 @@ spec:
           configMap:
             name: mariadb-init-scripts
             defaultMode: 0755
+        # TLS Certificate Volumes
+        - name: server-tls
+          secret:
+            secretName: mariadb-server-tls
+            defaultMode: 0400  # Read-only for owner only
+        - name: ca-tls
+          secret:
+            secretName: intermediate-ca-secret
+            defaultMode: 0444  # Read-only for all
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -155,6 +171,16 @@ data:
 
     # Security
     skip_name_resolve = 1
+
+    # TLS Configuration
+    ssl_cert = /etc/mysql/tls/server/tls.crt
+    ssl_key = /etc/mysql/tls/server/tls.key
+    ssl_ca = /etc/mysql/tls/ca/tls.crt
+    require_secure_transport = ON
+    tls_version = TLSv1.2,TLSv1.3
+
+    # TLS Cipher Configuration for Strong Security
+    ssl_cipher = ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384
 ---
 # MariaDB Initialization Scripts
 apiVersion: v1

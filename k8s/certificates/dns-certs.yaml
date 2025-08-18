@@ -1,0 +1,96 @@
+---
+# DNS over HTTPS Client Certificate for VA Services
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: va-dns-client-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-va
+    app.kubernetes.io/component: dns-client-tls
+spec:
+  secretName: va-dns-client-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+    organizationalUnits:
+      - Validation Authority
+      - DNS Clients
+  commonName: boulder-va-dns-client
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# DNS over HTTPS Client Certificate for Remote VA1
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: remote-va1-dns-client-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: remote-va1
+    app.kubernetes.io/component: dns-client-tls
+spec:
+  secretName: remote-va1-dns-client-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+    organizationalUnits:
+      - Remote Validation Authority 1
+      - DNS Clients
+  commonName: remote-va1-dns-client
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# DNS over HTTPS Client Certificate for Remote VA2
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: remote-va2-dns-client-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: remote-va2
+    app.kubernetes.io/component: dns-client-tls
+spec:
+  secretName: remote-va2-dns-client-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+    organizationalUnits:
+      - Remote Validation Authority 2
+      - DNS Clients
+  commonName: remote-va2-dns-client
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io

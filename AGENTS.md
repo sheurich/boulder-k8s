@@ -89,6 +89,39 @@ This document outlines standards and practices that all software development age
 - Document decisions and rationale for future reference
 - Ensure deliverables meet specified acceptance criteria
 
+### Task Management
+
+**TODO.md Maintenance Procedures:**
+
+- **Session Startup**: Check `TODO.md` at the start of each work session to understand current project state and priorities
+- **Status Updates**: Update task status when starting or completing work using appropriate status indicators
+- **Discovery Documentation**: Add newly discovered issues or requirements to TODO.md immediately as they are identified
+- **Completion Tracking**: Maintain running summary of completed work with completion dates for project history
+- **Regular Reviews**: Review and reprioritize tasks periodically based on changing requirements and blockers
+- **Next Steps Maintenance**: Keep next steps section updated with immediate actionable items
+
+**Status Indicators:**
+- `✅` (done) - Task completed and validated
+- `🔄` (in progress) - Currently being worked on
+- `🔴` (critical/urgent) - High priority task blocking other work
+- `⏸️` (blocked) - Waiting on dependencies or external decisions
+- `📋` (pending) - Planned but not yet started
+
+**Task Documentation Guidelines:**
+- Use markdown checkboxes for actionable items
+- Include dates for completed items to maintain project timeline
+- Add context notes for complex tasks requiring additional explanation
+- Link to relevant documentation or code when applicable
+- Document blockers with sufficient context for resolution
+- Organize tasks by logical categories and implementation phases
+
+**Weekly Review Process:**
+1. Update completion status for all finished tasks
+2. Assess and document any new blockers or impediments
+3. Reprioritize pending tasks based on current project needs
+4. Update next steps with upcoming week's focus areas
+5. Review project phase progress and timeline adherence
+
 ### Collaboration
 
 - Follow established version control practices

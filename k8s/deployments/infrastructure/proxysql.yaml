@@ -75,6 +75,16 @@ spec:
               mountPath: /etc/proxysql
             - name: data
               mountPath: /var/lib/proxysql
+            # TLS Certificate Mounts
+            - name: server-tls
+              mountPath: /etc/proxysql/tls/server
+              readOnly: true
+            - name: client-tls
+              mountPath: /etc/proxysql/tls/client
+              readOnly: true
+            - name: ca-tls
+              mountPath: /etc/proxysql/tls/ca
+              readOnly: true
           resources:
             requests:
               cpu: 500m
@@ -107,6 +117,19 @@ spec:
             name: proxysql-config
         - name: data
           emptyDir: {}
+        # TLS Certificate Volumes
+        - name: server-tls
+          secret:
+            secretName: proxysql-server-tls
+            defaultMode: 0400  # Read-only for owner only
+        - name: client-tls
+          secret:
+            secretName: mariadb-client-tls
+            defaultMode: 0400  # Read-only for owner only
+        - name: ca-tls
+          secret:
+            secretName: intermediate-ca-secret
+            defaultMode: 0444  # Read-only for all
 ---
 # ProxySQL Configuration
 apiVersion: v1
@@ -158,6 +181,10 @@ data:
         ping_timeout_server=500
         commands_stats=true
         sessions_sort=true
+        # TLS Configuration for Frontend (Boulder services connecting to ProxySQL)
+        ssl_p2s_cert="/etc/proxysql/tls/server/tls.crt"
+        ssl_p2s_key="/etc/proxysql/tls/server/tls.key"
+        ssl_p2s_ca="/etc/proxysql/tls/ca/tls.crt"
     }
 
     # MySQL Servers configuration
@@ -169,7 +196,10 @@ data:
             hostgroup=0
             weight=1000
             max_connections=200
-            use_ssl=0
+            use_ssl=1
+            ssl_cert="/etc/proxysql/tls/client/tls.crt"
+            ssl_key="/etc/proxysql/tls/client/tls.key"
+            ssl_ca="/etc/proxysql/tls/ca/tls.crt"
         }
     )
 

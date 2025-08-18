@@ -1,0 +1,173 @@
+---
+# MariaDB Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mariadb-server-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: server-tls
+spec:
+  secretName: mariadb-server-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder Infrastructure
+  commonName: mariadb.boulder.svc.cluster.local
+  dnsNames:
+    - mariadb
+    - mariadb.boulder
+    - mariadb.boulder.svc
+    - mariadb.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# MariaDB Client Certificate for Boulder Services
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mariadb-client-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: client-tls
+spec:
+  secretName: mariadb-client-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder Infrastructure
+    organizationalUnits:
+      - Database Clients
+  commonName: boulder-db-client
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# ProxySQL Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: proxysql-server-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: proxysql
+    app.kubernetes.io/component: server-tls
+spec:
+  secretName: proxysql-server-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder Infrastructure
+  commonName: proxysql.boulder.svc.cluster.local
+  dnsNames:
+    - proxysql
+    - proxysql.boulder
+    - proxysql.boulder.svc
+    - proxysql.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Redis Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-server-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: server-tls
+spec:
+  secretName: redis-server-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder Infrastructure
+  commonName: redis.boulder.svc.cluster.local
+  dnsNames:
+    - redis
+    - redis.boulder
+    - redis.boulder.svc
+    - redis.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Redis Client Certificate for Boulder Services
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-client-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: client-tls
+spec:
+  secretName: redis-client-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder Infrastructure
+    organizationalUnits:
+      - Cache Clients
+  commonName: boulder-redis-client
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io

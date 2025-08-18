@@ -76,11 +76,35 @@ spec:
                 secretKeyRef:
                   name: db-credentials
                   key: redis-password
+            # mTLS Environment Variables
+            - name: BOULDER_GRPC_TLS_CERT
+              value: "/etc/boulder/tls/server/tls.crt"
+            - name: BOULDER_GRPC_TLS_KEY
+              value: "/etc/boulder/tls/server/tls.key"
+            - name: BOULDER_GRPC_TLS_CA
+              value: "/etc/boulder/tls/ca/tls.crt"
+            - name: BOULDER_GRPC_CLIENT_CERT
+              value: "/etc/boulder/tls/server/tls.crt"
+            - name: BOULDER_GRPC_CLIENT_KEY
+              value: "/etc/boulder/tls/server/tls.key"
+            - name: BOULDER_GRPC_CLIENT_CA
+              value: "/etc/boulder/tls/ca/tls.crt"
+            - name: GRPC_GO_LOG_VERBOSITY_LEVEL
+              value: "99"
+            - name: GRPC_GO_LOG_SEVERITY_LEVEL
+              value: "info"
           volumeMounts:
             - name: config
               mountPath: /etc/boulder
             - name: internal-certs
               mountPath: /etc/boulder/certs
+              readOnly: true
+            # mTLS Certificate Mounts
+            - name: server-tls
+              mountPath: /etc/boulder/tls/server
+              readOnly: true
+            - name: ca-tls
+              mountPath: /etc/boulder/tls/ca
               readOnly: true
           resources:
             requests:
@@ -116,6 +140,15 @@ spec:
         - name: internal-certs
           secret:
             secretName: internal-pki
+        # mTLS Certificate Volumes
+        - name: server-tls
+          secret:
+            secretName: boulder-ra-grpc-tls
+            defaultMode: 0400  # Read-only for owner only
+        - name: ca-tls
+          secret:
+            secretName: intermediate-ca-secret
+            defaultMode: 0444  # Read-only for all
 ---
 # Boulder RA Service
 apiVersion: v1
@@ -158,25 +191,37 @@ data:
         "vaService": {
           "serverAddress": "boulder-va:9392",
           "hostOverride": "va.boulder",
-          "timeout": "20s"
+          "timeout": "20s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "caService": {
           "serverAddress": "boulder-ca:9393",
           "hostOverride": "ca.boulder",
-          "timeout": "15s"
+          "timeout": "15s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "saService": {
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
-          "timeout": "15s"
+          "timeout": "15s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "publisherService": {
           "serverAddress": "boulder-publisher:9391",
           "hostOverride": "publisher.boulder",
-          "timeout": "300s"
+          "timeout": "300s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "limiter": {

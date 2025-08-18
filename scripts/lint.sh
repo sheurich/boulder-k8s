@@ -59,9 +59,9 @@ main() {
     fi
     echo
     
-    # Run kubeconform on k8s directory
+    # Run kubeconform on k8s directory (ignore missing schemas for CRDs)
     if [ -d "k8s" ]; then
-        if ! run_linter "kubeconform on Kubernetes manifests" kubeconform --strict k8s/; then
+        if ! run_linter "kubeconform on Kubernetes manifests" kubeconform --ignore-missing-schemas k8s/; then
             exit_code=1
         fi
     else

@@ -1,0 +1,387 @@
+---
+# Boulder Database Initialization Job
+# Creates the complete Boulder database schema excluding deprecated OCSP functionality
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: boulder-db-init
+  namespace: boulder
+  labels:
+    app: boulder-db-init
+    app.kubernetes.io/name: boulder-db-init
+    app.kubernetes.io/component: database-initialization
+    app.kubernetes.io/part-of: boulder
+  annotations:
+    boulder.io/ocsp-excluded: "true"
+spec:
+  backoffLimit: 3
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: boulder-db-init
+        app.kubernetes.io/name: boulder-db-init
+        app.kubernetes.io/component: database-initialization
+    spec:
+      restartPolicy: Never
+      serviceAccountName: boulder-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+        - name: db-init
+          image: mariadb:10.5
+          env:
+            - name: MYSQL_HOST
+              value: "mariadb-service.boulder.svc.cluster.local"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: root-password
+            - name: MYSQL_BOULDER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: boulder-password
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+
+              echo "Starting Boulder database initialization..."
+              echo "Waiting for MariaDB to be ready..."
+
+              # Wait for MariaDB to be available
+              until mysqladmin ping -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u root -p"$MYSQL_ROOT_PASSWORD" --silent; do
+                echo "MariaDB not ready, waiting 5 seconds..."
+                sleep 5
+              done
+
+              echo "MariaDB is ready, initializing Boulder database schema..."
+
+              # Create Boulder database and user if they don't exist
+              mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u root -p"$MYSQL_ROOT_PASSWORD" <<EOF
+              CREATE DATABASE IF NOT EXISTS boulder CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+              CREATE DATABASE IF NOT EXISTS incidents CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+              CREATE USER IF NOT EXISTS 'boulder'@'%' IDENTIFIED BY '$MYSQL_BOULDER_PASSWORD';
+              CREATE USER IF NOT EXISTS 'boulder_ro'@'%' IDENTIFIED BY '$MYSQL_BOULDER_PASSWORD';
+
+              GRANT ALL PRIVILEGES ON boulder.* TO 'boulder'@'%';
+              GRANT ALL PRIVILEGES ON incidents.* TO 'boulder'@'%';
+              GRANT SELECT ON boulder.* TO 'boulder_ro'@'%';
+              GRANT SELECT ON incidents.* TO 'boulder_ro'@'%';
+
+              FLUSH PRIVILEGES;
+              EOF
+
+              echo "Creating Boulder database schema..."
+
+              # Create Boulder tables (excluding OCSP tables)
+              mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u boulder -p"$MYSQL_BOULDER_PASSWORD" boulder <<'SCHEMA_EOF'
+
+              -- Boulder Core Tables (OCSP tables excluded as deprecated)
+
+              -- Accounts table
+              CREATE TABLE IF NOT EXISTS accounts (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                jwk_sha256 VARCHAR(64) NOT NULL UNIQUE,
+                contact VARCHAR(191),
+                agreement VARCHAR(255),
+                initialIP BINARY(16),
+                createdAt DATETIME NOT NULL,
+                status TINYINT NOT NULL DEFAULT 0,
+                KEY idx_jwk_sha256 (jwk_sha256),
+                KEY idx_createdAt (createdAt),
+                KEY idx_status (status)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Registrations table (legacy support)
+              CREATE TABLE IF NOT EXISTS registrations (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                jwk_sha256 VARCHAR(64) NOT NULL UNIQUE,
+                contact VARCHAR(191),
+                agreement VARCHAR(255),
+                initialIP BINARY(16),
+                createdAt DATETIME NOT NULL,
+                status TINYINT NOT NULL DEFAULT 0,
+                KEY idx_jwk_sha256 (jwk_sha256),
+                KEY idx_createdAt (createdAt),
+                KEY idx_status (status)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Authorizations table
+              CREATE TABLE IF NOT EXISTS authorizations (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                identifier VARCHAR(255) NOT NULL,
+                registrationID BIGINT NOT NULL,
+                status TINYINT NOT NULL DEFAULT 0,
+                expires DATETIME NOT NULL,
+                challenges TEXT,
+                combinations TEXT,
+                createdAt DATETIME NOT NULL,
+                attemptedAt DATETIME,
+                validatedAt DATETIME,
+                validationError TEXT,
+                validationRecord TEXT,
+                KEY idx_registrationID (registrationID),
+                KEY idx_identifier (identifier),
+                KEY idx_expires (expires),
+                KEY idx_status_expires (status, expires),
+                KEY idx_createdAt (createdAt),
+                KEY idx_validatedAt (validatedAt)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Orders table
+              CREATE TABLE IF NOT EXISTS orders (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                registrationID BIGINT NOT NULL,
+                expires DATETIME NOT NULL,
+                error TEXT,
+                certificateSerial VARCHAR(255),
+                beganProcessing BOOLEAN DEFAULT FALSE,
+                created DATETIME NOT NULL,
+                status TINYINT NOT NULL DEFAULT 0,
+                names TEXT NOT NULL,
+                v2Authorizations TEXT,
+                processingStarted DATETIME,
+                KEY idx_registrationID (registrationID),
+                KEY idx_expires (expires),
+                KEY idx_certificateSerial (certificateSerial),
+                KEY idx_status_created (status, created),
+                KEY idx_created (created),
+                KEY idx_beganProcessing (beganProcessing)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Certificates table
+              CREATE TABLE IF NOT EXISTS certificates (
+                registrationID BIGINT NOT NULL,
+                serial VARCHAR(255) NOT NULL,
+                digest VARCHAR(255) NOT NULL,
+                der MEDIUMBLOB NOT NULL,
+                issued DATETIME NOT NULL,
+                expires DATETIME NOT NULL,
+                PRIMARY KEY (serial),
+                KEY idx_registrationID (registrationID),
+                KEY idx_digest (digest),
+                KEY idx_issued (issued),
+                KEY idx_expires (expires)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Certificate Status table
+              CREATE TABLE IF NOT EXISTS certificateStatus (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                serial VARCHAR(255) NOT NULL UNIQUE,
+                status TINYINT NOT NULL DEFAULT 0,
+                revokedDate DATETIME,
+                revokedReason INT,
+                lastExpirationNagSent DATETIME,
+                notAfter DATETIME NOT NULL,
+                isExpired BOOLEAN DEFAULT FALSE,
+                issuerID BIGINT,
+                KEY idx_serial (serial),
+                KEY idx_status (status),
+                KEY idx_notAfter (notAfter),
+                KEY idx_isExpired_notAfter (isExpired, notAfter),
+                KEY idx_revokedDate (revokedDate)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Challenges table
+              CREATE TABLE IF NOT EXISTS challenges (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                authorizationID BIGINT NOT NULL,
+                type VARCHAR(10) NOT NULL,
+                status TINYINT NOT NULL DEFAULT 0,
+                uri VARCHAR(255),
+                token BINARY(32) NOT NULL,
+                keyAuthorization VARCHAR(255),
+                validatedAt DATETIME,
+                error TEXT,
+                KEY idx_authorizationID (authorizationID),
+                KEY idx_token (token),
+                KEY idx_status (status),
+                KEY idx_type (type),
+                KEY idx_validatedAt (validatedAt)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Nonces table
+              CREATE TABLE IF NOT EXISTS nonces (
+                nonce BINARY(32) PRIMARY KEY,
+                used BOOLEAN DEFAULT FALSE,
+                created DATETIME NOT NULL,
+                KEY idx_created (created),
+                KEY idx_used_created (used, created)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Serial numbers table
+              CREATE TABLE IF NOT EXISTS serialNumbers (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                serial VARCHAR(255) NOT NULL UNIQUE,
+                registrationID BIGINT NOT NULL,
+                created DATETIME NOT NULL,
+                expires DATETIME NOT NULL,
+                KEY idx_serial (serial),
+                KEY idx_registrationID (registrationID),
+                KEY idx_expires (expires),
+                KEY idx_created (created)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Precertificates table
+              CREATE TABLE IF NOT EXISTS precertificates (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                serial VARCHAR(255) NOT NULL UNIQUE,
+                registrationID BIGINT NOT NULL,
+                der MEDIUMBLOB NOT NULL,
+                issued DATETIME NOT NULL,
+                expires DATETIME NOT NULL,
+                KEY idx_serial (serial),
+                KEY idx_registrationID (registrationID),
+                KEY idx_issued (issued),
+                KEY idx_expires (expires)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Issuers table
+              CREATE TABLE IF NOT EXISTS issuers (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                cert MEDIUMBLOB NOT NULL,
+                keyHash VARCHAR(255),
+                notAfter DATETIME NOT NULL,
+                location VARCHAR(255),
+                KEY idx_notAfter (notAfter),
+                KEY idx_keyHash (keyHash)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Revoked Certificates table
+              CREATE TABLE IF NOT EXISTS revokedCertificates (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                registrationID BIGINT NOT NULL,
+                serial VARCHAR(255) NOT NULL,
+                date DATETIME NOT NULL,
+                reason INT NOT NULL,
+                KEY idx_serial (serial),
+                KEY idx_registrationID (registrationID),
+                KEY idx_date (date),
+                KEY idx_reason (reason)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- CRL Entries table
+              CREATE TABLE IF NOT EXISTS crlEntries (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                serial VARCHAR(255) NOT NULL,
+                date DATETIME NOT NULL,
+                reason INT NOT NULL,
+                KEY idx_serial (serial),
+                KEY idx_date (date)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Blocked Keys table
+              CREATE TABLE IF NOT EXISTS blockedKeys (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                keyHash BINARY(32) NOT NULL UNIQUE,
+                added DATETIME NOT NULL,
+                source VARCHAR(255),
+                comment TEXT,
+                KEY idx_keyHash (keyHash),
+                KEY idx_added (added),
+                KEY idx_source (source)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Rate Limits table
+              CREATE TABLE IF NOT EXISTS rateLimits (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                bucketKey VARCHAR(255) NOT NULL,
+                count BIGINT NOT NULL DEFAULT 0,
+                reset DATETIME NOT NULL,
+                UNIQUE KEY idx_bucketKey (bucketKey),
+                KEY idx_reset (reset)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Certificate Transparency Logs table
+              CREATE TABLE IF NOT EXISTS ctLogs (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                uri VARCHAR(255) NOT NULL UNIQUE,
+                keyHash BINARY(32) NOT NULL,
+                KEY idx_uri (uri),
+                KEY idx_keyHash (keyHash)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- SCT Receipts table
+              CREATE TABLE IF NOT EXISTS sctReceipts (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                certificateSerial VARCHAR(255) NOT NULL,
+                logID BIGINT NOT NULL,
+                sct BLOB NOT NULL,
+                timestamp DATETIME NOT NULL,
+                KEY idx_certificateSerial (certificateSerial),
+                KEY idx_logID (logID),
+                KEY idx_timestamp (timestamp)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Boulder Schema Version Tracking
+              CREATE TABLE IF NOT EXISTS schemaVersion (
+                id INT PRIMARY KEY,
+                version VARCHAR(50) NOT NULL,
+                applied DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              -- Insert schema version
+              INSERT INTO schemaVersion (id, version) VALUES (1, 'boulder-k8s-v1.0.0-no-ocsp')
+              ON DUPLICATE KEY UPDATE version=VALUES(version), applied=CURRENT_TIMESTAMP;
+
+              SCHEMA_EOF
+
+              echo "Creating incidents database tables..."
+
+              # Create incidents database tables
+              mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u boulder -p"$MYSQL_BOULDER_PASSWORD" incidents <<'INCIDENTS_EOF'
+
+              -- Incidents table for security events
+              CREATE TABLE IF NOT EXISTS incidents (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                serial VARCHAR(255),
+                url VARCHAR(255),
+                resolvedDate DATETIME,
+                createdDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                KEY idx_serial (serial),
+                KEY idx_createdDate (createdDate),
+                KEY idx_resolvedDate (resolvedDate)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+              INCIDENTS_EOF
+
+              echo "Verifying database schema creation..."
+
+              # Verify table creation
+              TABLES=$(mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u boulder -p"$MYSQL_BOULDER_PASSWORD" boulder -e "SHOW TABLES;" | wc -l)
+              INCIDENTS_TABLES=$(mysql -h"$MYSQL_HOST" -P"$MYSQL_PORT" -u boulder -p"$MYSQL_BOULDER_PASSWORD" incidents -e "SHOW TABLES;" | wc -l)
+
+              echo "Created $((TABLES-1)) tables in boulder database"
+              echo "Created $((INCIDENTS_TABLES-1)) tables in incidents database"
+
+              if [[ $TABLES -lt 15 ]]; then
+                echo "ERROR: Expected at least 15 tables in boulder database, found $((TABLES-1))"
+                exit 1
+              fi
+
+              echo "Boulder database schema initialization completed successfully!"
+              echo "OCSP functionality excluded as per project requirements"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL

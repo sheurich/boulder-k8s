@@ -63,11 +63,39 @@ spec:
                 secretKeyRef:
                   name: db-credentials
                   key: redis-password
+            # mTLS Environment Variables
+            - name: BOULDER_GRPC_TLS_CERT
+              value: "/etc/boulder/tls/server/tls.crt"
+            - name: BOULDER_GRPC_TLS_KEY
+              value: "/etc/boulder/tls/server/tls.key"
+            - name: BOULDER_GRPC_TLS_CA
+              value: "/etc/boulder/tls/ca/tls.crt"
+            - name: BOULDER_GRPC_CLIENT_CERT
+              value: "/etc/boulder/tls/server/tls.crt"
+            - name: BOULDER_GRPC_CLIENT_KEY
+              value: "/etc/boulder/tls/server/tls.key"
+            - name: BOULDER_GRPC_CLIENT_CA
+              value: "/etc/boulder/tls/ca/tls.crt"
+            - name: GRPC_GO_LOG_VERBOSITY_LEVEL
+              value: "99"
+            - name: GRPC_GO_LOG_SEVERITY_LEVEL
+              value: "info"
           volumeMounts:
             - name: config
               mountPath: /etc/boulder
             - name: internal-certs
               mountPath: /etc/boulder/certs
+              readOnly: true
+            # mTLS Certificate Mounts
+            - name: server-tls
+              mountPath: /etc/boulder/tls/server
+              readOnly: true
+            - name: ca-tls
+              mountPath: /etc/boulder/tls/ca
+              readOnly: true
+            # Redis Client Certificate Mounts
+            - name: redis-client-tls
+              mountPath: /etc/boulder/tls/redis-client
               readOnly: true
           resources:
             requests:
@@ -103,6 +131,20 @@ spec:
         - name: internal-certs
           secret:
             secretName: internal-pki
+        # mTLS Certificate Volumes
+        - name: server-tls
+          secret:
+            secretName: nonce-service-grpc-tls
+            defaultMode: 0400  # Read-only for owner only
+        - name: ca-tls
+          secret:
+            secretName: intermediate-ca-secret
+            defaultMode: 0444  # Read-only for all
+        # Redis Client Certificate Volume
+        - name: redis-client-tls
+          secret:
+            secretName: redis-client-tls
+            defaultMode: 0400  # Read-only for owner only
 ---
 # Nonce Service
 apiVersion: v1
@@ -142,10 +184,18 @@ data:
         "grpcAddress": ":9501",
         "debugAddr": ":8021",
         "redis": {
-          "server": "redis-client:6379",
+          "server": "redis:6379",
           "password": "${REDIS_PASSWORD}",
           "maxRetries": 3,
-          "timeout": "5s"
+          "timeout": "5s",
+          "tls": {
+            "enabled": true,
+            "certFile": "/etc/boulder/tls/redis-client/tls.crt",
+            "keyFile": "/etc/boulder/tls/redis-client/tls.key",
+            "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+            "serverName": "redis.boulder.svc.cluster.local",
+            "skipVerify": false
+          }
         },
         "prefix": "boulder-k8s",
         "maxUsed": 65536
@@ -159,9 +209,9 @@ data:
         "dnsTimeout": "10s",
         "dnsAllowLoopbackAddresses": true,
         "tls": {
-          "certFile": "/etc/boulder/certs/nonce.boulder/cert.pem",
-          "keyFile": "/etc/boulder/certs/nonce.boulder/key.pem",
-          "caCertFile": "/etc/boulder/certs/minica.pem"
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key",
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt"
         }
       }
     }

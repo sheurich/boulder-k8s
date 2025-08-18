@@ -3,7 +3,7 @@
 # Deploys Boulder ACME CA to a Kubernetes cluster with proper service ordering
 # EXCLUDES all OCSP-related services (deprecated functionality)
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -13,6 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NAMESPACE="boulder"
 TIMEOUT="300s"
 
@@ -38,6 +39,24 @@ wait_for_statefulset() {
         statefulset/"$statefulset" \
         -n $NAMESPACE \
         --timeout=$TIMEOUT
+}
+
+# Function to wait for jobs to complete
+wait_for_job() {
+    local job=$1
+    echo -e "${BLUE}Waiting for job/$job to complete...${NC}"
+    if kubectl wait --for=condition=complete \
+        job/"$job" \
+        -n $NAMESPACE \
+        --timeout=$TIMEOUT; then
+        echo -e "${GREEN}✓ Job $job completed successfully${NC}"
+        return 0
+    else
+        echo -e "${RED}✗ Job $job failed or timed out${NC}"
+        # Show job logs for debugging
+        kubectl logs job/"$job" -n $NAMESPACE || true
+        return 1
+    fi
 }
 
 # Function to check if kubectl is available
@@ -72,6 +91,15 @@ main() {
     kubectl apply -f k8s/namespaces/boulder-namespace.yaml
     echo -e "${GREEN}✓ Namespace and RBAC created${NC}"
     
+    # Phase 1.5: Generate WebPKI certificates
+    echo -e "${BLUE}Phase 1.5: Generating WebPKI certificates...${NC}"
+    if "$SCRIPT_DIR/generate-webpki-certs.sh"; then
+        echo -e "${GREEN}✓ WebPKI certificates generated and deployed${NC}"
+    else
+        echo -e "${RED}✗ Failed to generate WebPKI certificates${NC}"
+        exit 1
+    fi
+    
     # Phase 2: Deploy secrets (must be first)
     echo -e "${BLUE}Phase 2: Creating secrets...${NC}"
     kubectl apply -f k8s/secrets/
@@ -85,6 +113,12 @@ main() {
     kubectl apply -f k8s/services/infrastructure/mariadb-service.yaml
     wait_for_statefulset "mariadb"
     echo -e "${GREEN}✓ MariaDB deployed${NC}"
+    
+    # Initialize database schema
+    echo -e "${BLUE}Initializing Boulder database schema...${NC}"
+    kubectl apply -f k8s/jobs/db-init.yaml
+    wait_for_job "boulder-db-init"
+    echo -e "${GREEN}✓ Database schema initialized${NC}"
     
     # Redis instances
     kubectl apply -f k8s/deployments/infrastructure/redis.yaml
@@ -158,13 +192,24 @@ main() {
     echo -e "\nService status:"
     kubectl get services -n $NAMESPACE
     
+    # Run security validation
+    echo -e "\n${BLUE}Running security validation...${NC}"
+    if "$SCRIPT_DIR/validate-security.sh"; then
+        echo -e "${GREEN}✓ Security validation passed${NC}"
+    else
+        echo -e "${YELLOW}⚠️ Security validation found issues (see output above)${NC}"
+    fi
+    
     echo -e "\n${GREEN}=== Boulder Deployment Complete ===${NC}"
     echo -e "${GREEN}✓ All services deployed successfully${NC}"
+    echo -e "${GREEN}✓ Database schema initialized${NC}"
+    echo -e "${GREEN}✓ WebPKI certificates provisioned${NC}"
+    echo -e "${GREEN}✓ Security validation completed${NC}"
     echo -e "${YELLOW}✓ OCSP services excluded as intended${NC}"
     echo
     echo -e "${BLUE}Next steps:${NC}"
     echo "1. Test ACME endpoint: curl -k http://localhost:4001/directory"
-    echo "2. Run integration tests: ./k8s/scripts/test.sh"
+    echo "2. Run integration tests: ./k8s/scripts/run-integration-tests.sh"
     echo "3. Monitor logs: kubectl logs -f deployment/boulder-wfe2 -n boulder"
 }
 
@@ -186,15 +231,21 @@ case "${1:-}" in
     --dry-run)
         echo -e "${YELLOW}Dry run mode - showing deployment order:${NC}"
         echo "1. Namespace and RBAC"
+        echo "1.5. WebPKI Certificate Generation"
         echo "2. Secrets"
-        echo "3. Infrastructure: MariaDB → Redis → ProxySQL"
+        echo "3. Infrastructure: MariaDB → Database Schema Init → Redis → ProxySQL"
         echo "4. Foundation: SA → Publisher"
         echo "5. Validation: VA"
         echo "6. Certificate: CA"
         echo "7. Registration: RA"
         echo "8. Web: WFE2"
+        echo "9. Security Validation"
         echo
         echo -e "${YELLOW}OCSP services are EXCLUDED${NC}"
+        echo -e "${GREEN}New automation includes:${NC}"
+        echo "  - Automated WebPKI certificate generation"
+        echo "  - Boulder database schema initialization"
+        echo "  - Comprehensive security validation"
         exit 0
         ;;
     "")

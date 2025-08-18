@@ -71,9 +71,22 @@ spec:
             - name: BOULDER_CONFIG_DIR
               value: "/etc/boulder"
             - name: GRPC_GO_LOG_VERBOSITY_LEVEL
-              value: "2"
+              value: "99"
             - name: GRPC_GO_LOG_SEVERITY_LEVEL
               value: "info"
+            # mTLS Environment Variables
+            - name: BOULDER_GRPC_TLS_CERT
+              value: "/etc/boulder/tls/server/tls.crt"
+            - name: BOULDER_GRPC_TLS_KEY
+              value: "/etc/boulder/tls/server/tls.key"
+            - name: BOULDER_GRPC_TLS_CA
+              value: "/etc/boulder/tls/ca/tls.crt"
+            - name: BOULDER_GRPC_CLIENT_CERT
+              value: "/etc/boulder/tls/server/tls.crt"
+            - name: BOULDER_GRPC_CLIENT_KEY
+              value: "/etc/boulder/tls/server/tls.key"
+            - name: BOULDER_GRPC_CLIENT_CA
+              value: "/etc/boulder/tls/ca/tls.crt"
           volumeMounts:
             - name: config
               mountPath: /etc/boulder
@@ -82,6 +95,13 @@ spec:
               readOnly: true
             - name: webpki-certs
               mountPath: /etc/boulder/webpki
+              readOnly: true
+            # mTLS Certificate Mounts
+            - name: server-tls
+              mountPath: /etc/boulder/tls/server
+              readOnly: true
+            - name: ca-tls
+              mountPath: /etc/boulder/tls/ca
               readOnly: true
           resources:
             requests:
@@ -120,6 +140,15 @@ spec:
         - name: webpki-certs
           secret:
             secretName: webpki-certs
+        # mTLS Certificate Volumes
+        - name: server-tls
+          secret:
+            secretName: boulder-wfe2-grpc-tls
+            defaultMode: 0400  # Read-only for owner only
+        - name: ca-tls
+          secret:
+            secretName: intermediate-ca-secret
+            defaultMode: 0444  # Read-only for all
 ---
 # Boulder WFE2 Service
 apiVersion: v1
@@ -170,19 +199,28 @@ data:
         "raService": {
           "serverAddress": "boulder-ra:9394",
           "hostOverride": "ra.boulder",
-          "timeout": "15s"
+          "timeout": "15s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "saService": {
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
-          "timeout": "15s"
+          "timeout": "15s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "getNonceService": {
           "serverAddress": "nonce-service:9501",
           "hostOverride": "nonce.boulder",
-          "timeout": "15s"
+          "timeout": "15s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "redeemNonceService": {
@@ -191,7 +229,10 @@ data:
             "nonce-service:9502"
           ],
           "hostOverride": "nonce.boulder",
-          "timeout": "15s"
+          "timeout": "15s",
+          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
+          "clientKey": "/etc/boulder/tls/server/tls.key",
+          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
 
         "limiter": {
@@ -226,6 +267,11 @@ data:
       "common": {
         "dnsResolver": "8.8.8.8:53",
         "dnsTimeout": "10s",
-        "dnsAllowLoopbackAddresses": true
+        "dnsAllowLoopbackAddresses": true,
+        "tls": {
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key",
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt"
+        }
       }
     }

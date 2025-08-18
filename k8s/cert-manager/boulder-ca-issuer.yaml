@@ -1,0 +1,109 @@
+---
+# Self-signed ClusterIssuer for Bootstrap CA
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer
+  labels:
+    app.kubernetes.io/name: boulder-ca-issuer
+    app.kubernetes.io/component: root-ca
+spec:
+  selfSigned: {}
+---
+# Root CA Certificate for Boulder Internal PKI
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: root-ca-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-ca-issuer
+    app.kubernetes.io/component: root-ca
+spec:
+  isCA: true
+  commonName: Boulder Root CA
+  subject:
+    organizationalUnits:
+      - Boulder ACME CA
+    organizations:
+      - Let's Encrypt (Development)
+    countries:
+      - US
+  duration: 43800h # 5 years
+  renewBefore: 8760h # 1 year
+  secretName: root-ca-secret
+  privateKey:
+    algorithm: RSA
+    size: 4096
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# Intermediate CA Certificate for Boulder Services
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intermediate-ca-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-ca-issuer
+    app.kubernetes.io/component: intermediate-ca
+spec:
+  isCA: true
+  commonName: Boulder Intermediate CA
+  subject:
+    organizationalUnits:
+      - Boulder ACME Services
+    organizations:
+      - Let's Encrypt (Development)
+    countries:
+      - US
+  duration: 17520h # 2 years
+  renewBefore: 4380h # 6 months
+  secretName: intermediate-ca-secret
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  issuerRef:
+    name: root-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Root CA Issuer (for signing intermediate)
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: root-ca-issuer
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-ca-issuer
+    app.kubernetes.io/component: root-ca-issuer
+spec:
+  ca:
+    secretName: root-ca-secret
+---
+# Boulder Internal Services CA Issuer
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: boulder-ca-issuer
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-ca-issuer
+    app.kubernetes.io/component: service-ca-issuer
+spec:
+  ca:
+    secretName: intermediate-ca-secret
+---
+# ClusterIssuer for Boulder Services (accessible from all namespaces)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: boulder-ca-issuer
+  labels:
+    app.kubernetes.io/name: boulder-ca-issuer
+    app.kubernetes.io/component: cluster-ca-issuer
+spec:
+  ca:
+    secretName: intermediate-ca-secret

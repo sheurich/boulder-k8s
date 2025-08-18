@@ -1,0 +1,66 @@
+---
+# Let's Encrypt ClusterIssuer Configuration for Boulder Kubernetes
+# Provides both staging and production ACME certificate issuers
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  labels:
+    app.kubernetes.io/name: letsencrypt-staging
+    app.kubernetes.io/component: cluster-issuer
+    app.kubernetes.io/part-of: boulder-k8s
+spec:
+  acme:
+    # Let's Encrypt staging server - use for testing
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address for ACME account registration
+    email: admin@boulder-k8s.local
+    # Private key secret for ACME account
+    privateKeySecretRef:
+      name: letsencrypt-staging-key
+    # HTTP-01 challenge solver configuration
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+            podTemplate:
+              metadata:
+                labels:
+                  app.kubernetes.io/name: letsencrypt-staging-solver
+                  app.kubernetes.io/component: challenge-solver
+              spec:
+                nodeSelector:
+                  "kubernetes.io/os": linux
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+  labels:
+    app.kubernetes.io/name: letsencrypt-production
+    app.kubernetes.io/component: cluster-issuer
+    app.kubernetes.io/part-of: boulder-k8s
+spec:
+  acme:
+    # Let's Encrypt production server - use for production certificates
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address for ACME account registration
+    email: admin@boulder-k8s.local
+    # Private key secret for ACME account
+    privateKeySecretRef:
+      name: letsencrypt-production-key
+    # HTTP-01 challenge solver configuration
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+            podTemplate:
+              metadata:
+                labels:
+                  app.kubernetes.io/name: letsencrypt-production-solver
+                  app.kubernetes.io/component: challenge-solver
+              spec:
+                nodeSelector:
+                  "kubernetes.io/os": linux

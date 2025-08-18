@@ -1,0 +1,187 @@
+---
+# Infrastructure TLS Configuration
+# Shared TLS configuration for infrastructure services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: infrastructure-tls-config
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: infrastructure-tls-config
+    app.kubernetes.io/component: tls-config
+    app.kubernetes.io/part-of: boulder
+data:
+  # TLS Certificate Paths
+  tls-paths.yaml: |
+    # Standard TLS certificate mount paths for infrastructure services
+    infrastructure:
+      mariadb:
+        server:
+          cert: "/etc/mysql/tls/server/tls.crt"
+          key: "/etc/mysql/tls/server/tls.key"
+          ca: "/etc/mysql/tls/ca/tls.crt"
+        client:
+          cert: "/etc/boulder/tls/db-client/tls.crt"
+          key: "/etc/boulder/tls/db-client/tls.key"
+          ca: "/etc/boulder/tls/ca/tls.crt"
+
+      proxysql:
+        server:
+          cert: "/etc/proxysql/tls/server/tls.crt"
+          key: "/etc/proxysql/tls/server/tls.key"
+          ca: "/etc/proxysql/tls/ca/tls.crt"
+        client:
+          cert: "/etc/proxysql/tls/client/tls.crt"
+          key: "/etc/proxysql/tls/client/tls.key"
+          ca: "/etc/proxysql/tls/ca/tls.crt"
+
+      redis:
+        server:
+          cert: "/etc/redis/tls/server/tls.crt"
+          key: "/etc/redis/tls/server/tls.key"
+          ca: "/etc/redis/tls/ca/tls.crt"
+        client:
+          cert: "/etc/boulder/tls/redis-client/tls.crt"
+          key: "/etc/boulder/tls/redis-client/tls.key"
+          ca: "/etc/boulder/tls/ca/tls.crt"
+
+  # Database Connection Templates
+  database-connections.yaml: |
+    # TLS-enabled database connection string templates
+    connections:
+      # ProxySQL connection with TLS (Boulder services -> ProxySQL)
+      proxysql_tls: >-
+        mysql://boulder:${MYSQL_PASSWORD}@proxysql:6033/boulder?tls=custom&
+        tls-cert=${TLS_CERT_PATH}&tls-key=${TLS_KEY_PATH}&
+        tls-ca=${TLS_CA_PATH}&tls-verify-identity=true
+
+      # Read-only ProxySQL connection with TLS
+      proxysql_ro_tls: >-
+        mysql://boulder_ro:${MYSQL_PASSWORD}@proxysql:6033/boulder?tls=custom&
+        tls-cert=${TLS_CERT_PATH}&tls-key=${TLS_KEY_PATH}&
+        tls-ca=${TLS_CA_PATH}&tls-verify-identity=true
+
+      # Incidents database connection with TLS
+      incidents_tls: >-
+        mysql://boulder:${MYSQL_PASSWORD}@proxysql:6033/incidents?tls=custom&
+        tls-cert=${TLS_CERT_PATH}&tls-key=${TLS_KEY_PATH}&
+        tls-ca=${TLS_CA_PATH}&tls-verify-identity=true
+
+  # Redis Connection Templates
+  redis-connections.yaml: |
+    # TLS-enabled Redis connection templates
+    connections:
+      # Redis with TLS authentication
+      redis_tls: >-
+        rediss://:${REDIS_PASSWORD}@redis:6379?
+        tls_cert_file=${TLS_CERT_PATH}&tls_key_file=${TLS_KEY_PATH}&
+        tls_ca_file=${TLS_CA_PATH}&tls_skip_verify=false
+
+      # Redis sharded connections (for rate limiting)
+      redis_shard_0_tls: >-
+        rediss://:${REDIS_PASSWORD}@redis-0.redis.boulder.svc.cluster.local:6379?
+        tls_cert_file=${TLS_CERT_PATH}&tls_key_file=${TLS_KEY_PATH}&
+        tls_ca_file=${TLS_CA_PATH}&tls_skip_verify=false
+
+      redis_shard_1_tls: >-
+        rediss://:${REDIS_PASSWORD}@redis-1.redis.boulder.svc.cluster.local:6379?
+        tls_cert_file=${TLS_CERT_PATH}&tls_key_file=${TLS_KEY_PATH}&
+        tls_ca_file=${TLS_CA_PATH}&tls_skip_verify=false
+
+  # TLS Security Configuration
+  tls-security.yaml: |
+    # Standard TLS security configurations for infrastructure
+    security:
+      # Minimum TLS version
+      min_tls_version: "1.2"
+
+      # Preferred TLS version
+      preferred_tls_version: "1.3"
+
+      # Allowed TLS cipher suites (TLS 1.2)
+      tls12_ciphers: >-
+        ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:
+        ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384
+
+      # Allowed TLS 1.3 cipher suites
+      tls13_ciphersuites: >-
+        TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256
+
+      # Certificate verification settings
+      verify_certificates: true
+      verify_identity: true
+
+      # Certificate file permissions
+      cert_file_mode: "0444"  # Certificates are public
+      key_file_mode: "0400"   # Private keys are restricted
+
+  # Health Check Templates
+  health-checks.yaml: |
+    # TLS-aware health check configurations
+    health_checks:
+      mariadb:
+        # Health check command for MariaDB with TLS
+        command: |
+          mysql --ssl-cert=/etc/mysql/tls/server/tls.crt \
+                --ssl-key=/etc/mysql/tls/server/tls.key \
+                --ssl-ca=/etc/mysql/tls/ca/tls.crt \
+                --ssl-verify-server-cert \
+                -h localhost -u root -p${MYSQL_ROOT_PASSWORD} \
+                -e "SELECT 1" 2>/dev/null
+
+      proxysql:
+        # Health check for ProxySQL TLS connections
+        command: |
+          mysql --ssl-cert=/etc/boulder/tls/db-client/tls.crt \
+                --ssl-key=/etc/boulder/tls/db-client/tls.key \
+                --ssl-ca=/etc/boulder/tls/ca/tls.crt \
+                --ssl-verify-server-cert \
+                -h proxysql -P 6033 -u boulder -p${MYSQL_PASSWORD} \
+                -e "SELECT 1" 2>/dev/null
+
+      redis:
+        # Health check for Redis TLS connections
+        command: |
+          redis-cli --tls \
+                   --cert /etc/boulder/tls/redis-client/tls.crt \
+                   --key /etc/boulder/tls/redis-client/tls.key \
+                   --cacert /etc/boulder/tls/ca/tls.crt \
+                   --no-auth-warning \
+                   -a ${REDIS_PASSWORD} \
+                   -p 6379 ping
+
+  # Environment Variable Templates
+  env-templates.yaml: |
+    # Environment variable templates for TLS-enabled connections
+    environment:
+      database:
+        # Database connection with TLS client certificates
+        - name: DATABASE_URL
+          value: >-
+            mysql://boulder:${MYSQL_PASSWORD}@proxysql:6033/boulder?tls=custom&
+            tls-cert=/etc/boulder/tls/db-client/tls.crt&
+            tls-key=/etc/boulder/tls/db-client/tls.key&
+            tls-ca=/etc/boulder/tls/ca/tls.crt&tls-verify-identity=true
+
+        - name: DATABASE_RO_URL
+          value: >-
+            mysql://boulder_ro:${MYSQL_PASSWORD}@proxysql:6033/boulder?tls=custom&
+            tls-cert=/etc/boulder/tls/db-client/tls.crt&
+            tls-key=/etc/boulder/tls/db-client/tls.key&
+            tls-ca=/etc/boulder/tls/ca/tls.crt&tls-verify-identity=true
+
+        - name: INCIDENTS_DATABASE_URL
+          value: >-
+            mysql://boulder:${MYSQL_PASSWORD}@proxysql:6033/incidents?tls=custom&
+            tls-cert=/etc/boulder/tls/db-client/tls.crt&
+            tls-key=/etc/boulder/tls/db-client/tls.key&
+            tls-ca=/etc/boulder/tls/ca/tls.crt&tls-verify-identity=true
+
+      redis:
+        # Redis connection with TLS client certificates
+        - name: REDIS_URL
+          value: >-
+            rediss://:${REDIS_PASSWORD}@redis:6379?
+            tls_cert_file=/etc/boulder/tls/redis-client/tls.crt&
+            tls_key_file=/etc/boulder/tls/redis-client/tls.key&
+            tls_ca_file=/etc/boulder/tls/ca/tls.crt&tls_skip_verify=false

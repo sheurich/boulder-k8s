@@ -1,0 +1,380 @@
+---
+# Boulder WFE2 gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-wfe2-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-wfe2
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: boulder-wfe2-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: boulder-wfe2.boulder.svc.cluster.local
+  dnsNames:
+    - boulder-wfe2
+    - boulder-wfe2.boulder
+    - boulder-wfe2.boulder.svc
+    - boulder-wfe2.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Registration Authority gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-ra-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-ra
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: boulder-ra-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: boulder-ra.boulder.svc.cluster.local
+  dnsNames:
+    - boulder-ra
+    - boulder-ra.boulder
+    - boulder-ra.boulder.svc
+    - boulder-ra.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Certificate Authority gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-ca-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-ca
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: boulder-ca-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: boulder-ca.boulder.svc.cluster.local
+  dnsNames:
+    - boulder-ca
+    - boulder-ca.boulder
+    - boulder-ca.boulder.svc
+    - boulder-ca.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Storage Authority gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-sa-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-sa
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: boulder-sa-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: boulder-sa.boulder.svc.cluster.local
+  dnsNames:
+    - boulder-sa
+    - boulder-sa.boulder
+    - boulder-sa.boulder.svc
+    - boulder-sa.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Validation Authority gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-va-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-va
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: boulder-va-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: boulder-va.boulder.svc.cluster.local
+  dnsNames:
+    - boulder-va
+    - boulder-va.boulder
+    - boulder-va.boulder.svc
+    - boulder-va.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Remote VA1 gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: remote-va1-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: remote-va1
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: remote-va1-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: remote-va1.boulder.svc.cluster.local
+  dnsNames:
+    - remote-va1
+    - remote-va1.boulder
+    - remote-va1.boulder.svc
+    - remote-va1.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Remote VA2 gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: remote-va2-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: remote-va2
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: remote-va2-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: remote-va2.boulder.svc.cluster.local
+  dnsNames:
+    - remote-va2
+    - remote-va2.boulder
+    - remote-va2.boulder.svc
+    - remote-va2.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Publisher gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-publisher-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: boulder-publisher
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: boulder-publisher-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: boulder-publisher.boulder.svc.cluster.local
+  dnsNames:
+    - boulder-publisher
+    - boulder-publisher.boulder
+    - boulder-publisher.boulder.svc
+    - boulder-publisher.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder SCT Provider gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sct-provider-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: sct-provider
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: sct-provider-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: sct-provider.boulder.svc.cluster.local
+  dnsNames:
+    - sct-provider
+    - sct-provider.boulder
+    - sct-provider.boulder.svc
+    - sct-provider.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+# Boulder Nonce Service gRPC Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nonce-service-grpc-cert
+  namespace: boulder
+  labels:
+    app.kubernetes.io/name: nonce-service
+    app.kubernetes.io/component: grpc-tls
+spec:
+  secretName: nonce-service-grpc-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+      - Boulder ACME Services
+  commonName: nonce-service.boulder.svc.cluster.local
+  dnsNames:
+    - nonce-service
+    - nonce-service.boulder
+    - nonce-service.boulder.svc
+    - nonce-service.boulder.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - "127.0.0.1"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io

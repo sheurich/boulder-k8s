@@ -244,6 +244,241 @@ Boulder requires two distinct certificate hierarchies:
 
 These must be generated using Boulder's `test/certs/generate.sh` script and packaged into Kubernetes Secrets.
 
+## 5. Infrastructure & Security Components
+
+This section outlines the critical infrastructure and security components that must be implemented as prerequisites for the Boulder Kubernetes deployment. These components ensure secure, reliable operation of the Boulder ACME Certificate Authority.
+
+### 5.1 TLS Certificate Management (cert-manager)
+
+#### Purpose
+
+cert-manager provides automated TLS certificate provisioning and management for all Kubernetes workloads, enabling secure communication and eliminating manual certificate management overhead.
+
+#### Implementation
+
+- **Version**: cert-manager v1.15.0 or latest stable release
+- **Deployment Method**: Helm chart or official YAML manifests
+- **Components**: cert-manager controller, webhook, and cainjector
+
+```yaml
+# Example cert-manager ClusterIssuer
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: boulder-internal-ca
+spec:
+  ca:
+    secretName: boulder-ca-key-pair
+```
+
+#### Configuration
+
+- **ClusterIssuer**: Internal CA for Boulder service certificates
+- **Issuer**: Let's Encrypt staging/production for external certificates
+- **Certificate Resources**: Automatic certificate creation via annotations
+- **Renewal Policy**: Automatic renewal at 2/3 of certificate lifetime
+
+#### Dependencies
+
+- Kubernetes cluster with CRD support
+- RBAC permissions for cert-manager service accounts
+- Internal CA certificate and key pair (generated via Boulder's certificate generation)
+
+#### Validation
+
+- Verify cert-manager pods are running and ready
+- Test certificate issuance with temporary Certificate resource
+- Confirm automatic renewal functionality
+- Validate certificate mounting in Boulder service pods
+
+#### Security Considerations
+
+- Secure storage of CA private keys in Kubernetes Secrets
+- RBAC policies limiting cert-manager permissions
+- Certificate transparency logging integration
+- Rotation policies for internal CA certificates
+
+### 5.2 Database Initialization and Migration
+
+#### Purpose
+
+Automated database schema creation and initialization ensures Boulder services have the required database structure and initial data for proper operation.
+
+#### Implementation
+
+- **Database Schema**: Extracted from Boulder source repository (`vendor/github.com/letsencrypt/boulder/`)
+- **Migration System**: Kubernetes Jobs for schema creation and updates
+- **Initial Data**: WebPKI ceremony data and system configuration
+- **User Management**: Database users with appropriate permissions
+
+```yaml
+# Example database initialization Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: boulder-db-init
+spec:
+  template:
+    spec:
+      containers:
+      - name: db-migrator
+        image: boulder:latest
+        command: ["/opt/boulder/bin/boulder-db-migrate"]
+        env:
+        - name: DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: boulder-db-credentials
+              key: url
+```
+
+#### Configuration
+
+- **Schema Files**: Boulder database schema SQL files
+- **Migration Scripts**: Version-controlled database updates
+- **Connection Configuration**: Secure database connection parameters
+- **ProxySQL Configuration**: Database proxy settings for connection pooling
+
+#### Dependencies
+
+- MariaDB StatefulSet deployed and operational
+- ProxySQL deployment configured
+- Boulder source code accessible for schema extraction
+- Database credentials stored in Kubernetes Secrets
+
+#### Validation
+
+- Verify all required tables and indexes are created
+- Test database connectivity from Boulder services
+- Confirm proper user permissions and access controls
+- Validate ProxySQL connection routing
+
+#### Security Considerations
+
+- Encrypted database connections (TLS)
+- Principle of least privilege for database users
+- Regular database backup and recovery procedures
+- Audit logging for database operations
+
+### 5.3 mTLS Security Architecture
+
+#### Purpose
+
+Mutual TLS (mTLS) authentication ensures secure, encrypted communication between all Boulder services, preventing unauthorized access and man-in-the-middle attacks.
+
+#### Implementation
+
+- **Certificate Authority**: Internal PKI hierarchy for service certificates
+- **Service Certificates**: Unique certificates for each Boulder service
+- **gRPC Configuration**: mTLS-enabled gRPC service definitions
+- **Certificate Distribution**: Automatic certificate mounting via cert-manager
+
+```yaml
+# Example service configuration with mTLS
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-ra-config
+data:
+  ra.json: |
+    {
+      "saService": {
+        "serverAddress": "boulder-sa:9395",
+        "hostOverride": "sa.boulder",
+        "clientCertificate": "/etc/boulder/certs/ra.boulder.crt",
+        "clientKey": "/etc/boulder/certs/ra.boulder.key",
+        "serverCertificate": "/etc/boulder/certs/minica.pem"
+      }
+    }
+```
+
+#### Configuration
+
+- **Service-to-Service**: gRPC mTLS for Boulder service communication
+- **Database Connections**: TLS encryption for MariaDB connections
+- **Redis Connections**: TLS encryption for Redis connections
+- **External Connections**: DoH (DNS over HTTPS) for VA to DNS resolver communication
+
+#### Dependencies
+
+- cert-manager deployment operational
+- Internal PKI certificates generated and distributed
+- Boulder services configured for mTLS authentication
+- Network policies allowing encrypted traffic
+
+#### Validation
+
+- Test mTLS handshake between all service pairs
+- Verify certificate validation and revocation checking
+- Confirm encrypted communication via network monitoring
+- Validate service startup with mTLS requirements
+
+#### Security Considerations
+
+- Certificate rotation policies and automation
+- Secure certificate storage and access controls
+- Network segmentation and traffic isolation
+- Monitoring and alerting for certificate expiration
+
+### 5.4 DNS Service Discovery Configuration
+
+#### Purpose
+
+Reliable DNS service discovery enables Boulder services to locate and communicate with dependencies while supporting both internal Kubernetes DNS and external DNS resolution.
+
+#### Implementation
+
+- **Kubernetes DNS**: CoreDNS for internal service resolution
+- **Service Naming**: Standardized service names following `service.namespace.svc.cluster.local` pattern
+- **DNS over HTTPS**: Secure DNS resolution for validation challenges
+- **Fallback Strategies**: Multiple DNS resolvers for high availability
+
+```yaml
+# Example DNS configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-va-config
+data:
+  va.json: |
+    {
+      "dnsResolver": "https://cloudflare-dns.com/dns-query",
+      "dnsAllowLoopbackAddresses": false,
+      "dnsTries": 3,
+      "dnsStaticResolvers": [
+        "boulder-dns-resolver.boulder.svc.cluster.local:53"
+      ]
+    }
+```
+
+#### Configuration
+
+- **Internal DNS**: Kubernetes service DNS for Boulder service discovery
+- **External DNS**: DoH endpoints for ACME challenge validation
+- **DNS Caching**: Local DNS caching for performance optimization
+- **Network Policies**: Secure DNS traffic routing and filtering
+
+#### Dependencies
+
+- Kubernetes cluster with functional CoreDNS
+- Network connectivity to external DoH providers
+- Boulder services configured for Kubernetes DNS
+- Network policies allowing DNS traffic
+
+#### Validation
+
+- Test internal service name resolution
+- Verify external DNS resolution via DoH
+- Confirm DNS caching and performance metrics
+- Validate DNS fallback and failure handling
+
+#### Security Considerations
+
+- Encrypted DNS queries (DoH/DoT) for external resolution
+- DNS query logging and monitoring
+- Protection against DNS poisoning and spoofing
+- Network isolation for DNS traffic
+
 ## Testing Validation
 
 - Verify service startup order and health checks via init containers
@@ -251,6 +486,10 @@ These must be generated using Boulder's `test/certs/generate.sh` script and pack
 - Ensure Boulder's integration tests pass using `test/integration-test.py --chisel`
 - Validate load balancing across multiple service instances via metrics endpoints
 - Confirm mTLS communication between all Boulder services
+- **Validate cert-manager certificate provisioning and renewal**
+- **Test database initialization and schema migration**
+- **Verify mTLS handshake between all Boulder services**
+- **Confirm DNS service discovery for both internal and external resolution**
 
 ### Startup Dependencies
 
@@ -284,10 +523,14 @@ spec:
 
 Using a **component-based structure** following Kubernetes best practices with Boulder services logically grouped:
 
-```
+```text
 manifests/
 ├── namespace.yaml
 ├── infrastructure/
+│   ├── cert-manager/
+│   │   ├── deployment.yaml
+│   │   ├── cluster-issuer.yaml
+│   │   └── certificate.yaml
 │   ├── redis/
 │   │   ├── statefulset.yaml
 │   │   └── service.yaml
@@ -336,12 +579,34 @@ manifests/
 │       ├── deployment.yaml
 │       ├── service.yaml
 │       └── configmap.yaml
+├── security/
+│   ├── pki/
+│   │   ├── internal-ca-secret.yaml
+│   │   ├── service-certificates.yaml
+│   │   └── certificate-generation-job.yaml
+│   ├── network-policies/
+│   │   ├── boulder-services-policy.yaml
+│   │   ├── database-access-policy.yaml
+│   │   └── external-dns-policy.yaml
+│   └── mtls/
+│       ├── ca-certificates.yaml
+│       └── service-mtls-config.yaml
+├── data/
+│   ├── database/
+│   │   ├── init-job.yaml
+│   │   ├── migration-job.yaml
+│   │   └── schema-configmap.yaml
+│   └── dns/
+│       ├── dns-resolver-config.yaml
+│       └── doh-endpoints-config.yaml
 ├── shared/
 │   ├── secrets.yaml
 │   ├── rbac.yaml
-│   └── network-policies.yaml
+│   └── service-accounts.yaml
 └── tests/
-    └── integration-job.yaml
+    ├── integration-job.yaml
+    ├── mtls-validation-job.yaml
+    └── security-test-job.yaml
 ```
 
 **Structure Benefits:**
@@ -355,8 +620,14 @@ manifests/
 ## Deliverables
 
 - Kubernetes manifests (YAMLs) for all services and configurations following the structure above.
+- **cert-manager deployment manifests** for automated TLS certificate management.
+- **Database initialization Jobs** for Boulder schema creation and migration.
+- **Internal PKI certificate generation** scripts and Kubernetes Secrets.
+- **mTLS configuration** for all Boulder service-to-service communication.
+- **DNS service discovery configuration** supporting both internal and external resolution.
 - Certificate generation Job to replace Boulder's `bsetup` service.
 - Integration test Job that runs Boulder's full test suite against the cluster.
 - Deployment script (`deploy.sh`) for one-command deployment on `kind`.
 - Test script (`test.sh`) for running integration tests.
+- **Security validation scripts** for mTLS and certificate verification.
 - Comprehensive README with deployment, testing, and troubleshooting instructions.
