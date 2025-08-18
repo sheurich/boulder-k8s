@@ -4,7 +4,7 @@ This document outlines standards and practices that all software development age
 
 ## Responsibilities
 
-- Read and follow the appropriate phase specification documents (e.g., SPECp1.md).
+- Read and follow the appropriate phase specification documents (e.g., `reference/SPECp1.md`).
 - Maintain test coverage for each deliverable.
 - Keep `README.md` and usage instructions up-to-date.
 - Use declarative configuration files and group them into logical files.

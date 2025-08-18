@@ -36,18 +36,18 @@ The foundational infrastructure is stable. The last session focused on resolving
 
 **Guiding Specification:**
 
-The goal for this phase is defined in `SPECp1.md`. The primary objective is to achieve functional parity with the upstream Boulder `docker-compose` environment. Success is measured by the passing of the full integration test suite.
+The goal for this phase is defined in `reference/SPECp1.md`. The primary objective is to achieve functional parity with the upstream Boulder `docker-compose` environment. Success is measured by the passing of the full integration test suite.
 
 **Key Architectural Decisions:**
 
-- **mTLS Deferred:** As noted in `SPECp1.md`, mTLS for service-to-service communication has been intentionally deferred to Phase 2 to simplify the initial deployment.
+- **mTLS Deferred:** As noted in `reference/SPECp1.md`, mTLS for service-to-service communication has been intentionally deferred to Phase 2 to simplify the initial deployment.
 - **OCSP Excluded:** This implementation intentionally excludes all OCSP-related functionality, a critical constraint detailed in both the `README.md` and `AGENTS.md`.
 
 ---
 
 ## 📚 Essential Documentation
 
-- **`SPECp1.md`**: **REQUIRED READING.** Defines the "definition of done" for the current phase.
+- **`reference/SPECp1.md`**: **REQUIRED READING.** Defines the "definition of done" for the current phase.
 - **`README.md`**: General project overview, setup, and manual testing instructions.
 - **`Makefile`**: Defines all high-level commands (`deploy`, `test`, `clean`).
 - **`AGENTS.md`**: Outlines development standards and commit guidelines.

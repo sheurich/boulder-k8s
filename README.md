@@ -90,8 +90,11 @@ boulder-k8s/
 │   ├── overview.md                     # System design overview
 │   ├── service-matrix.md               # Detailed service specs
 │   └── implementation-plan.md          # Implementation strategy
-├── reference/
-│   └── BOULDER.md                      # Upstream Boulder technical reference
+├── reference/                          # Technical reference documentation
+│   ├── BOULDER.md                      # Upstream Boulder technical reference
+│   ├── SPECp1.md                       # Phase 1 specification
+│   └── SPECp2.md                       # Phase 2 specification
+├── TROUBLESHOOTING.md                  # Issue resolution guide
 └── scripts/                            # Utility scripts
     └── lint.sh                         # Code quality validation
 ```
@@ -191,6 +194,8 @@ kubectl get pods -n boulder -w
 curl -s http://localhost:4001/directory | jq .
 ```
 
+**💡 Deployment Issues?** If deployment fails or services don't start properly, consult the [Troubleshooting Guide](TROUBLESHOOTING.md) for common deployment problems and their solutions.
+
 ## Testing
 
 This project includes comprehensive testing at multiple levels.
@@ -207,6 +212,8 @@ Validate that all Boulder services are running correctly and can communicate wit
 ./k8s/scripts/health-check.sh --verbose --resources
 ```
 
+**💡 Health Check Failures?** If health checks fail, see the [Troubleshooting Guide](TROUBLESHOOTING.md) for diagnostic procedures and resolution steps for service startup problems, database connectivity issues, and resource constraints.
+
 ### Integration Tests
 
 Run Boulder's complete integration test suite to validate the end-to-end ACME workflow.
@@ -218,6 +225,8 @@ Run Boulder's complete integration test suite to validate the end-to-end ACME wo
 # Monitor test progress
 kubectl logs -f job/boulder-integration-test -n boulder
 ```
+
+**💡 Integration Test Failures?** If tests fail or timeout, refer to the [Troubleshooting Guide](TROUBLESHOOTING.md) for integration test debugging, challenge validation issues, and performance optimization guidance.
 
 ### Manual Testing with an ACME Client
 

@@ -1,6 +1,6 @@
 # Phase 2 Spec: Multi-Environment & CI-Compatible Deployment
 
-> **Navigation:** See [`README.md`](README.md) for project overview | [`SPECp1.md`](SPECp1.md) for Phase 1 foundation | **Note:** Phase 2 extends Phase 1, not replaces it
+> **Navigation:** See [`README.md`](../README.md) for project overview | [`SPECp1.md`](SPECp1.md) for Phase 1 foundation | **Note:** Phase 2 extends Phase 1, not replaces it
 
 ## Objective
 

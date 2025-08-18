@@ -1,6 +1,6 @@
 # Boulder Kubernetes Implementation - Phase 1 Specification
 
-> **Navigation:** See [`README.md`](README.md) for project overview | **This is Phase 1** | See `SPECp2.md` for the next phase
+> **Navigation:** See [`README.md`](../README.md) for project overview | **This is Phase 1** | See `SPECp2.md` for the next phase
 
 > **Note:** This document is the authoritative source for all Boulder-specific technical specifications and implementation details for Phase 1.
 

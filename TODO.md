@@ -13,9 +13,9 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
 ## 📊 Project Progress Summary
 
 - **Phase 1 (Initial Kubernetes Deployment)**: In Progress
-  - *See [SPECp1.md](SPECp1.md) for full details.*
+  - *See [reference/SPECp1.md](reference/SPECp1.md) for full details.*
 - **Phase 2 (Multi-Environment & CI-Compatible Deployment)**: 0% Complete
-  - *See [SPECp2.md](SPECp2.md) for full details.*
+  - *See [reference/SPECp2.md](reference/SPECp2.md) for full details.*
 
 ---
 

@@ -6,7 +6,7 @@ This document outlines the phased implementation approach for deploying Boulder 
 
 ## Project Directory Structure
 
-Following the component-based structure specified in SPECp1.md:
+Following the component-based structure specified in `reference/SPECp1.md`:
 
 ```
 boulder-k8s/
