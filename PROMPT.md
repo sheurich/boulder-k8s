@@ -2,23 +2,22 @@
 
 **Project:** A production-grade implementation of the Boulder CA running on Kubernetes.
 
-**Checkpoint:** 2025-08-18T11:30:30.939Z
+**Checkpoint:** 2025-08-18T13:47:30.036Z
 
 **Status:**
-- **Phase 1: Documentation & Setup**: 100% Complete
-- **Phase 2: Deployment & Validation**: 0% Complete
+- **Phase 1: Infrastructure Deployment (In Progress)**:
+  - ✅ Database infrastructure is operational.
+  - 📋 Boulder core services deployment is pending.
 
 ---
 
 ## 🚀 Quick Start
 
-Your immediate task is to **deploy and validate the Phase 1 implementation**. This involves setting up the local Kubernetes cluster, deploying all manifests, and running integration tests to confirm functionality.
+Your immediate task is to **deploy the Boulder core services**. This involves deploying the Service orchestrator, Certificate Authority, Registration Authority, Validation Authority, and the Web Frontend.
 
 **First Commands to Run:**
 ```bash
-make setup
-make deploy
-make test
+make deploy-boulder
 ```
 
 ---
@@ -26,17 +25,17 @@ make test
 ## 📝 Project Context
 
 **Implementation Status:**
-- All Phase 1 Kubernetes manifests are created and located in the `k8s/` directory.
-- All necessary configuration files, including `kind-config.yaml` and `.yamllint`, are in place.
-- Documentation is complete, including `README.md`, `AGENTS.md`, and architectural diagrams.
+- The Kind cluster is running and accessible.
+- MariaDB is deployed and the Boulder schema is initialized (19 tables, OCSP tables excluded).
+- The database initialization job completed successfully.
 
 **Recent Accomplishments:**
-- ✅ Completed all Phase 1 deliverables as per `SPECp1.md`.
-- ✅ Consolidated and cleaned up all project documentation.
-- ✅ Established and documented version control practices in `AGENTS.md`.
+- ✅ **Fixed MariaDB Health Probes:** Resolved startup and liveness probe failures, ensuring stable database operation.
+- ✅ **Initialized Boulder Schema:** Successfully ran the `db-init` job to prepare the database for Boulder services.
+- ✅ **Disabled TLS for Phase 1:** Reverted an attempt to implement mTLS for database connections to simplify the initial deployment. This will be revisited in a later phase.
 
 **Outstanding Issues/Blockers:**
-- None. The project is ready for Phase 1 validation.
+- **TLS Complexity:** The initial attempt to secure MariaDB with TLS introduced significant complexity. This has been deferred to a later phase to avoid blocking core service deployment.
 
 ---
 
@@ -55,7 +54,7 @@ This `PROMPT.md` is your primary starting point. For deeper dives, refer to thes
 ## 📦 Repository Status
 
 - **Branch:** `main`
-- **Last Commit:** `docs: create agent handoff system`
+- **Last Commit:** `fix(k8s): resolve MariaDB health check probes and database initialization`
 - **Working Tree:** Clean. No uncommitted changes.
 
 ---
@@ -85,35 +84,33 @@ This `PROMPT.md` is your primary starting point. For deeper dives, refer to thes
 
 ## ✅ Current Task Details
 
-**Next Task: Deploy and Validate Phase 1**
+**Next Task: Deploy Boulder Services**
 
 **What Needs to Be Done:**
-1.  Deploy all Kubernetes resources for the Boulder CA.
-2.  Run the complete integration test suite to validate the deployment.
-3.  Document the results and confirm that all Phase 1 acceptance criteria are met.
+1.  Deploy the core Boulder services: `sa`, `ca`, `ra`, `va`, `wfe2`.
+2.  Deploy Redis and ProxySQL.
+3.  Run integration tests to validate the full Boulder stack.
 
 **Success Criteria:**
-- `make deploy` completes without errors.
-- `make test` passes successfully.
+- `make deploy-boulder` completes without errors.
 - All Boulder services are running and healthy in the `boulder` namespace.
-- The local environment can successfully issue a test certificate.
+- `make test` passes successfully.
 
 **Known Issues to Watch For:**
-- **Service Dependencies:** Boulder services have a strict startup order. The `db-init` job must complete successfully before other services can start.
-- **DNS Propagation:** Local DNS resolution within the Kind cluster can sometimes be slow. Tests may fail intermittently if services cannot resolve each other.
+- **Service Dependencies:** Boulder services have a strict startup order. Ensure the database is healthy before deploying the core services.
 
 ---
 
 ## 🚀 Deployment Instructions
 
 **Step-by-Step Deployment:**
-1.  **Start the local cluster:**
+1.  **Verify Cluster Status:**
     ```bash
-    make setup
+    kubectl get nodes
     ```
-2.  **Deploy all resources:**
+2.  **Deploy Boulder Services:**
     ```bash
-    make deploy
+    make deploy-boulder
     ```
 3.  **Check deployment status:**
     ```bash
