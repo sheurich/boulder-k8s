@@ -49,7 +49,7 @@ The goal for this phase is defined in `SPECp1.md`. The primary objective is to a
 
 - **`SPECp1.md`**: **REQUIRED READING.** Defines the "definition of done" for the current phase.
 - **`README.md`**: General project overview, setup, and manual testing instructions.
-- **`Makefile.mk`**: Defines all high-level commands (`deploy`, `test`, `clean`).
+- **`Makefile`**: Defines all high-level commands (`deploy`, `test`, `clean`).
 - **`AGENTS.md`**: Outlines development standards and commit guidelines.
 
 ---

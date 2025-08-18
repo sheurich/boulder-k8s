@@ -39,6 +39,7 @@ This document outlines standards and practices that all software development age
   - Use `yamllint` for general YAML validation
   - Use `shellcheck` for shell script validation
   - Use `markdownlint` for markdown documentation validation
+  - Use `hadolint` for Dockerfile validation
   - Use `checkmake` for Makefile validation
   - Use appropriate linters for each file type
   - Fix all linting errors before proceeding
@@ -117,6 +118,7 @@ This document outlines standards and practices that all software development age
 - **Next Steps Maintenance**: Keep next steps section updated with immediate actionable items
 
 **Status Indicators:**
+
 - `✅` (done) - Task completed and validated
 - `🔄` (in progress) - Currently being worked on
 - `🔴` (critical/urgent) - High priority task blocking other work
@@ -124,6 +126,7 @@ This document outlines standards and practices that all software development age
 - `📋` (pending) - Planned but not yet started
 
 **Task Documentation Guidelines:**
+
 - Use markdown checkboxes for actionable items
 - Include dates for completed items to maintain project timeline
 - Add context notes for complex tasks requiring additional explanation
@@ -132,6 +135,7 @@ This document outlines standards and practices that all software development age
 - Organize tasks by logical categories and implementation phases
 
 **Weekly Review Process:**
+
 1. Update completion status for all finished tasks
 2. Assess and document any new blockers or impediments
 3. Reprioritize pending tasks based on current project needs

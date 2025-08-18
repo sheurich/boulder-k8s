@@ -114,6 +114,7 @@ The following tools are required for deployment and development:
 - **kubeconform** - Kubernetes manifest validation (preferred)
 - **yamllint** - YAML file validation
 - **shellcheck** - Shell script validation
+- **hadolint** - Dockerfile validation
 - **markdownlint** - Documentation validation
 - **jq** - JSON parsing for debugging and configuration management
 
@@ -134,7 +135,7 @@ brew bundle
 
 # Or install individual tools
 brew install docker kubectl kind go python3
-brew install kubeconform yamllint shellcheck markdownlint-cli jq
+brew install kubeconform yamllint shellcheck markdownlint-cli jq hadolint
 ```
 
 ## Deployment
