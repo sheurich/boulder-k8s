@@ -81,6 +81,21 @@ This document outlines standards and practices that all software development age
 - Ensure documentation is easily navigable and searchable
 - Keep documentation up-to-date with code changes
 
+### Documentation Maintenance
+
+- **PROMPT.md Maintenance**: The `PROMPT.md` file must be updated at every checkpoint or handoff to ensure the next agent has a clear starting point.
+- **When to update PROMPT.md**:
+  - At the end of each work session.
+  - After completing major tasks or deliverables.
+  - Before any agent handoff.
+  - When the project status changes significantly (e.g., a new blocker is identified).
+- **What to update in PROMPT.md**:
+  - Current task status and progress.
+  - Repository status, including the current branch and recent commits.
+  - The immediate next tasks for the incoming agent.
+  - Any new blockers, issues, or architectural decisions.
+  - Changes to the environment or setup procedures.
+
 ## Best Practices
 
 ### Project Management
