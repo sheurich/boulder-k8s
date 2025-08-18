@@ -59,10 +59,17 @@ main() {
     fi
     echo
     
-    # Run kubeconform on k8s directory (ignore missing schemas for CRDs)
+    # Run kubeconform on k8s directory (ignore missing schemas for CRDs and exclude tmp directories)
     if [ -d "k8s" ]; then
-        if ! run_linter "kubeconform on Kubernetes manifests" kubeconform --ignore-missing-schemas k8s/; then
-            exit_code=1
+        # Find all YAML files in k8s directory, excluding tmp directories
+        k8s_files=$(find k8s/ -name "*.yaml" -o -name "*.yml" | grep -v "/tmp/" || true)
+        if [ -n "$k8s_files" ]; then
+            # shellcheck disable=SC2086
+            if ! run_linter "kubeconform on Kubernetes manifests" kubeconform --ignore-missing-schemas $k8s_files; then
+                exit_code=1
+            fi
+        else
+            echo "SKIP: No Kubernetes manifest files found in k8s/"
         fi
     else
         echo "SKIP: No k8s directory found"

@@ -1,201 +1,118 @@
 # Boulder Kubernetes Implementation - Phase 1 Specification
 
-> **Note:** This document is the authoritative source for all Boulder-specific technical specifications and implementation details.
+> **Note:** This document is the authoritative source for all Boulder-specific technical specifications and implementation details for Phase 1.
 
-## Objective
+## 1. Objective
 
 Containerize and deploy Let's Encrypt's Boulder services into a Kubernetes cluster to run its integration test suite in a pod-based microservice architecture.
 
-## Architecture Decisions
+## 2. Architecture
 
-### Service Discovery Strategy
+This section outlines the core architectural decisions for the Kubernetes deployment.
 
-- **Approach**: Kubernetes native load balancing with single Service per service type
-- **Pattern**: Replace Consul SRV lookups with direct Kubernetes service DNS names
-- **Example**: `boulder-sa` Service → multiple `boulder-sa` pods (Kubernetes handles load balancing)
-- **Rationale**: Simpler than preserving Boulder's multi-instance service discovery
+### 2.1. Containerization
+- **Base Image**: Use Boulder's existing `Containerfile` without modification.
+- **Deployment**: A single container image will be used for all Boulder services, with the specific service role (e.g., `boulder-ca`, `boulder-ra`) determined by command-line arguments.
 
-### Container Strategy
+### 2.2. Service Discovery
+- **Approach**: Kubernetes-native service discovery will replace Consul.
+- **Pattern**: Services will communicate directly using Kubernetes service DNS names (e.g., `boulder-sa.boulder.svc.cluster.local`). Boulder's `srvLookup` configurations will be replaced with static `serverAddress` entries.
+- **Load Balancing**: A single Kubernetes Service will load-balance traffic across multiple pods for a given Boulder service type (e.g., a `boulder-sa` Service fronts two `boulder-sa` pods).
 
-- **Base Image**: Use Boulder's existing `Containerfile` without modification
-- **Deployment**: Single image with different command-line arguments per pod
-- **Commands**: `boulder boulder-ca`, `boulder boulder-ra`, `boulder boulder-wfe2`, etc.
-- **Rationale**: Leverages Boulder's existing containerization work
+### 2.3. Configuration Management
+- **Configuration**: Boulder's JSON configuration files will be stored in Kubernetes ConfigMaps.
+- **Secrets**: Sensitive data (database credentials, TLS keys, API keys) will be stored in Kubernetes Secrets.
+- **Database URL**: Database connection strings will be stored in Secrets and mounted as files, referenced via Boulder's `dbConnectFile` setting.
 
-### Integration Testing
+### 2.4. PKI & Security
+- **mTLS**: All inter-service gRPC communication must be secured with mutual TLS (mTLS).
+- **Internal PKI**: An internal Certificate Authority (CA) will be used to issue certificates for mTLS. `cert-manager` is recommended for automating the lifecycle of these internal certificates.
+- **WebPKI**: The WebPKI certificate hierarchy required for CA operations will be generated using Boulder's `test/certs/generate.sh` script and mounted into CA pods as Kubernetes Secrets.
+- **HSM**: A file-based PKCS#11 configuration will be used, matching Boulder's test environment. Network HSM integration is deferred to Phase 2.
 
-- **Scope**: Full Boulder integration test suite via `test/integration-test.py --chisel`
-- **Execution**: Kubernetes Jobs running tests against deployed cluster services
-- **Prerequisites**: Certificate generation via init containers (replaces `bsetup` service)
+### 2.5. Integration Testing
+- **Execution**: The full Boulder integration test suite (`test/integration-test.py --chisel`) will be run as a Kubernetes Job.
+- **Prerequisites**: Certificate generation, previously handled by `bsetup`, will be performed by an init container or a dedicated Kubernetes Job.
 
-## Requirements
+## 3. Service Definitions
 
-### Microservices as Pods
+Each Boulder service will be deployed as a Kubernetes Deployment, exposed via a Service.
 
-- Each Boulder mode (e.g., `sa`, `ra`, `va`, etc.) must be deployed as an independent Kubernetes pod.
-- Use a single container image with different command-line arguments for each role.
+### 3.1. Service Dependencies and Startup Order
 
-### Service Discovery
+Boulder services have strict startup dependencies that must be enforced. Kubernetes init containers should be used to wait for dependencies to become available before starting a service pod.
 
-- Replace Consul DNS with Kubernetes services for service-to-service communication.
+**Startup Order:**
+1.  **Infrastructure Layer**: MariaDB, ProxySQL, Redis.
+2.  **Foundation Services**: `boulder-sa`, `boulder-publisher`, `remoteva`.
+3.  **Core Services**: `boulder-va`, `boulder-ca`, `boulder-ra`, `nonce-service`.
+4.  **Web & Edge Services**: `boulder-wfe2`, `sfe`.
 
-#### Configuration Conversion Patterns
-
-- Convert Boulder's JSON configs to Kubernetes ConfigMaps
-- Use Secrets for sensitive data (database URLs, TLS keys, Redis passwords)
-- Replace Consul SRV lookups with Kubernetes service DNS (e.g., `boulder-sa:9395`)
-- Update `dnsAuthority` from `consul.service.consul` to cluster DNS
-
-#### Service Discovery Pattern
-
-Replace Consul patterns like:
-
-```json
-"srvLookup": {"service": "sa", "domain": "service.consul"}
+**Example Init Container:**
+An `initContainer` can poll for the DNS resolution of its dependencies.
+```yaml
+# Example for boulder-ra, which depends on sa, ca, and va
+initContainers:
+- name: wait-for-dependencies
+  image: busybox:1.36
+  command: ['sh', '-c', 'until nslookup boulder-sa && nslookup boulder-ca && nslookup boulder-va; do echo "waiting for dependencies..."; sleep 2; done']
 ```
 
-With Kubernetes service names:
+### 3.2. Service-to-Resource Mapping
 
-```json
-"serverAddress": "boulder-sa:9395"
-```
+The following tables map Boulder services to Kubernetes resources and their dependencies.
 
-### Configuration Management
+#### Core Boulder Services
+| Service | Replicas | Dependencies |
+|---|---|---|
+| **boulder-sa** | 2 | MariaDB/ProxySQL |
+| **boulder-ca** | 2 | `boulder-sa` |
+| **boulder-ra** | 2 | `boulder-sa`, `boulder-ca`, `boulder-va`, `boulder-publisher` |
+| **boulder-va** | 2 | `boulder-sa`, `remoteva` |
+| **boulder-wfe2** | 1 | `boulder-ra`, `boulder-sa`, `nonce-service` |
+| **boulder-publisher** | 2 | - |
+| **boulder-ra-sct-provider** | 2 | `boulder-publisher` |
+| **nonce-service** | 2 | Redis |
+| **remoteva** | 3 | - |
 
-- Use Kubernetes ConfigMaps and Secrets to manage:
-  - Database credentials
-  - Redis connection strings
-  - TLS certificates and keys
-  - Boulder configuration files
+> **Note:** The `remoteva` service will have three distinct deployments (`remoteva-a`, `remoteva-b`, `remoteva-c`) each with its own configuration, but they can be addressed collectively if needed. The `boulder-ra-sct-provider` is a specialized instance of the RA.
 
-### Supporting Services
+#### Supporting Services
+| Service | Replicas | Dependencies |
+|---|---|---|
+| **sfe** | 1 | `boulder-ra`, `boulder-sa` |
+| **crl-storer** | 1 | `boulder-sa` |
+| **bad-key-revoker** | 1 | `boulder-sa` |
+| **log-validator** | 1 | `boulder-sa` |
+| **email-exporter** | 1 | `boulder-sa` |
 
-- Include Redis and PostgreSQL as Kubernetes services.
+#### Infrastructure Services
+| Service | Kubernetes Resource | Purpose |
+|---|---|---|
+| **MariaDB** | StatefulSet | Primary database |
+| **ProxySQL** | Deployment | Database proxy/load balancer |
+| **Redis** | StatefulSet (x2) | Rate limiting and nonce storage |
 
-### PKI and Certificate Management
+## 4. Configuration Conversion Patterns
 
-- Use file-based PKCS#11 configuration (matching Boulder's test environment approach)
-- Mount WebPKI certificates and keys as Kubernetes Secrets
-- Configure Boulder CA services to use local certificate files via mounted volumes
-- Generate test certificate hierarchies using Boulder's existing `test/certs/generate.sh` script
-- Note: Network-based HSM integration with SoftHSM2 + pkcs11-proxy is planned for Phase 2
+This section provides examples of how Boulder's original configuration should be adapted for Kubernetes.
 
-### Integration Testing
+### 4.1. Service Discovery (Consul to Kubernetes)
 
-- Replicate Boulder's Python-based integration test scripts to run against the Kubernetes cluster.
-- Ensure all inter-service dependencies (e.g., VA requires SA) are met at startup.
+Replace Consul SRV lookups with direct Kubernetes service DNS names.
 
-## Service Mapping & Dependencies
-
-### Service Dependencies
-
-Boulder services have strict startup dependencies that must be enforced using Kubernetes init containers:
-
-**Infrastructure Layer** (start first):
-
-- MariaDB (StatefulSet)
-- ProxySQL (Deployment)
-- Redis instances (2x StatefulSet for sharding)
-
-**Foundation Services**:
-
-- `remoteva-a/b/c` (no dependencies)
-- `boulder-sa-1/2` (depends on ProxySQL → MariaDB)
-- `boulder-publisher-1/2` (no dependencies)
-
-**Validation Services**:
-
-- `boulder-va-1/2` (depends on remoteva-a/b)
-
-**Certificate Services**:
-
-- `boulder-ra-sct-provider-1/2` (specialized RA instances for SCT operations, depends on publisher instances)
-- `boulder-ca-1/2` (depends on SA + SCT providers)
-
-**Registration Services**:
-
-- `boulder-ra-1/2` (depends on SA + CA + VA + Publisher)
-
-**Web Services**:
-
-- `nonce-service-1/2` instances (depends on Redis)
-- `boulder-wfe2` (depends on RA + SA + Nonce services)
-- `sfe` (depends on RA + SA)
-
-### Core Boulder Services (Essential for ACME Protocol)
-
-> **Note:** The `boulder-ra-sct-provider` services are specialized instances of the Registration Authority (RA) that are required by Boulder's test environment for SCT (Signed Certificate Timestamp) operations.
-
-| Service                       | Instances | Kubernetes Resources         | Dependencies                                                          | Commands                                                         |
-| ----------------------------- | --------- | ---------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **boulder-sa-1**              | 1         | Deployment, Service          | MariaDB, ProxySQL                                                     | `boulder boulder-sa --config /etc/boulder/sa.json`               |
-| **boulder-sa-2**              | 1         | Deployment, Service          | MariaDB, ProxySQL                                                     | `boulder boulder-sa --config /etc/boulder/sa.json`               |
-| **boulder-ca-1**              | 1         | Deployment, Service          | boulder-sa-1/2                                                        | `boulder boulder-ca --config /etc/boulder/ca.json`               |
-| **boulder-ca-2**              | 1         | Deployment, Service          | boulder-sa-1/2                                                        | `boulder boulder-ca --config /etc/boulder/ca.json`               |
-| **boulder-ra-1**              | 1         | Deployment, Service          | boulder-sa-1/2, boulder-ca-1/2, boulder-va-1/2, boulder-publisher-1/2 | `boulder boulder-ra --config /etc/boulder/ra.json`               |
-| **boulder-ra-2**              | 1         | Deployment, Service          | boulder-sa-1/2, boulder-ca-1/2, boulder-va-1/2, boulder-publisher-1/2 | `boulder boulder-ra --config /etc/boulder/ra.json`               |
-| **boulder-va-1**              | 1         | Deployment, Service          | boulder-sa-1/2, remoteva-a/b/c                                        | `boulder boulder-va --config /etc/boulder/va.json`               |
-| **boulder-va-2**              | 1         | Deployment, Service          | boulder-sa-1/2, remoteva-a/b/c                                        | `boulder boulder-va --config /etc/boulder/va.json`               |
-| **boulder-wfe2**              | 1         | Deployment, Service, Ingress | boulder-ra-1/2, boulder-sa-1/2, nonce-service-1/2                     | `boulder boulder-wfe2 --config /etc/boulder/wfe2.json`           |
-| **boulder-publisher-1**       | 1         | Deployment, Service          | -                                                                     | `boulder boulder-publisher --config /etc/boulder/publisher.json` |
-| **boulder-publisher-2**       | 1         | Deployment, Service          | -                                                                     | `boulder boulder-publisher --config /etc/boulder/publisher.json` |
-| **boulder-ra-sct-provider-1** | 1         | Deployment, Service          | boulder-publisher-1/2                                                 | `boulder boulder-ra --config /etc/boulder/ra-sct-provider.json`  |
-| **boulder-ra-sct-provider-2** | 1         | Deployment, Service          | boulder-publisher-1/2                                                 | `boulder boulder-ra --config /etc/boulder/ra-sct-provider.json`  |
-| **nonce-service-1**           | 1         | Deployment, Service          | Redis                                                                 | `boulder nonce-service --config /etc/boulder/nonce-service.json` |
-| **nonce-service-2**           | 1         | Deployment, Service          | Redis                                                                 | `boulder nonce-service --config /etc/boulder/nonce-service.json` |
-| **remoteva-a**                | 1         | Deployment, Service          | -                                                                     | `boulder remoteva --config /etc/boulder/remoteva-a.json`         |
-| **remoteva-b**                | 1         | Deployment, Service          | -                                                                     | `boulder remoteva --config /etc/boulder/remoteva-b.json`         |
-| **remoteva-c**                | 1         | Deployment, Service          | -                                                                     | `boulder remoteva --config /etc/boulder/remoteva-c.json`         |
-
-### Supporting Services (Auxiliary Functionality)
-
-| Service             | Kubernetes Resources | Dependencies                   | Commands                                                             |
-| ------------------- | -------------------- | ------------------------------ | -------------------------------------------------------------------- |
-| **sfe**             | Deployment, Service  | boulder-ra-1/2, boulder-sa-1/2 | `boulder sfe --config /etc/boulder/sfe.json`                         |
-| **crl-storer**      | Deployment, Service  | boulder-sa-1/2                 | `boulder crl-storer --config /etc/boulder/crl-storer.json`           |
-| **bad-key-revoker** | Deployment, Service  | boulder-sa-1/2                 | `boulder bad-key-revoker --config /etc/boulder/bad-key-revoker.json` |
-| **log-validator**   | Deployment, Service  | boulder-sa-1/2                 | `boulder log-validator --config /etc/boulder/log-validator.json`     |
-| **email-exporter**  | Deployment, Service  | boulder-sa-1/2                 | `boulder email-exporter --config /etc/boulder/email-exporter.json`   |
-
-### Infrastructure Services (Data Layer)
-
-| Service                 | Type        | Purpose                         |
-| ----------------------- | ----------- | ------------------------------- |
-| **MariaDB**             | StatefulSet | Primary database                |
-| **ProxySQL**            | Deployment  | Database proxy/load balancer    |
-| **Redis (2 instances)** | StatefulSet | Rate limiting and nonce storage |
-
-## Configuration Conversion Requirements
-
-When converting Boulder's Docker Compose configuration to Kubernetes:
-
-1. **Service Discovery**: Replace all Consul SRV lookups with Kubernetes service DNS names
-2. **Multi-Instance Services**: Use single Services with multiple pod endpoints instead of separate service instances
-3. **Certificate Paths**: Update file paths to mount points from Secrets/ConfigMaps
-4. **Database URLs**: Store in Secrets, reference via `dbConnectFile` pointing to mounted secret files
-5. **Redis Configuration**: Convert Consul-based Redis discovery to direct Kubernetes service addresses
-
-### Configuration Conversion Examples
-
-#### Service Discovery Conversion
-
-**Before (Consul SRV)**:
-
+**Before (Consul SRV in `ra.json`)**:
 ```json
 {
   "saService": {
     "dnsAuthority": "consul.service.consul",
-    "srvLookup": {
-      "service": "sa",
-      "domain": "service.consul"
-    },
+    "srvLookup": { "service": "sa", "domain": "service.consul" },
     "hostOverride": "sa.boulder"
   }
 }
 ```
 
-**After (Kubernetes DNS)**:
-
+**After (Kubernetes DNS in `ra.json`)**:
 ```json
 {
   "saService": {
@@ -205,429 +122,95 @@ When converting Boulder's Docker Compose configuration to Kubernetes:
 }
 ```
 
-#### Multi-Instance Service Conversion
+### 4.2. mTLS Configuration
 
-Boulder runs multiple instances of core services for load balancing. In Docker Compose, these are separate containers with different ports. In Kubernetes, we use a single Service with multiple pod endpoints.
+Client and server certificate paths must be configured for mTLS.
 
-**Example - Storage Authority**:
-
-- Docker: `boulder-sa-1` (port 9395) + `boulder-sa-2` (port 9495)
-- Kubernetes: Single `boulder-sa` Service with 2 pod endpoints, Kubernetes handles load balancing
-
-## PKI Certificate Management
-
-Boulder requires two distinct certificate hierarchies:
-
-**WebPKI Hierarchy** (for CA operations):
-
-- Generated using `test/certs/generate.sh`
-- Must include root certs, intermediates, and PKCS#11 configs
-- Mount as Secrets in CA service pods
-
-**Internal PKI** (for mTLS between services):
-
-- Internal CA certificate (`minica.pem`)
-- Service-specific certificates (`sa.boulder`, `ra.boulder`, etc.)
-- Mount in all Boulder service pods for gRPC authentication
-
-### PKI Details
-
-1. **WebPKI Hierarchy** (for certificate issuance):
-
-   - Root certificates (RSA + ECDSA)
-   - Intermediate certificates (multiple RSA + ECDSA)
-   - PKCS#11 configuration files for each issuer
-
-2. **Internal PKI** (for service mTLS):
-   - Internal CA certificate (`minica.pem`)
-   - Per-service certificates (`sa.boulder`, `ra.boulder`, `wfe.boulder`, etc.)
-
-These must be generated using Boulder's `test/certs/generate.sh` script and packaged into Kubernetes Secrets.
-
-## 5. Infrastructure & Security Components
-
-This section outlines the critical infrastructure and security components that must be implemented as prerequisites for the Boulder Kubernetes deployment. These components ensure secure, reliable operation of the Boulder ACME Certificate Authority.
-
-### 5.1 TLS Certificate Management (cert-manager)
-
-#### Purpose
-
-cert-manager provides automated TLS certificate provisioning and management for all Kubernetes workloads, enabling secure communication and eliminating manual certificate management overhead.
-
-#### Implementation
-
-- **Version**: cert-manager v1.15.0 or latest stable release
-- **Deployment Method**: Helm chart or official YAML manifests
-- **Components**: cert-manager controller, webhook, and cainjector
-
-```yaml
-# Example cert-manager ClusterIssuer
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: boulder-internal-ca
-spec:
-  ca:
-    secretName: boulder-ca-key-pair
+**Example (`ra.json` connecting to `sa.boulder`)**:
+```json
+{
+  "saService": {
+    "serverAddress": "boulder-sa:9395",
+    "hostOverride": "sa.boulder",
+    "clientCertificate": "/etc/boulder/certs/ra.boulder.crt",
+    "clientKey": "/etc/boulder/certs/ra.boulder.key",
+    "serverCertificate": "/etc/boulder/certs/minica.pem"
+  }
+}
 ```
 
-#### Configuration
+### 4.3. DNS Resolver Configuration
 
-- **ClusterIssuer**: Internal CA for Boulder service certificates
-- **Issuer**: Let's Encrypt staging/production for external certificates
-- **Certificate Resources**: Automatic certificate creation via annotations
-- **Renewal Policy**: Automatic renewal at 2/3 of certificate lifetime
+The Validation Authority (VA) must be configured to use external DNS resolvers for challenge validation, preferably via DNS-over-HTTPS (DoH).
 
-#### Dependencies
-
-- Kubernetes cluster with CRD support
-- RBAC permissions for cert-manager service accounts
-- Internal CA certificate and key pair (generated via Boulder's certificate generation)
-
-#### Validation
-
-- Verify cert-manager pods are running and ready
-- Test certificate issuance with temporary Certificate resource
-- Confirm automatic renewal functionality
-- Validate certificate mounting in Boulder service pods
-
-#### Security Considerations
-
-- Secure storage of CA private keys in Kubernetes Secrets
-- RBAC policies limiting cert-manager permissions
-- Certificate transparency logging integration
-- Rotation policies for internal CA certificates
-
-### 5.2 Database Initialization and Migration
-
-#### Purpose
-
-Automated database schema creation and initialization ensures Boulder services have the required database structure and initial data for proper operation.
-
-#### Implementation
-
-- **Database Schema**: Extracted from Boulder source repository (`vendor/github.com/letsencrypt/boulder/`)
-- **Migration System**: Kubernetes Jobs for schema creation and updates
-- **Initial Data**: WebPKI ceremony data and system configuration
-- **User Management**: Database users with appropriate permissions
-
-```yaml
-# Example database initialization Job
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: boulder-db-init
-spec:
-  template:
-    spec:
-      containers:
-      - name: db-migrator
-        image: boulder:latest
-        command: ["/opt/boulder/bin/boulder-db-migrate"]
-        env:
-        - name: DB_URL
-          valueFrom:
-            secretKeyRef:
-              name: boulder-db-credentials
-              key: url
+**Example (`va.json`)**:
+```json
+{
+  "dnsResolver": "https://cloudflare-dns.com/dns-query",
+  "dnsTries": 3
+}
 ```
 
-#### Configuration
+## 5. Infrastructure and Database
 
-- **Schema Files**: Boulder database schema SQL files
-- **Migration Scripts**: Version-controlled database updates
-- **Connection Configuration**: Secure database connection parameters
-- **ProxySQL Configuration**: Database proxy settings for connection pooling
+### 5.1. Database Initialization
+A Kubernetes Job must be used to initialize the database schema before the `boulder-sa` service starts. The schema migration scripts are available in the Boulder source code.
 
-#### Dependencies
+### 5.2. DNS
+The cluster must have a functional DNS service (e.g., CoreDNS). Network policies should be configured to allow Boulder services to make external DNS queries for challenge validation.
 
-- MariaDB StatefulSet deployed and operational
-- ProxySQL deployment configured
-- Boulder source code accessible for schema extraction
-- Database credentials stored in Kubernetes Secrets
+## 6. Testing and Validation
 
-#### Validation
+The deployment is considered complete only after the following criteria are met:
+- All service pods are running and healthy.
+- Startup dependencies are correctly handled by init containers.
+- The Boulder integration test suite (`test/integration-test.py --chisel`) passes when run as a Kubernetes Job.
+- mTLS is enforced for all service-to-service communication.
+- `cert-manager` successfully provisions and renews internal certificates.
+- The database initialization job completes successfully.
+- Load balancing across multiple service instances is confirmed.
 
-- Verify all required tables and indexes are created
-- Test database connectivity from Boulder services
-- Confirm proper user permissions and access controls
-- Validate ProxySQL connection routing
+## 7. Deployment Structure
 
-#### Security Considerations
-
-- Encrypted database connections (TLS)
-- Principle of least privilege for database users
-- Regular database backup and recovery procedures
-- Audit logging for database operations
-
-### 5.3 mTLS Security Architecture
-
-#### Purpose
-
-Mutual TLS (mTLS) authentication ensures secure, encrypted communication between all Boulder services, preventing unauthorized access and man-in-the-middle attacks.
-
-#### Implementation
-
-- **Certificate Authority**: Internal PKI hierarchy for service certificates
-- **Service Certificates**: Unique certificates for each Boulder service
-- **gRPC Configuration**: mTLS-enabled gRPC service definitions
-- **Certificate Distribution**: Automatic certificate mounting via cert-manager
-
-```yaml
-# Example service configuration with mTLS
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: boulder-ra-config
-data:
-  ra.json: |
-    {
-      "saService": {
-        "serverAddress": "boulder-sa:9395",
-        "hostOverride": "sa.boulder",
-        "clientCertificate": "/etc/boulder/certs/ra.boulder.crt",
-        "clientKey": "/etc/boulder/certs/ra.boulder.key",
-        "serverCertificate": "/etc/boulder/certs/minica.pem"
-      }
-    }
-```
-
-#### Configuration
-
-- **Service-to-Service**: gRPC mTLS for Boulder service communication
-- **Database Connections**: TLS encryption for MariaDB connections
-- **Redis Connections**: TLS encryption for Redis connections
-- **External Connections**: DoH (DNS over HTTPS) for VA to DNS resolver communication
-
-#### Dependencies
-
-- cert-manager deployment operational
-- Internal PKI certificates generated and distributed
-- Boulder services configured for mTLS authentication
-- Network policies allowing encrypted traffic
-
-#### Validation
-
-- Test mTLS handshake between all service pairs
-- Verify certificate validation and revocation checking
-- Confirm encrypted communication via network monitoring
-- Validate service startup with mTLS requirements
-
-#### Security Considerations
-
-- Certificate rotation policies and automation
-- Secure certificate storage and access controls
-- Network segmentation and traffic isolation
-- Monitoring and alerting for certificate expiration
-
-### 5.4 DNS Service Discovery Configuration
-
-#### Purpose
-
-Reliable DNS service discovery enables Boulder services to locate and communicate with dependencies while supporting both internal Kubernetes DNS and external DNS resolution.
-
-#### Implementation
-
-- **Kubernetes DNS**: CoreDNS for internal service resolution
-- **Service Naming**: Standardized service names following `service.namespace.svc.cluster.local` pattern
-- **DNS over HTTPS**: Secure DNS resolution for validation challenges
-- **Fallback Strategies**: Multiple DNS resolvers for high availability
-
-```yaml
-# Example DNS configuration
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: boulder-va-config
-data:
-  va.json: |
-    {
-      "dnsResolver": "https://cloudflare-dns.com/dns-query",
-      "dnsAllowLoopbackAddresses": false,
-      "dnsTries": 3,
-      "dnsStaticResolvers": [
-        "boulder-dns-resolver.boulder.svc.cluster.local:53"
-      ]
-    }
-```
-
-#### Configuration
-
-- **Internal DNS**: Kubernetes service DNS for Boulder service discovery
-- **External DNS**: DoH endpoints for ACME challenge validation
-- **DNS Caching**: Local DNS caching for performance optimization
-- **Network Policies**: Secure DNS traffic routing and filtering
-
-#### Dependencies
-
-- Kubernetes cluster with functional CoreDNS
-- Network connectivity to external DoH providers
-- Boulder services configured for Kubernetes DNS
-- Network policies allowing DNS traffic
-
-#### Validation
-
-- Test internal service name resolution
-- Verify external DNS resolution via DoH
-- Confirm DNS caching and performance metrics
-- Validate DNS fallback and failure handling
-
-#### Security Considerations
-
-- Encrypted DNS queries (DoH/DoT) for external resolution
-- DNS query logging and monitoring
-- Protection against DNS poisoning and spoofing
-- Network isolation for DNS traffic
-
-## Testing Validation
-
-- Verify service startup order and health checks via init containers
-- Test ACME workflow end-to-end before considering deployment complete
-- Ensure Boulder's integration tests pass using `test/integration-test.py --chisel`
-- Validate load balancing across multiple service instances via metrics endpoints
-- Confirm mTLS communication between all Boulder services
-- **Validate cert-manager certificate provisioning and renewal**
-- **Test database initialization and schema migration**
-- **Verify mTLS handshake between all Boulder services**
-- **Confirm DNS service discovery for both internal and external resolution**
-
-### Startup Dependencies
-
-Use Kubernetes init containers to handle Boulder's strict service startup order:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: boulder-ra
-spec:
-  template:
-    spec:
-      initContainers:
-        - name: wait-for-dependencies
-          image: busybox
-          command:
-            [
-              "sh",
-              "-c",
-              "until nslookup boulder-sa && nslookup boulder-ca && nslookup boulder-va; do sleep 2; done",
-            ]
-      containers:
-        - name: boulder-ra
-          image: boulder:latest
-          command: ["/opt/boulder/bin/boulder"]
-          args: ["boulder-ra", "--config", "/etc/boulder/ra.json"]
-```
-
-## Deployment Structure
-
-Using a **component-based structure** following Kubernetes best practices with Boulder services logically grouped:
+A component-based directory structure will be used for all Kubernetes manifests.
 
 ```text
 manifests/
 ├── namespace.yaml
 ├── infrastructure/
 │   ├── cert-manager/
-│   │   ├── deployment.yaml
-│   │   ├── cluster-issuer.yaml
-│   │   └── certificate.yaml
 │   ├── redis/
-│   │   ├── statefulset.yaml
-│   │   └── service.yaml
 │   ├── mariadb/
-│   │   ├── statefulset.yaml
-│   │   └── service.yaml
 │   └── proxysql/
-│       ├── deployment.yaml
-│       ├── service.yaml
-│       └── configmap.yaml
 ├── boulder/
 │   ├── sa/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   └── configmap.yaml
 │   ├── ca/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   └── configmap.yaml
 │   ├── ra/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   └── configmap.yaml
 │   ├── va/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   └── configmap.yaml
 │   ├── wfe2/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   ├── configmap.yaml
-│   │   └── ingress.yaml
 │   ├── publisher/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   └── configmap.yaml
 │   ├── nonce-service/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   └── configmap.yaml
-│   ├── remoteva/
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   └── configmap.yaml
-│   └── sfe/
-│       ├── deployment.yaml
-│       ├── service.yaml
-│       └── configmap.yaml
+│   └── remoteva/
 ├── security/
 │   ├── pki/
-│   │   ├── internal-ca-secret.yaml
-│   │   ├── service-certificates.yaml
-│   │   └── certificate-generation-job.yaml
-│   ├── network-policies/
-│   │   ├── boulder-services-policy.yaml
-│   │   ├── database-access-policy.yaml
-│   │   └── external-dns-policy.yaml
-│   └── mtls/
-│       ├── ca-certificates.yaml
-│       └── service-mtls-config.yaml
+│   └── network-policies/
 ├── data/
-│   ├── database/
-│   │   ├── init-job.yaml
-│   │   ├── migration-job.yaml
-│   │   └── schema-configmap.yaml
-│   └── dns/
-│       ├── dns-resolver-config.yaml
-│       └── doh-endpoints-config.yaml
+│   └── database-init-job.yaml
 ├── shared/
 │   ├── secrets.yaml
-│   ├── rbac.yaml
-│   └── service-accounts.yaml
+│   └── rbac.yaml
 └── tests/
-    ├── integration-job.yaml
-    ├── mtls-validation-job.yaml
-    └── security-test-job.yaml
+    └── integration-test-job.yaml
 ```
+> **Note:** Each component directory (e.g., `boulder/sa/`) should contain its respective Deployment, Service, and ConfigMap manifests.
 
-**Structure Benefits:**
+## 8. Deliverables
 
-- **Logical Grouping**: All Boulder services under `/boulder/` directory for clear organization
-- **Component Isolation**: Each service directory contains all related resources (Deployment, Service, ConfigMap)
-- **Standard Pattern**: Follows widely adopted microservice deployment patterns used by major Kubernetes projects
-- **Maintainable**: Changes to a service affect only its directory, easy to find and modify resources
-- **Phase 1 Focused**: Simple structure optimized for single-cluster deployment on `kind`
-
-## Deliverables
-
-- Kubernetes manifests (YAMLs) for all services and configurations following the structure above.
-- **cert-manager deployment manifests** for automated TLS certificate management.
-- **Database initialization Jobs** for Boulder schema creation and migration.
-- **Internal PKI certificate generation** scripts and Kubernetes Secrets.
-- **mTLS configuration** for all Boulder service-to-service communication.
-- **DNS service discovery configuration** supporting both internal and external resolution.
-- Certificate generation Job to replace Boulder's `bsetup` service.
-- Integration test Job that runs Boulder's full test suite against the cluster.
-- Deployment script (`deploy.sh`) for one-command deployment on `kind`.
-- Test script (`test.sh`) for running integration tests.
-- **Security validation scripts** for mTLS and certificate verification.
-- Comprehensive README with deployment, testing, and troubleshooting instructions.
+- All Kubernetes manifests (YAMLs) organized according to the deployment structure.
+- `cert-manager` deployment manifests.
+- Database initialization Job.
+- Scripts or Job to generate and load PKI certificates into Secrets.
+- Integration test Job definition.
+- A `deploy.sh` script for one-command deployment to a local `kind` cluster.
+- A `test.sh` script to execute the integration test Job.
+- Comprehensive `README.md` with deployment, testing, and troubleshooting instructions.

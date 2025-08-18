@@ -1,19 +1,12 @@
 ---
 # Kind Cluster Configuration for Boulder ACME CA
-# Configures a local Kubernetes cluster for Boulder development and testing
+# Simplified configuration for reliable cluster creation
 # EXCLUDES OCSP functionality (deprecated)
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-metadata:
-  name: boulder-k8s
+name: boulder-k8s
 nodes:
   - role: control-plane
-    kubeadmConfigPatches:
-      - |
-        kind: InitConfiguration
-        nodeRegistration:
-          kubeletExtraArgs:
-            node-labels: "ingress-ready=true"
     extraPortMappings:
       # ACME HTTP endpoint
       - containerPort: 4001
@@ -35,30 +28,5 @@ nodes:
       - containerPort: 443
         hostPort: 443
         protocol: TCP
-  # Additional worker nodes for testing load balancing
+  # Single worker node for Boulder services
   - role: worker
-  - role: worker
-networking:
-  # Disable default CNI to install custom networking
-  disableDefaultCNI: false
-  # Pod subnet (default is fine)
-  podSubnet: "10.244.0.0/16"
-  # Service subnet (default is fine)
-  serviceSubnet: "10.96.0.0/12"
-  # API server port
-  apiServerPort: 6443
-# Configure containerd for Boulder image loading
-containerdConfigPatches:
-  - |-
-    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
-      endpoint = ["http://localhost:5000"]
-# Feature gates for Kubernetes features
-featureGates:
-  # Enable useful features for Boulder
-  "EphemeralContainers": true
-  "TopologyAwareHints": true
-# Runtime configuration
-runtimeConfig:
-  "api/all": "true"
-# Kubernetes version (use stable)
-image: kindest/node:v1.28.0
