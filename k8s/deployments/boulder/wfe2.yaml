@@ -55,6 +55,7 @@ spec:
       containers:
         - name: boulder-wfe2
           image: boulder:latest
+          imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-wfe2"]
           args: ["--config", "/etc/boulder/wfe2.json"]
           ports:
@@ -105,11 +106,11 @@ spec:
               readOnly: true
           resources:
             requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
               cpu: 500m
               memory: 512Mi
-            limits:
-              cpu: 2000m
-              memory: 2Gi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -195,11 +196,13 @@ data:
         "serverKeyPath": "/etc/boulder/webpki/wfe.key.pem",
         "allowOrigins": ["*"],
         "baseURL": "http://boulder-wfe2:4001",
+        "timeout": "30s",
 
         "raService": {
           "serverAddress": "boulder-ra:9394",
           "hostOverride": "ra.boulder",
           "timeout": "15s",
+          "noWaitForReady": true,
           "clientCertificate": "/etc/boulder/tls/server/tls.crt",
           "clientKey": "/etc/boulder/tls/server/tls.key",
           "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
@@ -209,6 +212,7 @@ data:
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
           "timeout": "15s",
+          "noWaitForReady": true,
           "clientCertificate": "/etc/boulder/tls/server/tls.crt",
           "clientKey": "/etc/boulder/tls/server/tls.key",
           "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
@@ -218,6 +222,7 @@ data:
           "serverAddress": "nonce-service:9501",
           "hostOverride": "nonce.boulder",
           "timeout": "15s",
+          "noWaitForReady": true,
           "clientCertificate": "/etc/boulder/tls/server/tls.crt",
           "clientKey": "/etc/boulder/tls/server/tls.key",
           "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
@@ -230,6 +235,7 @@ data:
           ],
           "hostOverride": "nonce.boulder",
           "timeout": "15s",
+          "noWaitForReady": true,
           "clientCertificate": "/etc/boulder/tls/server/tls.crt",
           "clientKey": "/etc/boulder/tls/server/tls.key",
           "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
@@ -256,7 +262,9 @@ data:
         "directoryDetails": {
           "website": "https://letsencrypt.org",
           "caaIdentities": ["letsencrypt.org"]
-        }
+        },
+
+        "features": {}
       },
 
       "syslog": {

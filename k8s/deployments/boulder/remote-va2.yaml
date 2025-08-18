@@ -90,11 +90,11 @@ spec:
               readOnly: true
           resources:
             requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
               cpu: 250m
               memory: 256Mi
-            limits:
-              cpu: 1000m
-              memory: 1Gi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -146,8 +146,28 @@ data:
   remote-va2.json: |
     {
       "remoteVA": {
-        "grpcAddress": ":9497",
         "debugAddr": ":8005",
+        "grpc": {
+          "address": ":9497",
+          "maxConnectionAge": "30s",
+          "services": {
+            "va.VA": {
+              "clientNames": [
+                "va.boulder"
+              ]
+            },
+            "va.CAA": {
+              "clientNames": [
+                "va.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
         "saService": {
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",

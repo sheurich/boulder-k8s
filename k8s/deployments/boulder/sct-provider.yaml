@@ -90,11 +90,11 @@ spec:
               readOnly: true
           resources:
             requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
               cpu: 250m
               memory: 256Mi
-            limits:
-              cpu: 1000m
-              memory: 1Gi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -146,8 +146,23 @@ data:
   sct-provider.json: |
     {
       "sctProvider": {
-        "grpcAddress": ":9999",
         "debugAddr": ":8006",
+        "grpc": {
+          "address": ":9999",
+          "maxConnectionAge": "30s",
+          "services": {
+            "sctProvider.SCTProvider": {
+              "clientNames": [
+                "ca.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
         "saService": {
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",

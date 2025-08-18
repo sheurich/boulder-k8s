@@ -50,6 +50,7 @@ spec:
       containers:
         - name: boulder-va
           image: boulder:latest
+          imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-va"]
           args: ["--config", "/etc/boulder/va.json"]
           ports:
@@ -94,11 +95,11 @@ spec:
               readOnly: true
           resources:
             requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
               cpu: 500m
               memory: 512Mi
-            limits:
-              cpu: 2000m
-              memory: 2Gi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -171,8 +172,29 @@ data:
   va.json: |
     {
       "va": {
-        "grpcAddress": ":9392",
         "debugAddr": ":8004",
+        "grpc": {
+          "address": ":9392",
+          "maxConnectionAge": "30s",
+          "services": {
+            "va.VA": {
+              "clientNames": [
+                "ra.boulder"
+              ]
+            },
+            "va.CAA": {
+              "clientNames": [
+                "ra.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
+
         "saService": {
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
@@ -181,29 +203,54 @@ data:
           "clientKey": "/etc/boulder/tls/server/tls.key",
           "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
+
+        "tls": {
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key"
+        },
+
         "remoteVAs": [
           {
             "serverAddress": "remoteva-a:9397",
             "timeout": "15s",
-            "hostOverride": "rva1.boulder"
+            "hostOverride": "rva1.boulder",
+            "perspective": "dadaist",
+            "rir": "ARIN"
           },
           {
             "serverAddress": "remoteva-b:9498",
             "timeout": "15s",
-            "hostOverride": "rva2.boulder"
+            "hostOverride": "rva2.boulder",
+            "perspective": "surrealist",
+            "rir": "RIPE"
           },
           {
             "serverAddress": "remoteva-c:9499",
             "timeout": "15s",
-            "hostOverride": "rva3.boulder"
+            "hostOverride": "rva3.boulder",
+            "perspective": "cubist",
+            "rir": "ARIN"
           }
         ],
+
         "dnsProvider": {
           "server": "8.8.8.8:53",
           "timeout": "10s"
         },
+
+        "userAgent": "boulder",
+        "issuerDomain": "boulder.service.consul",
         "maxChallengeAttempts": 3,
-        "challengeLifetime": "300s"
+        "challengeLifetime": "300s",
+        "dnsTries": 3,
+        "dnsTimeout": "10s",
+
+        "accountURIPrefixes": [
+          "http://boulder-wfe2:4001/acme/acct/"
+        ],
+
+        "features": {}
       },
       "syslog": {
         "stdoutLevel": 6,

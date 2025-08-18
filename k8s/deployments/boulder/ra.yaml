@@ -59,6 +59,7 @@ spec:
       containers:
         - name: boulder-ra
           image: boulder:latest
+          imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-ra"]
           args: ["--config", "/etc/boulder/ra.json"]
           ports:
@@ -108,11 +109,11 @@ spec:
               readOnly: true
           resources:
             requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
               cpu: 1000m
               memory: 1Gi
-            limits:
-              cpu: 4000m
-              memory: 4Gi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -185,8 +186,24 @@ data:
   ra.json: |
     {
       "ra": {
-        "grpcAddress": ":9394",
         "debugAddr": ":8002",
+        "grpc": {
+          "address": ":9394",
+          "maxConnectionAge": "30s",
+          "services": {
+            "ra.RegistrationAuthority": {
+              "clientNames": [
+                "wfe.boulder",
+                "sfe.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
 
         "vaService": {
           "serverAddress": "boulder-va:9392",
@@ -222,6 +239,12 @@ data:
           "clientCertificate": "/etc/boulder/tls/server/tls.crt",
           "clientKey": "/etc/boulder/tls/server/tls.key",
           "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+        },
+
+        "tls": {
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key"
         },
 
         "limiter": {
@@ -277,7 +300,9 @@ data:
             "uri": "http://ct-test-srv:4600",
             "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYggOxPnPkzKBIhTacSYoIfnSL2jPugcbUKx83vFMvk5gKAz/AGe87w20riuPwEGn229hKVbEKHFB61NIqNHC3Q=="
           }
-        ]
+        ],
+
+        "features": {}
       },
 
       "pa": {

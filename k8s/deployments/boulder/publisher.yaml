@@ -34,6 +34,7 @@ spec:
       containers:
         - name: boulder-publisher
           image: boulder:latest
+          imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-publisher"]
           args: ["--config", "/etc/boulder/publisher.json"]
           ports:
@@ -78,11 +79,11 @@ spec:
               readOnly: true
           resources:
             requests:
-              cpu: 200m
-              memory: 256Mi
+              cpu: 50m
+              memory: 64Mi
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: 250m
+              memory: 256Mi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -155,17 +156,44 @@ data:
   publisher.json: |
     {
       "publisher": {
-        "grpcAddress": ":9391",
         "debugAddr": ":8009",
-        "ctLogs": [
-          {
-            "uri": "http://ct-test-srv:4600",
-            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYggOxPnPkzKBIhTacSYoIfnSL2jPugcbUKx83vFMvk5gKAz/AGe87w20riuPwEGn229hKVbEKHFB61NIqNHC3Q=="
+        "grpc": {
+          "address": ":9391",
+          "maxConnectionAge": "30s",
+          "services": {
+            "Publisher": {
+              "clientNames": [
+                "ra.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
           }
+        },
+
+        "tls": {
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key"
+        },
+
+        "userAgent": "boulder/1.0",
+        "blockProfileRate": 1000000000,
+        "chains": [
+          [
+            "/etc/boulder/webpki/int-ecdsa-a.cert.pem",
+            "/etc/boulder/webpki/root-ecdsa.cert.pem"
+          ],
+          [
+            "/etc/boulder/webpki/int-ecdsa-b.cert.pem",
+            "/etc/boulder/webpki/root-ecdsa.cert.pem"
+          ]
         ],
-        "maxReqsPerLog": 1000,
-        "submissionTimeout": "30s",
-        "logListFile": "/etc/boulder/ct-logs.json"
+
+        "features": {}
       },
       "syslog": {
         "stdoutLevel": 6,

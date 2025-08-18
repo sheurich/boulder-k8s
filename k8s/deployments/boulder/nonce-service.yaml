@@ -99,11 +99,11 @@ spec:
               readOnly: true
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 50m
+              memory: 64Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 250m
+              memory: 256Mi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -181,8 +181,24 @@ data:
   nonce-service.json: |
     {
       "nonceService": {
-        "grpcAddress": ":9501",
         "debugAddr": ":8021",
+        "grpc": {
+          "address": ":9501",
+          "maxConnectionAge": "30s",
+          "services": {
+            "nonce.NonceService": {
+              "clientNames": [
+                "wfe.boulder",
+                "sfe.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
         "redis": {
           "server": "redis:6379",
           "password": "${REDIS_PASSWORD}",

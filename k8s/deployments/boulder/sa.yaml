@@ -48,6 +48,7 @@ spec:
       containers:
         - name: boulder-sa
           image: boulder:latest
+          imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-sa"]
           args: ["--config", "/etc/boulder/sa.json"]
           ports:
@@ -111,11 +112,11 @@ spec:
               readOnly: true
           resources:
             requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
               cpu: 500m
               memory: 512Mi
-            limits:
-              cpu: 2000m
-              memory: 2Gi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -193,22 +194,50 @@ data:
   sa.json: |
     {
       "sa": {
-        "grpcAddress": ":9395",
         "debugAddr": ":8003",
+        "grpc": {
+          "address": ":9395",
+          "maxConnectionAge": "30s",
+          "services": {
+            "sa.StorageAuthority": {
+              "clientNames": [
+                "ca.boulder",
+                "ra.boulder"
+              ]
+            },
+            "sa.StorageAuthorityReadOnly": {
+              "clientNames": [
+                "wfe.boulder",
+                "sfe.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
 
-        "dbConfig": {
-          "dbConnect": "${DATABASE_URL}",
-          "dbConnectRO": "${DATABASE_RO_URL}",
-          "incidentsDbConnect": "${INCIDENTS_DATABASE_URL}",
+        "db": {
+          "dbConnectFile": "/etc/boulder/secrets/sa_dburl",
           "maxOpenConns": 100,
           "maxIdleConns": 10,
-          "maxConnLifetime": "3600s",
-          "tlsConfig": {
-            "certFile": "/etc/boulder/tls/db-client/tls.crt",
-            "keyFile": "/etc/boulder/tls/db-client/tls.key",
-            "caCertFile": "/etc/boulder/tls/ca/tls.crt",
-            "serverName": "proxysql.boulder.svc.cluster.local"
-          }
+          "connMaxLifetime": "3600s"
+        },
+        "readOnlyDB": {
+          "dbConnectFile": "/etc/boulder/secrets/sa_ro_dburl",
+          "maxOpenConns": 100
+        },
+        "incidentsDB": {
+          "dbConnectFile": "/etc/boulder/secrets/incidents_dburl",
+          "maxOpenConns": 100
+        },
+
+        "tls": {
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key"
         },
 
         "features": {

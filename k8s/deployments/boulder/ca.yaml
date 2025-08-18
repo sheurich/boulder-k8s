@@ -53,6 +53,7 @@ spec:
       containers:
         - name: boulder-ca
           image: boulder:latest
+          imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-ca"]
           args: ["--config", "/etc/boulder/ca.json"]
           ports:
@@ -100,11 +101,11 @@ spec:
               readOnly: true
           resources:
             requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
               cpu: 1000m
               memory: 1Gi
-            limits:
-              cpu: 4000m
-              memory: 4Gi
           livenessProbe:
             httpGet:
               path: /debug/health
@@ -180,8 +181,28 @@ data:
   ca.json: |
     {
       "ca": {
-        "grpcAddress": ":9393",
         "debugAddr": ":8001",
+        "grpcCA": {
+          "address": ":9393",
+          "maxConnectionAge": "30s",
+          "services": {
+            "ca.CertificateAuthority": {
+              "clientNames": [
+                "ra.boulder"
+              ]
+            },
+            "ca.CRLGenerator": {
+              "clientNames": [
+                "crl-updater.boulder"
+              ]
+            },
+            "grpc.health.v1.Health": {
+              "clientNames": [
+                "health-checker.boulder"
+              ]
+            }
+          }
+        },
 
         "saService": {
           "serverAddress": "boulder-sa:9395",
@@ -199,17 +220,32 @@ data:
           "clientKey": "/etc/boulder/tls/server/tls.key",
           "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
         },
+
+        "tls": {
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key"
+        },
+
         "issuance": {
           "certProfiles": {
             "legacy": {
+              "allowMustStaple": false,
+              "omitCommonName": false,
+              "omitKeyEncipherment": false,
+              "omitClientAuth": false,
+              "omitSKID": false,
+              "omitOCSP": true,
+              "includeCRLDistributionPoints": true,
               "maxValidityPeriod": "7776000s",
               "maxValidityBackdate": "1h5m"
             }
           },
           "issuers": [
             {
+              "active": true,
               "location": {
-                "configFile": "/etc/boulder/pkcs11/int-ecdsa-a.json",
+                "configFile": "/etc/boulder/webpki/int-ecdsa-a.pkcs11.json",
                 "certFile": "/etc/boulder/webpki/int-ecdsa-a.cert.pem",
                 "numSessions": 2
               }
@@ -217,25 +253,10 @@ data:
           ]
         },
 
-        "serialPrefix": "FF00000000000000",
+        "serialPrefixHex": "FF",
         "maxNames": 100,
-        "cfssl": {
-          "signing": {
-            "profiles": {
-              "ca": {
-                "usages": [
-                  "cert sign",
-                  "crl sign"
-                ],
-                "ca_constraint": {
-                  "is_ca": true,
-                  "max_path_len": 0,
-                  "max_path_len_zero": true
-                }
-              }
-            }
-          }
-        }
+        "goodkey": {},
+        "features": {}
       },
       "syslog": {
         "stdoutLevel": 6,
