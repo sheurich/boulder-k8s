@@ -73,17 +73,9 @@ check_infrastructure() {
         infra_health=1
     fi
     
-    # Redis instances
-    echo -n "  Redis-0... "
-    if kubectl wait --for=jsonpath='{.status.readyReplicas}'=1 statefulset/redis-0 -n "$NAMESPACE" --timeout="$TIMEOUT" &> /dev/null; then
-        echo -e "${GREEN}✓${NC}"
-    else
-        echo -e "${RED}✗${NC}"
-        infra_health=1
-    fi
-    
-    echo -n "  Redis-1... "
-    if kubectl wait --for=jsonpath='{.status.readyReplicas}'=1 statefulset/redis-1 -n "$NAMESPACE" --timeout="$TIMEOUT" &> /dev/null; then
+    # Redis StatefulSet (2 replicas)
+    echo -n "  Redis... "
+    if kubectl wait --for=jsonpath='{.status.readyReplicas}'=2 statefulset/redis -n "$NAMESPACE" --timeout="$TIMEOUT" &> /dev/null; then
         echo -e "${GREEN}✓${NC}"
     else
         echo -e "${RED}✗${NC}"
@@ -188,37 +180,20 @@ test_database_connectivity() {
 test_redis_connectivity() {
     echo -e "${BLUE}Testing Redis connectivity...${NC}"
     
-    # Test Redis-0
+    # Test Redis pods (from StatefulSet)
     echo -n "  Redis-0 connectivity... "
-    local redis0_pod
-    redis0_pod=$(kubectl get pods -n "$NAMESPACE" -l app=redis-0 -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
-    
-    if [[ -n "$redis0_pod" ]]; then
-        if kubectl exec -n "$NAMESPACE" "$redis0_pod" -- redis-cli ping &> /dev/null; then
-            echo -e "${GREEN}✓${NC}"
-        else
-            echo -e "${RED}✗${NC}"
-            return 1
-        fi
+    if kubectl exec -n "$NAMESPACE" redis-0 -- redis-cli ping &> /dev/null; then
+        echo -e "${GREEN}✓${NC}"
     else
-        echo -e "${RED}✗ No Redis-0 pod found${NC}"
+        echo -e "${RED}✗${NC}"
         return 1
     fi
     
-    # Test Redis-1
     echo -n "  Redis-1 connectivity... "
-    local redis1_pod
-    redis1_pod=$(kubectl get pods -n "$NAMESPACE" -l app=redis-1 -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
-    
-    if [[ -n "$redis1_pod" ]]; then
-        if kubectl exec -n "$NAMESPACE" "$redis1_pod" -- redis-cli ping &> /dev/null; then
-            echo -e "${GREEN}✓${NC}"
-        else
-            echo -e "${RED}✗${NC}"
-            return 1
-        fi
+    if kubectl exec -n "$NAMESPACE" redis-1 -- redis-cli ping &> /dev/null; then
+        echo -e "${GREEN}✓${NC}"
     else
-        echo -e "${RED}✗ No Redis-1 pod found${NC}"
+        echo -e "${RED}✗${NC}"
         return 1
     fi
     

@@ -48,7 +48,7 @@ spec:
               echo "MariaDB is ready!"
       containers:
         - name: proxysql
-          image: proxysql/proxysql:2.5
+          image: proxysql/proxysql:2.4.4
           ports:
             - containerPort: 6033
               name: mysql

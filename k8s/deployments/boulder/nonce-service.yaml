@@ -219,15 +219,5 @@ data:
       "syslog": {
         "stdoutLevel": 6,
         "syslogLevel": 6
-      },
-      "common": {
-        "dnsResolver": "8.8.8.8:53",
-        "dnsTimeout": "10s",
-        "dnsAllowLoopbackAddresses": true,
-        "tls": {
-          "certFile": "/etc/boulder/tls/server/tls.crt",
-          "keyFile": "/etc/boulder/tls/server/tls.key",
-          "caCertFile": "/etc/boulder/tls/ca/tls.crt"
-        }
       }
     }

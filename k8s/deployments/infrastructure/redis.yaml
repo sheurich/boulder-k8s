@@ -63,6 +63,9 @@ spec:
             - name: ca-tls
               mountPath: /etc/redis/tls/ca
               readOnly: true
+            - name: client-tls
+              mountPath: /etc/redis/tls/client
+              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -73,22 +76,36 @@ spec:
           livenessProbe:
             exec:
               command:
-                - redis-cli
-                - --no-auth-warning
-                - -a
-                - $(REDIS_PASSWORD)
-                - ping
+                - sh
+                - -c
+                - |
+                  redis-cli \
+                    --tls \
+                    --cert /etc/redis/tls/client/tls.crt \
+                    --key /etc/redis/tls/client/tls.key \
+                    --cacert /etc/redis/tls/ca/ca-bundle.crt \
+                    --no-auth-warning \
+                    -h 127.0.0.1 \
+                    -a "$REDIS_PASSWORD" \
+                    ping
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
           readinessProbe:
             exec:
               command:
-                - redis-cli
-                - --no-auth-warning
-                - -a
-                - $(REDIS_PASSWORD)
-                - ping
+                - sh
+                - -c
+                - |
+                  redis-cli \
+                    --tls \
+                    --cert /etc/redis/tls/client/tls.crt \
+                    --key /etc/redis/tls/client/tls.key \
+                    --cacert /etc/redis/tls/ca/ca-bundle.crt \
+                    --no-auth-warning \
+                    -h 127.0.0.1 \
+                    -a "$REDIS_PASSWORD" \
+                    ping
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 3
@@ -103,8 +120,12 @@ spec:
             defaultMode: 0400  # Read-only for owner only
         - name: ca-tls
           secret:
-            secretName: intermediate-ca-secret
+            secretName: redis-ca-bundle
             defaultMode: 0444  # Read-only for all
+        - name: client-tls
+          secret:
+            secretName: redis-client-tls
+            defaultMode: 0400  # Read-only for owner only
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -138,7 +159,7 @@ data:
     # TLS Configuration
     tls-cert-file /etc/redis/tls/server/tls.crt
     tls-key-file /etc/redis/tls/server/tls.key
-    tls-ca-cert-file /etc/redis/tls/ca/tls.crt
+    tls-ca-cert-file /etc/redis/tls/ca/ca-bundle.crt
     tls-auth-clients yes
     tls-protocols "TLSv1.2 TLSv1.3"
     tls-ciphersuites TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256

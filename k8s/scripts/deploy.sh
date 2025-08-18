@@ -123,8 +123,11 @@ main() {
     # Redis instances
     kubectl apply -f k8s/deployments/infrastructure/redis.yaml
     kubectl apply -f k8s/services/infrastructure/redis-service.yaml
-    wait_for_statefulset "redis-0"
-    wait_for_statefulset "redis-1"
+    # Wait for Redis StatefulSet with 2 replicas
+    kubectl wait --for=jsonpath='{.status.readyReplicas}'=2 \
+        statefulset/redis \
+        -n $NAMESPACE \
+        --timeout=$TIMEOUT
     echo -e "${GREEN}✓ Redis deployed${NC}"
     
     # ProxySQL (depends on MariaDB)
