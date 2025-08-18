@@ -52,10 +52,11 @@ This document outlines standards and practices that all software development age
 
 ### Testing Requirements
 
-- Implement unit tests for individual components
-- Create integration tests for system interactions
-- Perform end-to-end testing for complete workflows
-- Validate all functionality before marking tasks complete
+- **End-to-End Validation**: The primary goal of testing in this project is to ensure the end-to-end ACME (Automated Certificate Management Environment) protocol workflow is fully functional and compliant.
+- **OCSP Exclusion**: All tests must exclude OCSP (Online Certificate Status Protocol) functionality, as it is deprecated in the core Boulder software and not included in this Kubernetes implementation.
+- **Service Dependencies**: Tests must validate that the strict startup order and dependencies between Boulder’s microservices are correctly handled by the Kubernetes deployment (e.g., using init containers).
+- **Multi-Perspective Validation**: Challenge validation tests should confirm that checks are performed from multiple network perspectives (MPIC), a key security feature of Boulder.
+- **Real-World Scenarios**: Tests should simulate realistic certificate issuance and management workflows that users will perform.
 
 ## Naming & Structure
 
@@ -131,12 +132,47 @@ This document outlines standards and practices that all software development age
 
 ### Version Control
 
-- Commit changes periodically at logical milestones
-- Create atomic commits with single logical changes
-- Write clear, descriptive commit messages following conventional format
-- Group related changes together
-- Avoid mixing unrelated changes in single commits
-- Commit after completing major features or fixing significant issues
+#### Logical Commit Grouping
+
+- **Commit Timing**: Commit after each major task completion or when reaching a stable checkpoint
+- **Group Related Changes**: Combine logically related changes into single commits
+- **Separate Unrelated Changes**: Never mix different types of changes (e.g., don't combine Kubernetes manifests with documentation updates)
+- **Atomic Commits**: Each commit should represent a single logical change that maintains project functionality
+- **Conventional Format**: Use conventional commit format: `type(scope): description`
+
+#### Commit Types
+
+- **feat**: New features or functionality
+- **fix**: Bug fixes and corrections
+- **docs**: Documentation changes only
+- **refactor**: Code restructuring without functional changes
+- **test**: Adding or modifying tests
+- **chore**: Maintenance tasks, tooling, dependencies
+
+#### Logical Grouping Examples
+
+- **Documentation cleanup**: All documentation updates, deletions, and consolidations in one commit
+- **Kubernetes manifest updates**: All K8s YAML changes grouped together
+- **Script changes**: Shell scripts, automation, and tooling modifications together
+- **Configuration updates**: Environment configs, settings files, and parameters together
+- **Database changes**: Schema, migrations, and data-related modifications together
+
+#### When to Commit
+
+- **After completing each subtask** or deliverable
+- **Before switching to a different type of work** (e.g., from documentation to code)
+- **After resolving merge conflicts** to maintain clean history
+- **When reaching a stable checkpoint** where the project builds and runs
+- **Before taking breaks** to save progress at logical points
+- **After fixing linting errors** to maintain code quality standards
+
+#### Commit Message Guidelines
+
+- Use present tense: "Add feature" not "Added feature"
+- Keep first line under 50 characters
+- Provide detailed description in body for complex changes
+- Reference issue numbers when applicable
+- Explain the "why" not just the "what" for non-obvious changes
 
 ## Project-Specific Exclusions
 
