@@ -15,6 +15,7 @@ This document outlines standards and practices that all software development age
 
 ### Project Documentation
 
+- **Boulder Development Environment Guide (`reference/BOULDER.md`)**: A comprehensive technical reference for the upstream Boulder project, detailing its architecture, services, configuration, and testing environment. This guide is essential for understanding the foundational Boulder patterns that this Kubernetes implementation adapts.
 - Technical reference guides for project setup, architecture, and deployment
 - Complete source code repositories with build configurations and test suites
 - Project wikis with design documents, implementation guides, and coding standards

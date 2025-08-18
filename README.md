@@ -90,9 +90,15 @@ boulder-k8s/
 │   ├── overview.md                     # System design overview
 │   ├── service-matrix.md               # Detailed service specs
 │   └── implementation-plan.md          # Implementation strategy
+├── reference/
+│   └── BOULDER.md                      # Upstream Boulder technical reference
 └── scripts/                            # Utility scripts
     └── lint.sh                         # Code quality validation
 ```
+
+### Boulder Technical Reference
+
+For developers new to Boulder, the [Boulder Development Environment Guide](reference/BOULDER.md) is an essential technical reference. It provides a comprehensive overview of the upstream Boulder project, including its microservice architecture, service dependencies, configuration patterns, and testing environment. Consulting this guide is highly recommended for understanding the foundational concepts that this Kubernetes implementation is built upon.
 
 ## Prerequisites
 

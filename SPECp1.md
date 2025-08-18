@@ -10,6 +10,8 @@ The primary objective of Phase 1 is to create a high-fidelity replica of the sta
 
 **Guiding Principle:** The deployment should be functionally equivalent to running `docker-compose up` in the upstream Boulder repository. The ultimate measure of success is the ability to run Boulder's full integration test suite (`test/integration-test.py --chisel`) against this new Kubernetes-based deployment and have it pass. This ensures we have a complete, functional, and validated ACME CA before moving on to production-hardening in Phase 2.
 
+> **Upstream Reference:** For a comprehensive overview of the upstream Boulder development environment, including its architecture, service dependencies, and configuration, please consult the [Boulder Development Environment Guide](reference/BOULDER.md). This guide is an essential resource for understanding the patterns this Kubernetes implementation adapts.
+
 ## 2. Architecture
 
 This section outlines the core architectural decisions for the Kubernetes deployment.
