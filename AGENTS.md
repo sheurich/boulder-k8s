@@ -174,8 +174,13 @@ This document outlines standards and practices that all software development age
 
 #### When to Commit
 
+**CRITICAL:** Commits MUST be performed at logical checkpoints throughout
+development - this is not optional and ensures work is preserved and
+collaboration remains effective.
+
 - **After completing each subtask** or deliverable
-- **Before switching to a different type of work** (e.g., from documentation to code)
+- **Before switching to a different type of work** (e.g., from documentation
+  to code)
 - **After resolving merge conflicts** to maintain clean history
 - **When reaching a stable checkpoint** where the project builds and runs
 - **Before taking breaks** to save progress at logical points
@@ -188,6 +193,40 @@ This document outlines standards and practices that all software development age
 - Provide detailed description in body for complex changes
 - Reference issue numbers when applicable
 - Explain the "why" not just the "what" for non-obvious changes
+
+#### Commit Checkpoint Reminders
+
+**CRITICAL:** Commits are mandatory checkpoint activities that must be
+performed after each logical chunk of work is completed. Delaying commits
+creates significant risks and collaboration challenges.
+
+**Why This Matters:**
+
+- **Risk Mitigation**: Uncommitted work can be lost due to system failures,
+  accidental deletions, or environment issues
+- **Collaboration**: Uncommitted changes make it impossible for team members
+  to see progress or collaborate effectively
+- **Recovery**: Regular commits provide rollback points when issues arise
+  during development
+- **Accountability**: Commits create an audit trail of work completed and
+  progress made
+
+**Commit Checkpoint Checklist - Commit After:**
+
+- [ ] Fixing any bug or resolving an issue
+- [ ] Updating documentation (README, guides, specifications)
+- [ ] Implementing a feature or component
+- [ ] Refactoring code or improving structure
+- [ ] Adding or modifying tests
+- [ ] Updating configuration files or scripts
+- [ ] Completing linting and validation fixes
+- [ ] Reaching any stable, working state
+- [ ] Before switching context to different work
+- [ ] At the end of each work session
+
+**Remember:** Each commit should represent a complete, logical unit of work
+that leaves the project in a functional state. If you can describe what you
+did in a clear commit message, it's time to commit.
 
 ## Project-Specific Exclusions
 
