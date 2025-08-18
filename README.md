@@ -93,15 +93,17 @@ boulder-k8s/
 ├── reference/                          # Technical reference documentation
 │   ├── BOULDER.md                      # Upstream Boulder technical reference
 │   ├── SPECp1.md                       # Phase 1 specification
-│   └── SPECp2.md                       # Phase 2 specification
-├── TROUBLESHOOTING.md                  # Issue resolution guide
+│   ├── SPECp2.md                       # Phase 2 specification
+│   └── TROUBLESHOOTING.md              # Issue resolution guide
 └── scripts/                            # Utility scripts
     └── lint.sh                         # Code quality validation
 ```
 
-### Boulder Technical Reference
+### Technical References
 
 For developers new to Boulder, the [Boulder Development Environment Guide](reference/BOULDER.md) is an essential technical reference. It provides a comprehensive overview of the upstream Boulder project, including its microservice architecture, service dependencies, configuration patterns, and testing environment. Consulting this guide is highly recommended for understanding the foundational concepts that this Kubernetes implementation is built upon.
+
+When encountering deployment or operational issues, the [Troubleshooting Guide](reference/TROUBLESHOOTING.md) provides comprehensive diagnostic procedures and step-by-step resolution instructions for common problems including cluster connectivity, service startup failures, database issues, and ACME API troubleshooting.
 
 ## Prerequisites
 
@@ -194,7 +196,7 @@ kubectl get pods -n boulder -w
 curl -s http://localhost:4001/directory | jq .
 ```
 
-**💡 Deployment Issues?** If deployment fails or services don't start properly, consult the [Troubleshooting Guide](TROUBLESHOOTING.md) for common deployment problems and their solutions.
+**💡 Deployment Issues?** If deployment fails or services don't start properly, consult the [Troubleshooting Guide](reference/TROUBLESHOOTING.md) for common deployment problems and their solutions.
 
 ## Testing
 
@@ -212,7 +214,7 @@ Validate that all Boulder services are running correctly and can communicate wit
 ./k8s/scripts/health-check.sh --verbose --resources
 ```
 
-**💡 Health Check Failures?** If health checks fail, see the [Troubleshooting Guide](TROUBLESHOOTING.md) for diagnostic procedures and resolution steps for service startup problems, database connectivity issues, and resource constraints.
+**💡 Health Check Failures?** If health checks fail, see the [Troubleshooting Guide](reference/TROUBLESHOOTING.md) for diagnostic procedures and resolution steps for service startup problems, database connectivity issues, and resource constraints.
 
 ### Integration Tests
 
@@ -226,7 +228,7 @@ Run Boulder's complete integration test suite to validate the end-to-end ACME wo
 kubectl logs -f job/boulder-integration-test -n boulder
 ```
 
-**💡 Integration Test Failures?** If tests fail or timeout, refer to the [Troubleshooting Guide](TROUBLESHOOTING.md) for integration test debugging, challenge validation issues, and performance optimization guidance.
+**💡 Integration Test Failures?** If tests fail or timeout, refer to the [Troubleshooting Guide](reference/TROUBLESHOOTING.md) for integration test debugging, challenge validation issues, and performance optimization guidance.
 
 ### Manual Testing with an ACME Client
 
@@ -327,7 +329,7 @@ Certificates are generated using Boulder's existing certificate generation scrip
 
 ## Troubleshooting
 
-For common issues and solutions, please refer to the [TROUBLESHOOTING.md](TROUBLESHOOTING.md) guide.
+For common issues and solutions, please refer to the [Troubleshooting Guide](reference/TROUBLESHOOTING.md).
 
 ## Contributing
 

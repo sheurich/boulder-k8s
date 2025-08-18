@@ -1019,4 +1019,4 @@ kubectl autoscale deployment boulder-wfe2 --cpu-percent=70 --min=2 --max=10 -n b
 
 ---
 
-This troubleshooting guide covers the most common issues encountered with Boulder Kubernetes deployment. For additional help, check the service logs and refer to the [TESTING.md](TESTING.md) documentation for validation procedures.
+This troubleshooting guide covers the most common issues encountered with Boulder Kubernetes deployment. For additional help, check the service logs and refer to the [Testing section](../README.md#testing) in the main README for validation procedures.
