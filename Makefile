@@ -41,6 +41,28 @@ test: health-check test-integration
 bootstrap: setup deploy health-check
 	@echo "Boulder deployment bootstrap completed successfully"
 
+#
+## --------------------------------------
+## Docker Image Management
+## --------------------------------------
+DOCKER_IMAGE ?= boulder-k8s
+DOCKER_TAG ?= latest
+# BOULDER_VERSION defaults to 'main' for development builds.
+# For production, this should be overridden with a specific git tag or commit SHA.
+# Example: make docker-build BOULDER_VERSION=v2.5.1
+BOULDER_VERSION ?= main
+GOLANG_VERSION ?= 1.22.5
+
+# Build Boulder Docker image using build arguments
+docker-build:
+	@echo "Building Boulder Docker image with Boulder tag $(BOULDER_VERSION) and Go $(GOLANG_VERSION)..."
+	DOCKER_BUILDKIT=1 docker build \
+		--file docker/Boulder.dockerfile \
+		--build-arg BOULDER_TAG=$(BOULDER_VERSION) \
+		--build-arg GOLANG_VER=$(GOLANG_VERSION) \
+		--tag $(DOCKER_IMAGE):$(DOCKER_TAG) \
+		.
+
 # Clean up Kind cluster and temporary files
 clean:
 	@echo "Cleaning up Kind cluster..."
@@ -53,4 +75,4 @@ status:
 	@echo "=== Boulder Namespace Pods ===" && kubectl get pods -n boulder -o wide || echo "Boulder namespace not found"
 	@echo "=== Boulder Services ===" && kubectl get services -n boulder || echo "Boulder namespace not found"
 
-.PHONY: all lint setup deploy health-check test-integration test bootstrap clean status
+.PHONY: all lint setup deploy health-check test-integration test bootstrap clean status docker-build

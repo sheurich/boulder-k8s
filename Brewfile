@@ -4,6 +4,7 @@
 # Development tools
 brew "checkmake"
 brew "docker"
+brew "hadolint"
 brew "jq"
 brew "kind"
 brew "kubeconform"

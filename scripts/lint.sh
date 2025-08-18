@@ -41,6 +41,7 @@ main() {
     check_command "shellcheck"
     check_command "markdownlint"
     check_command "checkmake"
+    check_command "hadolint"
     echo "All required tools are available"
     echo
     
@@ -108,6 +109,16 @@ main() {
         fi
     else
         echo "SKIP: No Makefile found"
+    fi
+    echo
+    
+    # Run hadolint on Dockerfile
+    if [ -f "docker/Boulder.dockerfile" ]; then
+        if ! run_linter "hadolint on Dockerfile" hadolint docker/Boulder.dockerfile; then
+            exit_code=1
+        fi
+    else
+        echo "SKIP: No docker/Boulder.dockerfile found"
     fi
     echo
     
