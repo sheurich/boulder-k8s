@@ -2,136 +2,81 @@
 
 **Project:** A production-grade implementation of the Boulder CA running on Kubernetes.
 
-**Checkpoint:** 2025-08-18T13:47:30.036Z
+**Checkpoint:** 2025-08-19T10:00:00.000Z
 
 **Status:**
-- **Phase 1: Infrastructure Deployment (In Progress)**:
-  - ✅ Database infrastructure is operational.
-  - 📋 Boulder core services deployment is pending.
+
+- **Phase 1: Infrastructure Deployment (Partially Complete)**:
+  - ✅ Kubernetes cluster is running (`make setup`).
+  - ✅ Database infrastructure (MariaDB, Redis, ProxySQL) is deployed and healthy.
+  - ✅ Boulder database schema is initialized.
+  - 📋 Boulder core application services deployment is pending.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Immediate Task: Deploy Boulder Applications and Validate
 
-Your immediate task is to **deploy the Boulder core services**. This involves deploying the Service orchestrator, Certificate Authority, Registration Authority, Validation Authority, and the Web Frontend.
+Your immediate task is to **deploy the remaining Boulder application services** and run the full integration test suite to validate the entire system.
 
-**First Commands to Run:**
-```bash
-make deploy-boulder
+**First Command to Run:**
+
+```sh
+make deploy
 ```
+
+This will execute the script at `k8s/scripts/deploy.sh` to bring up all services in the correct order.
 
 ---
 
 ## 📝 Project Context
 
 **Implementation Status:**
-- The Kind cluster is running and accessible.
-- MariaDB is deployed and the Boulder schema is initialized (19 tables, OCSP tables excluded).
-- The database initialization job completed successfully.
 
-**Recent Accomplishments:**
-- ✅ **Fixed MariaDB Health Probes:** Resolved startup and liveness probe failures, ensuring stable database operation.
-- ✅ **Initialized Boulder Schema:** Successfully ran the `db-init` job to prepare the database for Boulder services.
-- ✅ **Disabled TLS for Phase 1:** Reverted an attempt to implement mTLS for database connections to simplify the initial deployment. This will be revisited in a later phase.
+The foundational infrastructure is stable. The last session focused on resolving health check issues with MariaDB and ensuring the database schema was correctly initialized. The project is now ready for the application layer.
 
-**Outstanding Issues/Blockers:**
-- **TLS Complexity:** The initial attempt to secure MariaDB with TLS introduced significant complexity. This has been deferred to a later phase to avoid blocking core service deployment.
+**Guiding Specification:**
+
+The goal for this phase is defined in `SPECp1.md`. The primary objective is to achieve functional parity with the upstream Boulder `docker-compose` environment. Success is measured by the passing of the full integration test suite.
+
+**Key Architectural Decisions:**
+
+- **mTLS Deferred:** As noted in `SPECp1.md`, mTLS for service-to-service communication has been intentionally deferred to Phase 2 to simplify the initial deployment.
+- **OCSP Excluded:** This implementation intentionally excludes all OCSP-related functionality, a critical constraint detailed in both the `README.md` and `AGENTS.md`.
 
 ---
 
 ## 📚 Essential Documentation
 
-This `PROMPT.md` is your primary starting point. For deeper dives, refer to these key documents:
-
-- **[`AGENTS.md`](AGENTS.md)**: **REQUIRED READING.** Outlines development standards, commit guidelines, and handoff protocols.
-- **[`SPECp1.md`](SPECp1.md)**: Defines the completed Phase 1 requirements. Use for validation context.
-- **[`SPECp2.md`](SPECp2.md)**: Defines the upcoming Phase 2 requirements.
-- **[`README.md`](README.md)**: Provides a general project overview, setup instructions, and usage.
-- **[`TODO.md`](TODO.md)**: Tracks detailed task status and project history.
+- **`SPECp1.md`**: **REQUIRED READING.** Defines the "definition of done" for the current phase.
+- **`README.md`**: General project overview, setup, and manual testing instructions.
+- **`Makefile.mk`**: Defines all high-level commands (`deploy`, `test`, `clean`).
+- **`AGENTS.md`**: Outlines development standards and commit guidelines.
 
 ---
 
-## 📦 Repository Status
-
-- **Branch:** `main`
-- **Last Commit:** `fix(k8s): resolve MariaDB health check probes and database initialization`
-- **Working Tree:** Clean. No uncommitted changes.
-
----
-
-## 🛠️ Environment Setup
-
-**Prerequisites:**
-- [x] `git`
-- [x] `make`
-- [x] `docker`
-- [x] `kubectl`
-- [x] `kind`
-- [x] `helm`
-- [x] `brew` (for macOS package management)
-
-**Quick Setup:**
-1. **Install Tools:**
-   ```bash
-   brew bundle install
-   ```
-2. **Set up Local Cluster:**
-   ```bash
-   make setup
-   ```
-
----
-
-## ✅ Current Task Details
-
-**Next Task: Deploy Boulder Services**
+## ✅ Task Details & Success Criteria
 
 **What Needs to Be Done:**
-1.  Deploy the core Boulder services: `sa`, `ca`, `ra`, `va`, `wfe2`.
-2.  Deploy Redis and ProxySQL.
-3.  Run integration tests to validate the full Boulder stack.
+
+1.  Execute the deployment of all Boulder application services.
+2.  Verify all pods are running and healthy.
+3.  Run the full test suite to validate the end-to-end ACME workflow.
 
 **Success Criteria:**
-- `make deploy-boulder` completes without errors.
-- All Boulder services are running and healthy in the `boulder` namespace.
-- `make test` passes successfully.
 
-**Known Issues to Watch For:**
-- **Service Dependencies:** Boulder services have a strict startup order. Ensure the database is healthy before deploying the core services.
+- `make deploy` completes without errors.
+- All pods in the `boulder` namespace are in the `Running` or `Completed` state.
+- `make test` (which runs both health checks and integration tests) passes successfully.
 
 ---
 
-## 🚀 Deployment Instructions
+## 🚀 Step-by-Step Instructions
 
-**Step-by-Step Deployment:**
-1.  **Verify Cluster Status:**
-    ```bash
-    kubectl get nodes
+1.  **Deploy All Services:**
+    ```sh
+    make deploy
     ```
-2.  **Deploy Boulder Services:**
-    ```bash
-    make deploy-boulder
+2.  **Validate the Deployment:**
+    ```sh
+    make test
     ```
-3.  **Check deployment status:**
-    ```bash
-    kubectl get pods -n boulder
-    ```
-    *Wait for all pods to be in the `Running` or `Completed` state.*
-
-**Validation Commands:**
-- **Run integration tests:**
-  ```bash
-  make test
-  ```
-- **Perform a health check:**
-  ```bash
-  make health-check
-  ```
-
----
-
-## ⚠️ Important Notes
-
-- **OCSP Exclusion:** This implementation **intentionally excludes** all OCSP-related functionality, as it is deprecated in the core Boulder software. Do not attempt to implement or test OCSP services.
-- **Phase Boundaries:** Project phases are strictly defined by `SPECp1.md` and `SPECp2.md`. Do not begin Phase 2 work until Phase 1 is fully validated.
-- **Version Control:** All changes must follow the commit conventions outlined in `AGENTS.md`. Create logical, atomic commits for all work.

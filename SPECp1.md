@@ -1,10 +1,14 @@
 # Boulder Kubernetes Implementation - Phase 1 Specification
 
+> **Navigation:** See [`README.md`](README.md) for project overview | **This is Phase 1** | See `SPECp2.md` for the next phase
+
 > **Note:** This document is the authoritative source for all Boulder-specific technical specifications and implementation details for Phase 1.
 
-## 1. Objective
+## 1. Objective & Guiding Principle
 
-Containerize and deploy Let's Encrypt's Boulder services into a Kubernetes cluster to run its integration test suite in a pod-based microservice architecture.
+The primary objective of Phase 1 is to create a high-fidelity replica of the standard Boulder `docker-compose` development environment within Kubernetes.
+
+**Guiding Principle:** The deployment should be functionally equivalent to running `docker-compose up` in the upstream Boulder repository. The ultimate measure of success is the ability to run Boulder's full integration test suite (`test/integration-test.py --chisel`) against this new Kubernetes-based deployment and have it pass. This ensures we have a complete, functional, and validated ACME CA before moving on to production-hardening in Phase 2.
 
 ## 2. Architecture
 
@@ -26,7 +30,8 @@ This section outlines the core architectural decisions for the Kubernetes deploy
 
 ### 2.4. PKI & Security
 - **mTLS**: All inter-service gRPC communication must be secured with mutual TLS (mTLS).
-- **Internal PKI**: An internal Certificate Authority (CA) will be used to issue certificates for mTLS. `cert-manager` is recommended for automating the lifecycle of these internal certificates.
+> **Note:** Implementation of mTLS and the associated internal PKI has been deferred to simplify the initial Phase 1 deployment. This will be a key requirement for Phase 2.
+ - **Internal PKI**: An internal Certificate Authority (CA) will be used to issue certificates for mTLS. `cert-manager` is recommended for automating the lifecycle of these internal certificates. (Deferred to Phase 2).
 - **WebPKI**: The WebPKI certificate hierarchy required for CA operations will be generated using Boulder's `test/certs/generate.sh` script and mounted into CA pods as Kubernetes Secrets.
 - **HSM**: A file-based PKCS#11 configuration will be used, matching Boulder's test environment. Network HSM integration is deferred to Phase 2.
 
@@ -41,6 +46,8 @@ Each Boulder service will be deployed as a Kubernetes Deployment, exposed via a 
 ### 3.1. Service Dependencies and Startup Order
 
 Boulder services have strict startup dependencies that must be enforced. Kubernetes init containers should be used to wait for dependencies to become available before starting a service pod.
+
+> **Scope Note:** The Phase 1 deployment must include all Boulder services required to pass the integration test suite. This includes not only the core services but also supporting components like `boulder-publisher`, `nonce-service`, and the `remoteva` instances, mirroring the upstream `docker-compose` environment.
 
 **Startup Order:**
 1.  **Infrastructure Layer**: MariaDB, ProxySQL, Redis.
@@ -75,7 +82,21 @@ The following tables map Boulder services to Kubernetes resources and their depe
 | **nonce-service** | 2 | Redis |
 | **remoteva** | 3 | - |
 
-> **Note:** The `remoteva` service will have three distinct deployments (`remoteva-a`, `remoteva-b`, `remoteva-c`) each with its own configuration, but they can be addressed collectively if needed. The `boulder-ra-sct-provider` is a specialized instance of the RA.
+> **OCSP Exclusion:** This implementation intentionally excludes all OCSP-related functionality and services, as they are deprecated in the core Boulder software.
+> 
+> **Note:** The `boulder-ra-sct-provider` is a specialized instance of the RA.
+
+### 3.3. Multi-Perspective Issuance Corroboration (MPIC)
+
+To enhance security against network-level attacks like BGP hijacking, Boulder employs Multi-Perspective Issuance Corroboration (MPIC). This requires that domain control validation be performed from multiple network vantage points.
+
+**Implementation Requirements:**
+- The primary `boulder-va` service orchestrates the validation.
+- Three distinct `remoteva` deployments (`remoteva-a`, `remoteva-b`, `remoteva-c`) must be deployed. Each must be configured with a unique `perspective` and `rir` (Regional Internet Registry) to ensure network diversity.
+- **Quorum Rule**: For a validation challenge to succeed, the primary `boulder-va` check must pass, and **at least 2 of the 3** `remoteva` instances must also return a successful validation.
+- **RIR Diversity**: The set of successful `remoteva` instances must represent at least **2 different RIRs**.
+
+These requirements must be reflected in the `va.json` configuration file, which lists the gRPC addresses and expected perspectives of the `remoteva` services.
 
 #### Supporting Services
 | Service | Replicas | Dependencies |
@@ -124,6 +145,8 @@ Replace Consul SRV lookups with direct Kubernetes service DNS names.
 
 ### 4.2. mTLS Configuration
 
+> **Note:** The following configuration is for a future mTLS implementation and has been deferred from the initial Phase 1 deployment.
+
 Client and server certificate paths must be configured for mTLS.
 
 **Example (`ra.json` connecting to `sa.boulder`)**:
@@ -165,8 +188,6 @@ The deployment is considered complete only after the following criteria are met:
 - All service pods are running and healthy.
 - Startup dependencies are correctly handled by init containers.
 - The Boulder integration test suite (`test/integration-test.py --chisel`) passes when run as a Kubernetes Job.
-- mTLS is enforced for all service-to-service communication.
-- `cert-manager` successfully provisions and renews internal certificates.
 - The database initialization job completes successfully.
 - Load balancing across multiple service instances is confirmed.
 
@@ -211,6 +232,5 @@ manifests/
 - Database initialization Job.
 - Scripts or Job to generate and load PKI certificates into Secrets.
 - Integration test Job definition.
-- A `deploy.sh` script for one-command deployment to a local `kind` cluster.
-- A `test.sh` script to execute the integration test Job.
+- A `Makefile` with `deploy` and `test` targets that orchestrate deployment and testing to a local `kind` cluster.
 - Comprehensive `README.md` with deployment, testing, and troubleshooting instructions.
