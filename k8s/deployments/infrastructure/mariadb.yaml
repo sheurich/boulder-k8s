@@ -61,13 +61,13 @@ spec:
               mountPath: /etc/mysql/conf.d
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
-            # TLS Certificate Mounts - TEMPORARILY DISABLED FOR HEALTH CHECK TESTING
-            # - name: server-tls
-            #   mountPath: /etc/mysql/tls/server
-            #   readOnly: true
-            # - name: ca-tls
-            #   mountPath: /etc/mysql/tls/ca
-            #   readOnly: true
+              # TLS Certificate Mounts - TEMPORARILY DISABLED FOR HEALTH CHECK TESTING
+              # - name: server-tls
+              #   mountPath: /etc/mysql/tls/server
+              #   readOnly: true
+              # - name: ca-tls
+              #   mountPath: /etc/mysql/tls/ca
+              #   readOnly: true
           resources:
             requests:
               cpu: 1000m
@@ -101,15 +101,15 @@ spec:
           configMap:
             name: mariadb-init-scripts
             defaultMode: 0755
-        # TLS Certificate Volumes - TEMPORARILY DISABLED FOR HEALTH CHECK TESTING
-        # - name: server-tls
-        #   secret:
-        #     secretName: mariadb-server-tls
-        #     defaultMode: 0400  # Read-only for owner only
-        # - name: ca-tls
-        #   secret:
-        #     secretName: internal-pki
-        #     defaultMode: 0444  # Read-only for all
+            # TLS Certificate Volumes - TEMPORARILY DISABLED FOR HEALTH CHECK TESTING
+            # - name: server-tls
+            #   secret:
+            #     secretName: mariadb-server-tls
+            #     defaultMode: 0400  # Read-only for owner only
+            # - name: ca-tls
+            #   secret:
+            #     secretName: internal-pki
+            #     defaultMode: 0444  # Read-only for all
   volumeClaimTemplates:
     - metadata:
         name: data
