@@ -15,7 +15,7 @@ metadata:
     # Explicitly note OCSP exclusion
     boulder.io/ocsp-excluded: "true"
 spec:
-  replicas: 2  # 2 replicas for high availability
+  replicas: 2 # 2 replicas for high availability
   selector:
     matchLabels:
       app: boulder-ra
@@ -35,7 +35,7 @@ spec:
       initContainers:
         - name: wait-for-dependencies
           image: busybox:1.35
-          command: ['sh', '-c']
+          command: ["sh", "-c"]
           args:
             - |
               echo "Waiting for dependencies..."
@@ -155,11 +155,11 @@ spec:
         - name: server-tls
           secret:
             secretName: boulder-ra-grpc-tls
-            defaultMode: 0400  # Read-only for owner only
+            defaultMode: 0400 # Read-only for owner only
         - name: ca-tls
           secret:
             secretName: intermediate-ca-secret
-            defaultMode: 0444  # Read-only for all
+            defaultMode: 0444 # Read-only for all
 ---
 # Boulder RA Service
 apiVersion: v1
@@ -389,22 +389,22 @@ data:
   ident-policy.yaml: |
     # Boulder identifier policy for Kubernetes deployment
     # This is a test configuration for development use
-    
+
     ExactBlockedNames:
       - "highrisk.example.com"
-    
+
     HighRiskBlockedNames:
       - "ip6.arpa"
-      - "in-addr.arpa" 
+      - "in-addr.arpa"
       - "example"
       - "invalid"
       - "local"
       - "localhost"
       - "test"
-    
+
     AdminBlockedNames:
       - "blocked.example.com"
-    
+
     AdminBlockedPrefixes:
       - "10.0.0.0/8"
       - "172.16.0.0/12"

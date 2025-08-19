@@ -15,7 +15,7 @@ spec:
     # Let's Encrypt staging server - use for testing
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     # Email address for ACME account registration
-    email: admin@boulder-k8s.local
+    email: admin@boulder.example.com
     # Private key secret for ACME account
     privateKeySecretRef:
       name: letsencrypt-staging-key
@@ -47,7 +47,7 @@ spec:
     # Let's Encrypt production server - use for production certificates
     server: https://acme-v02.api.letsencrypt.org/directory
     # Email address for ACME account registration
-    email: admin@boulder-k8s.local
+    email: admin@boulder.example.com
     # Private key secret for ACME account
     privateKeySecretRef:
       name: letsencrypt-production-key

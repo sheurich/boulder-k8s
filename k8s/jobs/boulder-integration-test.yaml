@@ -18,8 +18,8 @@ metadata:
     boulder.io/test-type: "integration"
 spec:
   backoffLimit: 3
-  activeDeadlineSeconds: 1800  # 30 minutes timeout
-  ttlSecondsAfterFinished: 300  # Keep job for 5 minutes after completion
+  activeDeadlineSeconds: 1800 # 30 minutes timeout
+  ttlSecondsAfterFinished: 300 # Keep job for 5 minutes after completion
   template:
     metadata:
       labels:
@@ -37,7 +37,7 @@ spec:
       initContainers:
         - name: wait-for-boulder-ready
           image: busybox:1.35
-          command: ['sh', '-c']
+          command: ["sh", "-c"]
           args:
             - |
               echo "Waiting for Boulder services to be ready..."
@@ -88,8 +88,8 @@ spec:
             - "--challSrv"
             - "http://boulder-wfe2.boulder.svc.cluster.local:4001"
             - "--domain"
-            - "boulder.local"
-            - "--exclude-ocsp"  # Exclude OCSP tests (deprecated)
+            - "boulder.test"
+            - "--exclude-ocsp" # Exclude OCSP tests (deprecated)
           env:
             - name: BOULDER_CONFIG_DIR
               value: "/etc/boulder"
@@ -98,7 +98,7 @@ spec:
             - name: ACME_SERVER_URL
               value: "http://boulder-wfe2.boulder.svc.cluster.local:4001"
             - name: TEST_DOMAIN
-              value: "boulder.local"
+              value: "boulder.test"
             - name: GRPC_GO_LOG_VERBOSITY_LEVEL
               value: "2"
             - name: GRPC_GO_LOG_SEVERITY_LEVEL
@@ -126,7 +126,7 @@ spec:
               memory: 4Gi
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false  # Tests may need to write temp files
+            readOnlyRootFilesystem: false # Tests may need to write temp files
             capabilities:
               drop:
                 - ALL
@@ -159,7 +159,7 @@ data:
       "test": {
         "acmeServerURL": "http://boulder-wfe2.boulder.svc.cluster.local:4001",
         "challSrvURL": "http://boulder-wfe2.boulder.svc.cluster.local:4001",
-        "domain": "boulder.local",
+        "domain": "boulder.test",
         "excludeOCSP": true,
         "timeout": "300s",
         "retries": 3,
