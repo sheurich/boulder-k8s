@@ -105,6 +105,12 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
   - An attempt to secure MariaDB connections with mTLS was reverted for Phase 1 to maintain velocity.
   - **Next Steps**: Re-evaluate and implement a simplified TLS strategy in Phase 2.
 
+- ⏸️ **Boulder SA Operational Constraints** *(Added 2025-08-19)*
+  - Boulder SA readiness probe disabled due to HTTP debug endpoint connectivity issues (gRPC health working fine)
+  - Single SA replica running temporarily due to metrics conflicts
+  - Incidents DB temporarily removed from Boulder SA config to resolve metrics collector duplication
+  - **Next Steps**: Address readiness probe and metrics conflicts in Phase 2
+
 ---
 
 ## 🎯 Next Steps (Immediate Actions)

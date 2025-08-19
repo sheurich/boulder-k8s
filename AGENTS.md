@@ -179,6 +179,14 @@ This section consolidates all maintenance responsibilities that agents must perf
 4. Update next steps with upcoming week's focus areas
 5. Review project phase progress and timeline adherence
 
+### Agent Autonomous Behavior
+
+- Complete assigned tasks fully before yielding back to user
+- Never stop at uncertainty - research reasonable approaches and continue
+- Document assumptions and proceed rather than asking for confirmation  
+- Only escalate for unrecoverable errors or architectural decisions
+- Provide brief progress updates as you execute each deployment step
+
 ### Collaboration
 
 - Follow established version control practices
