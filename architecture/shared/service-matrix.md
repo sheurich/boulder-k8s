@@ -353,16 +353,18 @@ This exclusion simplifies the deployment without affecting core ACME certificate
 | **Service Name** | nonce-service |
 | **Purpose** | Generates and validates single-use nonces for replay protection |
 | **Command** | `boulder nonce-service --config /etc/boulder/nonce-service.json` |
-| **Ports** | - 9501/9502 (gRPC)<br>- 8021/8022 (Debug/Metrics) |
+| **Ports** | - 9301/9501/9401 (gRPC)<br>- 8111/8113/8112 (Debug/Metrics) |
 | **Dependencies** | Redis |
-| **Replicas** | 2-4 (geographic distribution) |
+| **Replicas** | 3 (geographic distribution: taro-1, taro-2, zinc-1) |
 
 #### Configuration Requirements
+
+**nonce-service-taro-1:**
 ```json
 {
   "nonceService": {
-    "grpcAddress": ":9501",
-    "debugAddr": ":8021",
+    "grpcAddress": ":9301",
+    "debugAddr": ":8111",
     "redis": {
       "server": "redis:6379",
       "password": "${REDIS_PASSWORD}",
@@ -374,11 +376,48 @@ This exclusion simplifies the deployment without affecting core ACME certificate
 }
 ```
 
+**nonce-service-taro-2:**
+```json
+{
+  "nonceService": {
+    "grpcAddress": ":9501",
+    "debugAddr": ":8113",
+    "redis": {
+      "server": "redis:6379",
+      "password": "${REDIS_PASSWORD}",
+      "maxRetries": 3,
+      "timeout": "5s"
+    },
+    "prefix": "taro"
+  }
+}
+```
+
+**nonce-service-zinc-1:**
+```json
+{
+  "nonceService": {
+    "grpcAddress": ":9401",
+    "debugAddr": ":8112",
+    "redis": {
+      "server": "redis:6379",
+      "password": "${REDIS_PASSWORD}",
+      "maxRetries": 3,
+      "timeout": "5s"
+    },
+    "prefix": "zinc"
+  }
+}
+```
+
 #### Environment Variables
 - `REDIS_PASSWORD`: (from Secret)
 
 #### Health Check
-- **Endpoint**: `http://localhost:8021/debug/health`
+- **Endpoints**:
+  - `http://localhost:8111/debug/health` (taro-1)
+  - `http://localhost:8113/debug/health` (taro-2)
+  - `http://localhost:8112/debug/health` (zinc-1)
 - **Initial Delay**: 15s
 - **Period**: 10s
 

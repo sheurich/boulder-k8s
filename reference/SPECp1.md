@@ -34,7 +34,7 @@ This section outlines the core architectural decisions for the Kubernetes deploy
 - **mTLS**: All inter-service gRPC communication must be secured with mutual TLS (mTLS). This is a core requirement for Boulder's gRPC services and cannot be disabled.
 - **Internal PKI**: An internal Certificate Authority (CA) will be used to issue certificates for mTLS. `cert-manager` is used for automating the lifecycle of these internal certificates.
 - **WebPKI**: The WebPKI certificate hierarchy required for CA operations will be generated using Boulder's `test/certs/generate.sh` script and mounted into CA pods as Kubernetes Secrets.
-- **HSM**: A file-based PKCS#11 configuration will be used, matching Boulder's test environment. Network HSM integration is deferred to Phase 2.
+- **HSM**: A SoftHSM sidecar pattern with PKCS#11 proxy provides certificate signing capabilities, matching Boulder's test environment requirements for Phase 1. This enables complete certificate signing functionality for integration testing.
 
 ### 2.5. Integration Testing
 - **Execution**: The full Boulder integration test suite (`test/integration-test.py --chisel`) will be run as a Kubernetes Job.
@@ -146,8 +146,6 @@ Replace Consul SRV lookups with direct Kubernetes service DNS names.
 
 ### 4.2. mTLS Configuration
 
-> **Note:** The following configuration is for a future mTLS implementation and has been deferred from the initial Phase 1 deployment.
-
 Client and server certificate paths must be configured for mTLS.
 
 **Example (`ra.json` connecting to `sa.boulder`)**:
@@ -197,32 +195,35 @@ The deployment is considered complete only after the following criteria are met:
 A component-based directory structure will be used for all Kubernetes manifests.
 
 ```text
-manifests/
-├── namespace.yaml
-├── infrastructure/
-│   ├── cert-manager/
-│   ├── redis/
-│   ├── mariadb/
-│   └── proxysql/
-├── boulder/
-│   ├── sa/
-│   ├── ca/
-│   ├── ra/
-│   ├── va/
-│   ├── wfe2/
-│   ├── publisher/
-│   ├── nonce-service/
-│   └── remoteva/
-├── security/
-│   ├── pki/
-│   └── network-policies/
-├── data/
-│   └── database-init-job.yaml
-├── shared/
-│   ├── secrets.yaml
-│   └── rbac.yaml
-└── tests/
-    └── integration-test-job.yaml
+k8s/
+├── namespaces/
+│   └── boulder-namespace.yaml
+├── deployments/
+│   ├── infrastructure/
+│   │   ├── mariadb.yaml
+│   │   ├── redis.yaml
+│   │   └── proxysql.yaml
+│   └── boulder/
+│       ├── ca.yaml
+│       ├── sa.yaml
+│       ├── ra.yaml
+│       ├── va.yaml
+│       ├── wfe2.yaml
+│       ├── publisher.yaml
+│       ├── nonce-service.yaml
+│       └── remote-va1.yaml
+├── services/
+│   ├── infrastructure/
+│   └── boulder/
+├── secrets/
+│   └── db-credentials.yaml
+├── jobs/
+│   ├── db-init.yaml
+│   └── boulder-integration-test.yaml
+└── scripts/
+    ├── deploy.sh
+    ├── health-check.sh
+    └── run-integration-tests.sh
 ```
 > **Note:** Each component directory (e.g., `boulder/sa/`) should contain its respective Deployment, Service, and ConfigMap manifests.
 
