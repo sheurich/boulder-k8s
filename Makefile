@@ -24,17 +24,17 @@ setup-tls:
 	./k8s/scripts/setup-tls.sh
 
 # Deploy Boulder services to Kubernetes cluster
-deploy: lint docker-build setup-tls
+deploy: setup docker-build setup-tls
 	@echo "Deploying Boulder services..."
 	./k8s/scripts/deploy.sh
 
 # Run health checks on Boulder services
-health-check:
+health-check: deploy
 	@echo "Running Boulder health checks..."
 	./k8s/scripts/health-check.sh
 
 # Run integration tests for Boulder ACME functionality
-test-integration:
+test-integration: deploy
 	@echo "Running Boulder integration tests..."
 	./k8s/scripts/run-integration-tests.sh
 
@@ -43,7 +43,7 @@ test: health-check test-integration
 	@echo "All Boulder tests completed successfully"
 
 # Complete setup and deployment workflow
-bootstrap: setup deploy health-check
+bootstrap: deploy health-check
 	@echo "Boulder deployment bootstrap completed successfully"
 
 #
