@@ -79,13 +79,10 @@ The following tables map Boulder services to Kubernetes resources and their depe
 | **boulder-va** | 2 | `boulder-sa`, `remoteva` |
 | **boulder-wfe2** | 1 | `boulder-ra`, `boulder-sa`, `nonce-service` |
 | **boulder-publisher** | 2 | - |
-| **boulder-ra-sct-provider** | 2 | `boulder-publisher` |
 | **nonce-service** | 2 | Redis |
 | **remoteva** | 3 | - |
 
 > **OCSP Exclusion:** This implementation intentionally excludes all OCSP-related functionality and services, as they are deprecated in the core Boulder software.
-> 
-> **Note:** The `boulder-ra-sct-provider` is a specialized instance of the RA.
 
 ### 3.3. Multi-Perspective Issuance Corroboration (MPIC)
 

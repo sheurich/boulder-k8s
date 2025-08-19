@@ -62,13 +62,12 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
 - 🔴 **Fix Boulder Service Deployment Issues** *(Critical)*
   - **RA Service**: Configuration error "unknown field clientCertificate"
   - **Publisher Service**: Syslog connection failures (containerization issue)
-  - **SCT Provider**: Image pull policy issues preventing startup
-  - **CA/VA/WFE2**: Stuck in init containers waiting for SCT Provider
+  - **CA/VA/WFE2**: Waiting for dependent services to be operational
   - **Priority**: Critical
   - **Current State**: Most services in CrashLoopBackOff or Init states
   
 - 📋 **Complete Boulder Service Deployment**
-  - Deploy and verify all core services: `ca`, `ra`, `va`, `wfe2`, `publisher`, `sct-provider`
+  - Deploy and verify all core services: `ca`, `ra`, `va`, `wfe2`, `publisher`
   - **Priority**: High
   - **Dependencies**: Infrastructure services functional, configuration fixes applied
 
@@ -141,10 +140,10 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
 2. **Fix Boulder Service Configuration Errors** *(Critical)*
    - Fix RA service "unknown field clientCertificate" configuration error
    - Resolve Publisher syslog connection issues for containerized environment
-   - Fix SCT Provider image pull policy to use local boulder-k8s image
+   - Configure CA service to use RA directly for SCT operations (no separate SCT provider needed)
 
 3. **Complete Service Deployment Chain** *(High)*
-   - Once SCT Provider is running, CA/VA/WFE2 init containers should proceed
+   - Ensure proper dependency ordering between CA and RA services
    - Verify all services reach "SERVING" state (check logs, not just pod status)
    - Test end-to-end service connectivity
 
