@@ -72,11 +72,6 @@ spec:
           env:
             - name: BOULDER_CONFIG_DIR
               value: "/etc/boulder"
-            - name: REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: redis-password
             # mTLS Environment Variables
             - name: BOULDER_GRPC_TLS_CERT
               value: "/etc/boulder/tls/server/tls.crt"
@@ -99,6 +94,9 @@ spec:
               mountPath: /etc/boulder
             - name: internal-certs
               mountPath: /etc/boulder/certs
+              readOnly: true
+            - name: redis-password
+              mountPath: /etc/boulder/secrets
               readOnly: true
             # mTLS Certificate Mounts
             - name: server-tls
@@ -141,6 +139,12 @@ spec:
         - name: internal-certs
           secret:
             secretName: internal-pki
+        - name: redis-password
+          secret:
+            secretName: db-credentials
+            items:
+              - key: redis-password
+                path: redis-password
         # mTLS Certificate Volumes
         - name: server-tls
           secret:
@@ -197,6 +201,11 @@ data:
                 "sfe.boulder"
               ]
             },
+            "ra.SCTProvider": {
+              "clientNames": [
+                "ca.boulder"
+              ]
+            },
             "grpc.health.v1.Health": {
               "clientNames": [
                 "health-checker.boulder"
@@ -209,36 +218,28 @@ data:
           "serverAddress": "boulder-va:9392",
           "hostOverride": "va.boulder",
           "timeout": "20s",
-          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
-          "clientKey": "/etc/boulder/tls/server/tls.key",
-          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+          "noWaitForReady": true
         },
 
         "caService": {
           "serverAddress": "boulder-ca:9393",
           "hostOverride": "ca.boulder",
           "timeout": "15s",
-          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
-          "clientKey": "/etc/boulder/tls/server/tls.key",
-          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+          "noWaitForReady": true
         },
 
         "saService": {
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
           "timeout": "15s",
-          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
-          "clientKey": "/etc/boulder/tls/server/tls.key",
-          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+          "noWaitForReady": true
         },
 
         "publisherService": {
           "serverAddress": "boulder-publisher:9391",
           "hostOverride": "publisher.boulder",
           "timeout": "300s",
-          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
-          "clientKey": "/etc/boulder/tls/server/tls.key",
-          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+          "noWaitForReady": true
         },
 
         "tls": {
@@ -249,58 +250,49 @@ data:
 
         "limiter": {
           "redis": {
-            "server": "redis-client:6379",
-            "password": "${REDIS_PASSWORD}",
-            "maxRetries": 3,
-            "timeout": "5s"
+            "lookups": [
+              {
+                "Service": "redis-client",
+                "Domain": "boulder.svc.cluster.local"
+              }
+            ],
+            "lookupDNSAuthority": "kube-dns.kube-system.svc.cluster.local",
+            "passwordFile": "/etc/boulder/secrets/redis-password",
+            "readTimeout": "250ms",
+            "writeTimeout": "250ms",
+            "poolSize": 100,
+            "routeRandomly": true
           },
-          "defaults": {
-            "certificatesPerName": {
-              "threshold": 5,
-              "window": "168h"
-            },
-            "registrationsPerIP": {
-              "threshold": 10,
-              "window": "3h"
-            },
-            "duplicateCertificateLimit": {
-              "threshold": 5,
-              "window": "168h"
-            },
-            "pendingAuthorizationsPerAccount": {
-              "threshold": 300,
-              "window": "168h"
-            },
-            "certificatesPerFQDNSet": {
-              "threshold": 10000,
-              "window": "168h"
-            }
-          }
+          "defaults": "/etc/boulder/ratelimit-defaults.yml",
+          "overrides": "/etc/boulder/ratelimit-overrides.yml"
         },
 
-        "maxNames": 100,
-        "doNotForceCN": true,
-        "reuseValidAuthz": true,
-        "authzCacheTTL": "300s",
-        "pendingAuthzCacheTTL": "300s",
-        "orderLifetime": "168h",
-        "finalizeTimeout": "30s",
+        "validationProfiles": {
+          "legacy": {
+            "pendingAuthzLifetime": "168h",
+            "validAuthzLifetime": "720h",
+            "orderLifetime": "168h",
+            "maxNames": 100,
+            "identifierTypes": [
+              "dns"
+            ]
+          }
+        },
+        "defaultProfileName": "legacy",
 
-        "caaDistributedResolver": {
-          "maxResolvers": 3,
-          "servers": [
-            "8.8.8.8:53",
-            "1.1.1.1:53"
+        "ctLogs": {
+          "stagger": "500ms",
+          "logListFile": "/etc/boulder/ct-test-srv/log_list.json",
+          "sctLogs": [
+            "Test Log 1"
           ],
-          "timeout": "5s"
+          "infoLogs": [
+            "Test Log 1"
+          ],
+          "finalLogs": [
+            "Test Log 1"
+          ]
         },
-
-        "ctLogs": [
-          {
-            "uri": "http://ct-test-srv:4600",
-            "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYggOxPnPkzKBIhTacSYoIfnSL2jPugcbUKx83vFMvk5gKAz/AGe87w20riuPwEGn229hKVbEKHFB61NIqNHC3Q=="
-          }
-        ],
 
         "features": {}
       },
@@ -314,7 +306,51 @@ data:
       },
 
       "syslog": {
-        "stdoutLevel": 6,
-        "syslogLevel": 6
+        "stdoutlevel": 6,
+        "sysloglevel": 6
       }
     }
+  ratelimit-defaults.yml: |
+    NewRegistrationsPerIPAddress:
+      count: 10000
+      burst: 10000
+      period: 168h
+    NewRegistrationsPerIPv6Range:
+      count: 99999
+      burst: 99999
+      period: 168h
+    CertificatesPerDomain:
+      count: 2
+      burst: 2
+      period: 2160h
+    FailedAuthorizationsPerDomainPerAccount:
+      count: 3
+      burst: 3
+      period: 5m
+    FailedAuthorizationsForPausingPerDomainPerAccount:
+      count: 1
+      burst: 3600
+      period: 24h
+    NewOrdersPerAccount:
+      count: 1500
+      burst: 1500
+      period: 3h
+    CertificatesPerFQDNSet:
+      count: 2
+      burst: 2
+      period: 3h
+  ratelimit-overrides.yml: |
+    - NewRegistrationsPerIPAddress:
+        burst: 1000000
+        count: 1000000
+        period: 168h
+        ids:
+          - id: 127.0.0.1
+            comment: localhost testing
+    - CertificatesPerFQDNSet:
+        burst: 10000
+        count: 10000
+        period: 168h
+        ids:
+          - id: example.com
+            comment: Test domain

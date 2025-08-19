@@ -44,9 +44,8 @@ spec:
                 echo "Waiting for SA service..."
                 sleep 2
               done
-              until nslookup boulder-ra-sct-provider.boulder.svc.cluster.local;
-              do
-                echo "Waiting for SCT Provider service..."
+              until nslookup boulder-ra.boulder.svc.cluster.local; do
+                echo "Waiting for RA service (for SCT functionality)..."
                 sleep 2
               done
               echo "All dependencies ready!"
@@ -208,17 +207,13 @@ data:
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
           "timeout": "15s",
-          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
-          "clientKey": "/etc/boulder/tls/server/tls.key",
-          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+          "noWaitForReady": true
         },
         "sctService": {
-          "serverAddress": "boulder-ra-sct-provider:9594",
+          "serverAddress": "boulder-ra:9394",
           "hostOverride": "ra.boulder",
           "timeout": "15s",
-          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
-          "clientKey": "/etc/boulder/tls/server/tls.key",
-          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+          "noWaitForReady": true
         },
 
         "tls": {

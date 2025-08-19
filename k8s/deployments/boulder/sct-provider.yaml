@@ -168,9 +168,12 @@ data:
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
           "timeout": "15s",
-          "clientCertificate": "/etc/boulder/tls/server/tls.crt",
-          "clientKey": "/etc/boulder/tls/server/tls.key",
-          "serverCertificate": "/etc/boulder/tls/ca/tls.crt"
+          "noWaitForReady": true
+        },
+        "tls": {
+          "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+          "certFile": "/etc/boulder/tls/server/tls.crt",
+          "keyFile": "/etc/boulder/tls/server/tls.key"
         },
         "ctLogs": [
           {
@@ -181,7 +184,7 @@ data:
         "logListFile": "/etc/boulder/ct-test-srv/log_list.json"
       },
       "syslog": {
-        "stdoutLevel": 6,
-        "syslogLevel": 6
+        "stdoutlevel": 6,
+        "sysloglevel": 6
       }
     }
