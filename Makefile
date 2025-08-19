@@ -39,11 +39,15 @@ test-integration: deploy
 	./k8s/scripts/run-integration-tests.sh
 
 # Run all tests (health check followed by integration tests)
-test: health-check test-integration
+test: deploy
+	@echo "Running Boulder health checks..."
+	@./k8s/scripts/health-check.sh
+	@echo "Running Boulder integration tests..."
+	@./k8s/scripts/run-integration-tests.sh
 	@echo "All Boulder tests completed successfully"
 
 # Complete setup and deployment workflow
-bootstrap: deploy health-check
+bootstrap: health-check
 	@echo "Boulder deployment bootstrap completed successfully"
 
 #
