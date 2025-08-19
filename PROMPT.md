@@ -67,6 +67,9 @@ The goal for this phase is defined in `reference/SPECp1.md`. The primary objecti
 ## 📚 Essential Documentation
 
 - **`reference/SPECp1.md`**: **REQUIRED READING.** Defines the "definition of done" for the current phase.
+- **`architecture/overview.md`**: **REQUIRED READING.** Comprehensive architectural design, service dependencies, and Kubernetes deployment patterns.
+- **`architecture/implementation-plan.md`**: **REQUIRED READING.** Phased implementation approach, deployment order, and success criteria.
+- **`architecture/service-matrix.md`**: Detailed service specifications, configuration requirements, and resource definitions.
 - **`README.md`**: General project overview, setup, and manual testing instructions.
 - **`Makefile`**: Defines all high-level commands (`deploy`, `test`, `clean`).
 - **`AGENTS.md`**: Outlines development standards and commit guidelines.
