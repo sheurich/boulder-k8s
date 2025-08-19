@@ -47,7 +47,7 @@ spec:
               echo "Database dependencies ready!"
       containers:
         - name: boulder-sa
-          image: boulder:latest
+          image: boulder-k8s:latest
           imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-sa"]
           args: ["--config", "/etc/boulder/sa.json"]

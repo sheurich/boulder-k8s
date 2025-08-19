@@ -58,7 +58,7 @@ spec:
               echo "All dependencies ready!"
       containers:
         - name: boulder-ra
-          image: boulder:latest
+          image: boulder-k8s:latest
           imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-ra"]
           args: ["--config", "/etc/boulder/ra.json"]

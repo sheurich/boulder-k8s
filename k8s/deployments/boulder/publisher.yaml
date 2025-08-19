@@ -33,7 +33,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: boulder-publisher
-          image: boulder:latest
+          image: boulder-k8s:latest
           imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-publisher"]
           args: ["--config", "/etc/boulder/publisher.json"]

@@ -45,7 +45,7 @@ spec:
               echo "All dependencies ready!"
       containers:
         - name: boulder-sct-provider
-          image: boulder:latest
+          image: boulder-k8s:latest
           command: ["boulder", "boulder-sct-provider"]
           args: ["--config", "/etc/boulder/sct-provider.json"]
           ports:

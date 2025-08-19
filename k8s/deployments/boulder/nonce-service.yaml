@@ -45,7 +45,7 @@ spec:
               echo "Redis is ready!"
       containers:
         - name: nonce-service
-          image: boulder:latest
+          image: boulder-k8s:latest
           command: ["boulder", "nonce-service"]
           args: ["--config", "/etc/boulder/nonce-service.json"]
           ports:

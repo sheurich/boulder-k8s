@@ -52,7 +52,7 @@ spec:
               echo "All dependencies ready!"
       containers:
         - name: boulder-ca
-          image: boulder:latest
+          image: boulder-k8s:latest
           imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-ca"]
           args: ["--config", "/etc/boulder/ca.json"]

@@ -54,7 +54,7 @@ spec:
               echo "All dependencies ready!"
       containers:
         - name: boulder-wfe2
-          image: boulder:latest
+          image: boulder-k8s:latest
           imagePullPolicy: IfNotPresent
           command: ["boulder", "boulder-wfe2"]
           args: ["--config", "/etc/boulder/wfe2.json"]

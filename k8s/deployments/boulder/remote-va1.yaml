@@ -45,7 +45,7 @@ spec:
               echo "All dependencies ready!"
       containers:
         - name: boulder-remote-va1
-          image: boulder:latest
+          image: boulder-k8s:latest
           command: ["boulder", "boulder-va"]
           args: ["--config", "/etc/boulder/remote-va1.json"]
           ports:
