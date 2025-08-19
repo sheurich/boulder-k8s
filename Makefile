@@ -49,19 +49,36 @@ DOCKER_IMAGE ?= boulder-k8s
 DOCKER_TAG ?= latest
 # BOULDER_VERSION defaults to 'main' for development builds.
 # For production, this should be overridden with a specific git tag or commit SHA.
-# Example: make docker-build BOULDER_VERSION=v2.5.1
+# Example: make docker-build \
+# 	BOULDER_VERSION=v0.20250812.0 GOLANG_VERSION=1.24.6 \
+# 	DOCKER_TAG=${BOULDER_VERSION}-go${GOLANG_VERSION}
 BOULDER_VERSION ?= main
-GOLANG_VERSION ?= 1.22.5
+GOLANG_VERSION ?= 1
+
+# Build metadata for OCI labels
+IMAGE_VENDOR ?= boulder-k8s
+# Use the commit hash for the revision
+BUILD_REVISION := $(shell git rev-parse HEAD)
+# Use the commit date for a deterministic build date (ISO 8601 format)
+BUILD_DATE := $(shell git show -s --format=%cI HEAD)
 
 # Build Boulder Docker image using build arguments
 docker-build:
-	@echo "Building Boulder Docker image with Boulder tag $(BOULDER_VERSION) and Go $(GOLANG_VERSION)..."
+	@echo "Building Boulder Docker image..."
+	@echo "  Vendor:    $(IMAGE_VENDOR)"
+	@echo "  Source:    Boulder $(BOULDER_VERSION) / Go $(GOLANG_VERSION)"
+	@echo "  Revision:  $(BUILD_REVISION)"
+	@echo "  Date:      $(BUILD_DATE)"
+	@echo "  Output:    $(DOCKER_IMAGE):$(DOCKER_TAG)"
 	DOCKER_BUILDKIT=1 docker build \
 		--file docker/Boulder.dockerfile \
 		--build-arg BOULDER_TAG=$(BOULDER_VERSION) \
 		--build-arg GOLANG_VER=$(GOLANG_VERSION) \
+		--build-arg IMAGE_VENDOR="$(IMAGE_VENDOR)" \
+		--build-arg BUILD_REVISION="$(BUILD_REVISION)" \
+		--build-arg BUILD_DATE="$(BUILD_DATE)" \
 		--tag $(DOCKER_IMAGE):$(DOCKER_TAG) \
-		.
+		docker/
 
 # Clean up Kind cluster and temporary files
 clean:
