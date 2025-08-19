@@ -18,8 +18,13 @@ setup: lint
 	kubectl cluster-info
 	kubectl get nodes
 
+# Deploy TLS infrastructure (cert-manager and certificates)
+setup-tls:
+	@echo "Deploying cert-manager and TLS certificates..."
+	./k8s/scripts/setup-tls.sh
+
 # Deploy Boulder services to Kubernetes cluster
-deploy: lint
+deploy: lint docker-build setup-tls
 	@echo "Deploying Boulder services..."
 	./k8s/scripts/deploy.sh
 
@@ -92,4 +97,4 @@ status:
 	@echo "=== Boulder Namespace Pods ===" && kubectl get pods -n boulder -o wide || echo "Boulder namespace not found"
 	@echo "=== Boulder Services ===" && kubectl get services -n boulder || echo "Boulder namespace not found"
 
-.PHONY: all lint setup deploy health-check test-integration test bootstrap clean status docker-build
+.PHONY: all lint setup deploy setup-tls health-check test-integration test bootstrap clean status docker-build
