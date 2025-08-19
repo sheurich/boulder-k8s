@@ -233,7 +233,6 @@ data:
 
         "features": {
           "ServeRenewalInfo": true,
-          "GetAuthorizationsByDomains": true,
           "CheckCertificateBySerial": true
         }
       },

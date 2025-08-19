@@ -31,9 +31,8 @@ This section outlines the core architectural decisions for the Kubernetes deploy
 - **Database URL**: Database connection strings will be stored in Secrets and mounted as files, referenced via Boulder's `dbConnectFile` setting.
 
 ### 2.4. PKI & Security
-- **mTLS**: All inter-service gRPC communication must be secured with mutual TLS (mTLS).
-> **Note:** Implementation of mTLS and the associated internal PKI has been deferred to simplify the initial Phase 1 deployment. This will be a key requirement for Phase 2.
- - **Internal PKI**: An internal Certificate Authority (CA) will be used to issue certificates for mTLS. `cert-manager` is recommended for automating the lifecycle of these internal certificates. (Deferred to Phase 2).
+- **mTLS**: All inter-service gRPC communication must be secured with mutual TLS (mTLS). This is a core requirement for Boulder's gRPC services and cannot be disabled.
+- **Internal PKI**: An internal Certificate Authority (CA) will be used to issue certificates for mTLS. `cert-manager` is used for automating the lifecycle of these internal certificates.
 - **WebPKI**: The WebPKI certificate hierarchy required for CA operations will be generated using Boulder's `test/certs/generate.sh` script and mounted into CA pods as Kubernetes Secrets.
 - **HSM**: A file-based PKCS#11 configuration will be used, matching Boulder's test environment. Network HSM integration is deferred to Phase 2.
 

@@ -40,7 +40,7 @@ The goal for this phase is defined in `reference/SPECp1.md`. The primary objecti
 
 **Key Architectural Decisions:**
 
-- **mTLS Deferred:** As noted in `reference/SPECp1.md`, mTLS for service-to-service communication has been intentionally deferred to Phase 2 to simplify the initial deployment.
+- **mTLS Required:** As noted in `reference/SPECp1.md`, mTLS for service-to-service communication is a core Boulder requirement and is implemented in Phase 1 using cert-manager.
 - **OCSP Excluded:** This implementation intentionally excludes all OCSP-related functionality, a critical constraint detailed in both the `README.md` and `AGENTS.md`.
 
 ---

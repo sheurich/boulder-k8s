@@ -56,16 +56,6 @@ spec:
               mountPath: /data
             - name: config
               mountPath: /etc/redis
-            # TLS Certificate Mounts
-            - name: server-tls
-              mountPath: /etc/redis/tls/server
-              readOnly: true
-            - name: ca-tls
-              mountPath: /etc/redis/tls/ca
-              readOnly: true
-            - name: client-tls
-              mountPath: /etc/redis/tls/client
-              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -80,10 +70,6 @@ spec:
                 - -c
                 - |
                   redis-cli \
-                    --tls \
-                    --cert /etc/redis/tls/client/tls.crt \
-                    --key /etc/redis/tls/client/tls.key \
-                    --cacert /etc/redis/tls/ca/ca-bundle.crt \
                     --no-auth-warning \
                     -h 127.0.0.1 \
                     -a "$REDIS_PASSWORD" \
@@ -98,10 +84,6 @@ spec:
                 - -c
                 - |
                   redis-cli \
-                    --tls \
-                    --cert /etc/redis/tls/client/tls.crt \
-                    --key /etc/redis/tls/client/tls.key \
-                    --cacert /etc/redis/tls/ca/ca-bundle.crt \
                     --no-auth-warning \
                     -h 127.0.0.1 \
                     -a "$REDIS_PASSWORD" \
@@ -113,19 +95,6 @@ spec:
         - name: config
           configMap:
             name: redis-config
-        # TLS Certificate Volumes
-        - name: server-tls
-          secret:
-            secretName: redis-server-tls
-            defaultMode: 0400  # Read-only for owner only
-        - name: ca-tls
-          secret:
-            secretName: redis-ca-bundle
-            defaultMode: 0444  # Read-only for all
-        - name: client-tls
-          secret:
-            secretName: redis-client-tls
-            defaultMode: 0400  # Read-only for owner only
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -149,23 +118,12 @@ metadata:
 data:
   redis.conf: |
     # Redis configuration for Boulder rate limiting and nonce storage
+    # Phase 1: TLS disabled (deferred to Phase 2 per SPECp1.md)
 
-    # Network - TLS Configuration
+    # Network Configuration
     bind 0.0.0.0
-    port 0
-    tls-port 6379
+    port 6379
     tcp-backlog 511
-
-    # TLS Configuration
-    tls-cert-file /etc/redis/tls/server/tls.crt
-    tls-key-file /etc/redis/tls/server/tls.key
-    tls-ca-cert-file /etc/redis/tls/ca/ca-bundle.crt
-    tls-auth-clients yes
-    tls-protocols "TLSv1.2 TLSv1.3"
-    tls-ciphersuites TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256
-    tls-ciphers ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:!aNULL:!MD5:!DSS
-    tls-prefer-server-ciphers yes
-    tls-session-caching no
 
     # Memory management
     maxmemory 256mb
