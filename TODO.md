@@ -50,6 +50,13 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
   - **Priority**: High
   - **Dependencies**: Core services operational.
 
+- 📋 **Medium Priority Improvements** *(Added 2025-08-19)*
+  - **Pre-deployment Validation**: Create validation script that runs before deployment to check required tools, cluster access, and Docker images.
+  - **Centralized Feature Flag Configuration**: Move Boulder feature flags from individual service configs to a centralized ConfigMap for easier management.
+  - **Enhanced Health Checks**: Improve health check scripts to verify actual service health endpoints rather than just pod status.
+  - **Configuration Templates**: Create environment-specific configuration templates (development, staging, production) with overlays.
+  - **Better Logging Configuration**: Standardize logging configuration across all Boulder services with consistent format and levels.
+
 - 📋 **PKI & Certificate Management**
   - Implement file-based PKCS#11 configuration for the test environment.
   - Automate generation of WebPKI and internal mTLS certificate hierarchies.
