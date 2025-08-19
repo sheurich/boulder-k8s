@@ -4,7 +4,7 @@
 
 This TODO list serves as the persistent task tracking system for the Boulder Kubernetes deployment project. It maintains a complete record of accomplished work, current progress, and remaining tasks organized by priority and implementation phases, aligned with the official SPEC documents.
 
-**Last Updated**: 2025-08-18
+**Last Updated**: 2025-08-19
 **Project Status**: Phase 1 (In Progress)
 **Current Focus**: Deploying Boulder Core Services
 
@@ -33,6 +33,12 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
   - ✅ Resolved MariaDB health check probes for stable operation.
   - ✅ Deployed `db-init` job to initialize the Boulder schema.
   - ✅ Confirmed all 19 required tables are created (OCSP tables excluded).
+
+- ✅ **Documentation Organization** *(Completed August 19, 2025)*
+  - ✅ Consolidated maintenance procedures and established clearer documentation boundaries
+  - ✅ Updated linting workflow to use [`make lint`](Makefile) target
+  - ✅ Verified kubeconform integration working properly
+  - ✅ Commit: 031b9d3
 
 ---
 
@@ -113,17 +119,6 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
 
 ---
 
-## 🔄 Review and Maintenance
+## 🔄 Maintenance
 
-### Weekly Reviews *(Every Monday)*
-- Update task status and completion dates.
-- Assess priority changes and blockers.
-- Review completed work and lessons learned.
-- Plan upcoming week's focus areas.
-
-### Task Status Indicators
-- ✅ **Completed** - Work finished and validated.
-- 🔄 **In Progress** - Currently being worked on.
-- 🔴 **Critical/Urgent** - High priority, blocking other work.
-- ⏸️ **Blocked** - Waiting on dependencies or decisions.
-- 📋 **Pending** - Planned but not yet started.
+**For complete maintenance procedures including task status indicators, weekly reviews, and update guidelines, see [`AGENTS.md`](AGENTS.md).**

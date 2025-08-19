@@ -2,7 +2,7 @@
 
 **Project:** A production-grade implementation of the Boulder CA running on Kubernetes.
 
-**Checkpoint:** 2025-08-19T04:18:00.000Z
+**Checkpoint:** 2025-08-19T17:04:00.000Z
 
 **Status:**
 
@@ -16,11 +16,20 @@
   - ✅ Database authentication RESOLVED - Boulder SA connects successfully.
   - ✅ Boulder SA service is running and fully operational.
 
+- **Documentation Organization (COMPLETE)**:
+  - ✅ Consolidated maintenance procedures in [`AGENTS.md`](AGENTS.md) into dedicated section
+  - ✅ Established clearer boundaries between [`AGENTS.md`](AGENTS.md) and [`README.md`](README.md)
+  - ✅ Updated linting documentation to reference [`make lint`](Makefile) target
+  - ✅ Verified kubeconform integration working properly (commit 031b9d3)
+  - ✅ All linting checks pass including kubeconform validation
+
 ---
 
 ## 🚀 Immediate Task: Deploy Remaining Boulder Services
 
 Your immediate task is to **deploy the remaining Boulder services** (CA, RA, VA, WFE2, Publisher) now that the infrastructure and Boulder SA are operational, then set up mTLS for Boulder SA -> ProxySQL -> MariaDB as requested.
+
+**Recent Progress**: Documentation organization has been completed with improved maintenance procedures and clearer boundaries between user and developer documentation.
 
 **System Status Check:**
 
@@ -35,55 +44,26 @@ kubectl get pods -n boulder
 
 **Implementation Status:**
 
-Phase 1 infrastructure is now **COMPLETE** and operational. Major accomplishments in this session:
-
-### Database Authentication Issues RESOLVED:
-- ✅ **ProxySQL Configuration**: Fixed environment variable substitution by replacing `${MYSQL_PASSWORD}` placeholders with actual password values (`boulder-db-password`, `boulder-root-password`)
-- ✅ **Boulder SA Database Connection**: Boulder SA now successfully connects to MariaDB through ProxySQL
-- ✅ **Boulder SA Service**: Both StorageAuthority and StorageAuthorityReadOnly gRPC services are SERVING on port 9395
-- ✅ **Configuration Cleanup**: Removed incidents DB temporarily to resolve metrics collector duplication issues
-- ✅ **Syslog Configuration**: Fixed syslog settings (`sysloglevel: -1`) to prevent container startup failures
-- ✅ **Readiness Probe**: Temporarily disabled HTTP readiness probe due to debug endpoint connectivity issues (gRPC health is working)
-
-### Infrastructure Status:
-- ✅ **MariaDB**: Running and healthy on port 3306
-- ✅ **Redis**: Running cluster (2 instances) and healthy  
-- ✅ **ProxySQL**: Running with correct authentication, boulder user can connect successfully
-- ✅ **Boulder SA**: Running (1/1 Ready) with gRPC services serving
-- ✅ **TLS Certificates**: All Boulder service certificates issued by cert-manager
-- ✅ **Boulder Image**: `boulder-k8s:latest` built and loaded into kind cluster
-
-**Guiding Specification:**
-
-The goal for this phase is defined in `reference/SPECp1.md`. The primary objective is to achieve functional parity with the upstream Boulder `docker-compose` environment. Success is measured by the passing of the full integration test suite.
+Phase 1 infrastructure is **COMPLETE** and operational. Boulder SA service is running and connecting successfully to MariaDB through ProxySQL.
 
 **Key Architectural Decisions:**
 
-- **mTLS Required:** As noted in `reference/SPECp1.md`, mTLS for service-to-service communication is a core Boulder requirement and is implemented in Phase 1 using cert-manager.
-- **OCSP Excluded:** This implementation intentionally excludes all OCSP-related functionality, a critical constraint detailed in both the `README.md` and `AGENTS.md`.
+- **mTLS Required:** Service-to-service communication uses cert-manager-issued certificates
+- **OCSP Excluded:** All OCSP functionality is intentionally excluded (deprecated in Boulder)
+- **Single SA Replica:** Running 1 replica temporarily due to metrics conflicts
+
+**Current Foundation:** All infrastructure services (MariaDB, Redis, ProxySQL, cert-manager) and Boulder SA are operational and ready for remaining Boulder services.
 
 ---
 
 ## 📚 Essential Documentation
 
-**Start here for complete context:**
+**Required Reading:**
+- [`reference/SPECp1.md`](reference/SPECp1.md) - Phase 1 specification and success criteria
+- [`architecture/shared/service-matrix.md`](architecture/shared/service-matrix.md) - Service specifications and configuration
+- [`TODO.md`](TODO.md) - Current project status and task prioritization
 
-- **[`reference/SPECp1.md`](reference/SPECp1.md)**: **REQUIRED READING.** Authoritative Phase 1 specification and "definition of done."
-- **[`architecture/phase1.md`](architecture/phase1.md)**: **REQUIRED READING.** Consolidated architectural design, service dependencies, and Kubernetes deployment patterns.
-- **[`architecture/shared/service-matrix.md`](architecture/shared/service-matrix.md)**: **REQUIRED READING.** Detailed service specifications, configuration requirements, and resource definitions.
-- **[`architecture/shared/decisions.md`](architecture/shared/decisions.md)**: Key architectural decisions and rationale (OCSP exclusion, mTLS requirements, etc.).
-
-**Project management and operational guides:**
-
-- **[`TODO.md`](TODO.md)**: Current project status, completed work, and prioritized task list.
-- **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**: Comprehensive problem resolution guide for common deployment issues.
-- **[`README.md`](README.md)**: Project overview, setup instructions, and manual testing procedures.
-- **[`AGENTS.md`](AGENTS.md)**: Development standards, commit guidelines, and agent responsibilities.
-
-**Technical references:**
-
-- **[`reference/BOULDER.md`](reference/BOULDER.md)**: Upstream Boulder technical reference and development environment guide.
-- **[`Makefile`](Makefile)**: High-level project commands (`deploy`, `test`, `clean`, `setup`).
+**Additional References:** See [`README.md`](README.md) for complete documentation index.
 
 ---
 
@@ -162,4 +142,9 @@ The goal for this phase is defined in `reference/SPECp1.md`. The primary objecti
 - **Check certificates:** `kubectl get certificates -n boulder` (should all be Ready=True)
 - **Check database connectivity:** `kubectl exec mariadb-0 -n boulder -- mysql -u boulder -pboulder-db-password -e "SELECT 1;"`
 
-**Current Status:** Infrastructure complete and Boulder SA operational. Ready to deploy remaining Boulder services and configure mTLS.
+**Current Status:** Infrastructure complete and Boulder SA operational. Documentation organization completed (commit 031b9d3). Ready to deploy remaining Boulder services and configure mTLS.
+
+**Repository Status:**
+- **Current Branch**: augv2
+- **Recent Commit**: 031b9d3 - "docs: consolidate maintenance procedures and establish clearer documentation boundaries"
+- **Next Agent Tasks**: Continue with Boulder service deployment (CA, RA, VA, WFE2, Publisher) and mTLS configuration
