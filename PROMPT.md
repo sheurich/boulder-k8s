@@ -66,13 +66,24 @@ The goal for this phase is defined in `reference/SPECp1.md`. The primary objecti
 
 ## 📚 Essential Documentation
 
-- **`reference/SPECp1.md`**: **REQUIRED READING.** Defines the "definition of done" for the current phase.
-- **`architecture/overview.md`**: **REQUIRED READING.** Comprehensive architectural design, service dependencies, and Kubernetes deployment patterns.
-- **`architecture/implementation-plan.md`**: **REQUIRED READING.** Phased implementation approach, deployment order, and success criteria.
-- **`architecture/service-matrix.md`**: Detailed service specifications, configuration requirements, and resource definitions.
-- **`README.md`**: General project overview, setup, and manual testing instructions.
-- **`Makefile`**: Defines all high-level commands (`deploy`, `test`, `clean`).
-- **`AGENTS.md`**: Outlines development standards and commit guidelines.
+**Start here for complete context:**
+
+- **[`reference/SPECp1.md`](reference/SPECp1.md)**: **REQUIRED READING.** Authoritative Phase 1 specification and "definition of done."
+- **[`architecture/phase1.md`](architecture/phase1.md)**: **REQUIRED READING.** Consolidated architectural design, service dependencies, and Kubernetes deployment patterns.
+- **[`architecture/shared/service-matrix.md`](architecture/shared/service-matrix.md)**: **REQUIRED READING.** Detailed service specifications, configuration requirements, and resource definitions.
+- **[`architecture/shared/decisions.md`](architecture/shared/decisions.md)**: Key architectural decisions and rationale (OCSP exclusion, mTLS requirements, etc.).
+
+**Project management and operational guides:**
+
+- **[`TODO.md`](TODO.md)**: Current project status, completed work, and prioritized task list.
+- **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)**: Comprehensive problem resolution guide for common deployment issues.
+- **[`README.md`](README.md)**: Project overview, setup instructions, and manual testing procedures.
+- **[`AGENTS.md`](AGENTS.md)**: Development standards, commit guidelines, and agent responsibilities.
+
+**Technical references:**
+
+- **[`reference/BOULDER.md`](reference/BOULDER.md)**: Upstream Boulder technical reference and development environment guide.
+- **[`Makefile`](Makefile)**: High-level project commands (`deploy`, `test`, `clean`, `setup`).
 
 ---
 
