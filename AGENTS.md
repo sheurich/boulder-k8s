@@ -9,7 +9,6 @@ This document outlines standards and practices that all software development age
 - Keep `README.md` and usage instructions up-to-date.
 - Use declarative configuration files and group them into logical files.
 - Follow project structure and naming conventions.
-- **Update Brewfile**: Maintain the project's `Brewfile` when developer dependencies change, adding new tools or removing obsolete ones. Keep packages sorted alphabetically and ensure all development tools are available via `brew bundle`.
 
 ## Reference Material
 
@@ -35,14 +34,8 @@ This document outlines standards and practices that all software development age
 - Write clear, maintainable, and well-documented code
 - Ensure proper test coverage for all functionality
 - **MANDATORY: Lint all files upon creation or modification**
-  - Use `kubeconform --strict` for Kubernetes manifest validation (preferred)
-  - Use `kubectl --dry-run=client -o yaml` for Kubernetes manifests when cluster is available
-  - Use `yamllint` for general YAML validation
-  - Use `shellcheck` for shell script validation
-  - Use `markdownlint` for markdown documentation validation
-  - Use `hadolint` for Dockerfile validation
-  - Use `checkmake` for Makefile validation
-  - Use appropriate linters for each file type
+  - Use `make lint` to run all project linting checks
+  - The [`lint` target](Makefile) runs validation for all file types including Kubernetes manifests, YAML, shell scripts, Markdown, and Dockerfiles
   - Fix all linting errors before proceeding
 
 ### Configuration Management
@@ -83,20 +76,72 @@ This document outlines standards and practices that all software development age
 - Ensure documentation is easily navigable and searchable
 - Keep documentation up-to-date with code changes
 
-### Documentation Maintenance
+## Maintenance Procedures
 
-- **PROMPT.md Maintenance**: The `PROMPT.md` file must be updated at every checkpoint or handoff to ensure the next agent has a clear starting point.
-- **When to update PROMPT.md**:
-  - At the end of each work session.
-  - After completing major tasks or deliverables.
-  - Before any agent handoff.
-  - When the project status changes significantly (e.g., a new blocker is identified).
-- **What to update in PROMPT.md**:
-  - Current task status and progress.
-  - Repository status, including the current branch and recent commits.
-  - The immediate next tasks for the incoming agent.
-  - Any new blockers, issues, or architectural decisions.
-  - Changes to the environment or setup procedures.
+This section consolidates all maintenance responsibilities that agents must perform to keep the project healthy and well-organized.
+
+### File Maintenance
+
+#### Brewfile Management
+
+- **Update Brewfile**: Maintain the project's [`Brewfile`](Brewfile) when developer dependencies change
+- Add new tools or remove obsolete ones as project requirements evolve
+- Keep packages sorted alphabetically for easy maintenance
+- Ensure all development tools are available via `brew bundle`
+
+#### Lint Target Management
+
+- **Lint Target Maintenance**: Update the [`scripts/lint.sh`](scripts/lint.sh) script and [`Makefile`](Makefile) lint target when adding new document types or locations
+- Ensure the [`make lint`](Makefile) target covers all file types in the project
+- Test lint targets after modifications to ensure they work correctly
+
+#### Documentation Management
+
+- Keep [`README.md`](README.md) and usage instructions up-to-date with project changes
+- Maintain consistency between documentation files
+- Update cross-references when file locations or structures change
+
+### Process Maintenance
+
+#### PROMPT.md Management
+
+- **Update at checkpoints**: The [`PROMPT.md`](PROMPT.md) file must be updated at every checkpoint or handoff to ensure the next agent has a clear starting point
+- **When to update**:
+  - At the end of each work session
+  - After completing major tasks or deliverables
+  - Before any agent handoff
+  - When the project status changes significantly (e.g., a new blocker is identified)
+- **What to update**:
+  - Current task status and progress
+  - Repository status, including the current branch and recent commits
+  - The immediate next tasks for the incoming agent
+  - Any new blockers, issues, or architectural decisions
+  - Changes to the environment or setup procedures
+
+#### TODO.md Management
+
+- **Session Startup**: Check [`TODO.md`](TODO.md) at the start of each work session to understand current project state and priorities
+- **Status Updates**: Update task status when starting or completing work using appropriate status indicators
+- **Discovery Documentation**: Add newly discovered issues or requirements immediately as they are identified
+- **Completion Tracking**: Maintain running summary of completed work with completion dates for project history
+- **Regular Reviews**: Review and reprioritize tasks periodically based on changing requirements and blockers
+- **Next Steps Maintenance**: Keep next steps section updated with immediate actionable items
+
+### Quality Maintenance
+
+#### Code Standards
+
+- Follow established coding standards and best practices
+- Ensure proper test coverage for all deliverables
+- Run [`make lint`](Makefile:10) before proceeding with changes
+- Fix all linting errors before committing code
+
+#### Testing Standards
+
+- Maintain comprehensive test coverage for each deliverable
+- Validate that end-to-end ACME protocol workflow remains functional
+- Ensure service dependencies and startup ordering work correctly
+- Test realistic certificate issuance and management workflows
 
 ## Best Practices
 
@@ -108,15 +153,6 @@ This document outlines standards and practices that all software development age
 - Ensure deliverables meet specified acceptance criteria
 
 ### Task Management
-
-**TODO.md Maintenance Procedures:**
-
-- **Session Startup**: Check `TODO.md` at the start of each work session to understand current project state and priorities
-- **Status Updates**: Update task status when starting or completing work using appropriate status indicators
-- **Discovery Documentation**: Add newly discovered issues or requirements to TODO.md immediately as they are identified
-- **Completion Tracking**: Maintain running summary of completed work with completion dates for project history
-- **Regular Reviews**: Review and reprioritize tasks periodically based on changing requirements and blockers
-- **Next Steps Maintenance**: Keep next steps section updated with immediate actionable items
 
 **Status Indicators:**
 

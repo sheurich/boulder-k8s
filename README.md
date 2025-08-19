@@ -14,7 +14,7 @@ A complete Kubernetes deployment for Boulder ACME Certificate Authority, transfo
 - [ACME API Usage](#acme-api-usage)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
+- [Development](#development)
 - [License](#license)
 
 ## Overview
@@ -113,22 +113,23 @@ When encountering deployment or operational issues, the [Troubleshooting Guide](
 The following tools are required for deployment and development:
 
 #### Container and Kubernetes Tools
+
 - **Docker Engine** - Container runtime for building and running services
 - **kubectl** - Kubernetes command-line tool (v1.25+)
 - **kind** - Kubernetes in Docker for local clusters (v0.17+)
 
 #### Development Tools
+
 - **Go** (1.21+) - For building Boulder and running integration tests
 - **Python** (3.8+) - For Boulder's integration test framework
 - **Git** - Version control with submodule support
 
 #### Validation Tools
-- **kubeconform** - Kubernetes manifest validation (preferred)
-- **yamllint** - YAML file validation
-- **shellcheck** - Shell script validation
-- **hadolint** - Dockerfile validation
-- **markdownlint** - Documentation validation
+
+- **make** - Build automation and linting via [`make lint`](Makefile)
 - **jq** - JSON parsing for debugging and configuration management
+
+For complete validation tool requirements and maintenance procedures, see [`AGENTS.md`](AGENTS.md).
 
 ### System Requirements
 
@@ -145,10 +146,11 @@ Install all development dependencies:
 # Using Homebrew (macOS/Linux)
 brew bundle
 
-# Or install individual tools
-brew install docker kubectl kind go python3
-brew install kubeconform yamllint shellcheck markdownlint-cli jq hadolint
+# Or install essential tools
+brew install docker kubectl kind go python3 make jq
 ```
+
+**💡 Development Setup**: For complete development environment setup, coding standards, and maintenance procedures, see [`AGENTS.md`](AGENTS.md).
 
 ## Deployment
 
@@ -163,7 +165,7 @@ cd boulder-k8s
 git submodule update --init --recursive
 
 # Verify prerequisites
-make lint
+make lint   # See AGENTS.md for complete linting requirements
 ```
 
 ### 2. Create Kubernetes Cluster
@@ -265,6 +267,7 @@ This endpoint provides the URLs for all other ACME operations, such as creating 
 #### Using Certbot
 
 **Account Registration:**
+
 ```bash
 certbot register \
   --server http://localhost:4001/acme/directory \
@@ -274,6 +277,7 @@ certbot register \
 ```
 
 **Certificate Issuance (HTTP-01):**
+
 ```bash
 certbot certonly \
   --server http://localhost:4001/acme/directory \
@@ -282,6 +286,7 @@ certbot certonly \
 ```
 
 **Certificate Issuance (DNS-01):**
+
 ```bash
 certbot certonly \
   --server http://localhost:4001/acme/directory \
@@ -293,6 +298,7 @@ certbot certonly \
 #### Using acme.sh
 
 **Certificate Issuance (HTTP-01):**
+
 ```bash
 acme.sh --issue \
   --server http://localhost:4001/acme/directory \
@@ -301,6 +307,7 @@ acme.sh --issue \
 ```
 
 **Wildcard Certificate (DNS-01):**
+
 ```bash
 acme.sh --issue \
   --server http://localhost:4001/acme/directory \
