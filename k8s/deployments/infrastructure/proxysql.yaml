@@ -49,6 +49,7 @@ spec:
       containers:
         - name: proxysql
           image: proxysql/proxysql:2.4.4
+          command: ["proxysql", "-f", "-c", "/etc/proxysql/proxysql.cnf"]
           ports:
             - containerPort: 6033
               name: mysql
@@ -127,7 +128,7 @@ data:
     # Admin interface configuration
     admin_variables=
     {
-        admin_credentials="admin:${PROXYSQL_ADMIN_PASSWORD}"
+        admin_credentials="admin:boulder-proxysql-admin"
         mysql_ifaces="0.0.0.0:6032"
         refresh_interval=2000
         web_enabled=false
@@ -148,7 +149,7 @@ data:
         server_version="8.0.25"
         connect_timeout_server=3000
         monitor_username="root"
-        monitor_password="${MYSQL_ROOT_PASSWORD}"
+        monitor_password="boulder-root-password"
         monitor_history=600000
         monitor_connect_interval=60000
         monitor_ping_interval=10000
@@ -179,21 +180,21 @@ data:
     (
         {
             username="boulder"
-            password="${MYSQL_PASSWORD}"
+            password="boulder-db-password"
             default_hostgroup=0
             max_connections=200
             active=1
         },
         {
             username="boulder_ro"
-            password="${MYSQL_PASSWORD}"
+            password="boulder-db-password"
             default_hostgroup=0
             max_connections=100
             active=1
         },
         {
             username="root"
-            password="${MYSQL_ROOT_PASSWORD}"
+            password="boulder-root-password"
             default_hostgroup=0
             max_connections=10
             active=1
@@ -219,15 +220,7 @@ data:
         }
     )
 
-    # MySQL Host Groups
-    mysql_replication_hostgroups =
-    (
-        {
-            writer_hostgroup=0
-            reader_hostgroup=0
-            comment="Boulder database cluster"
-        }
-    )
+    # MySQL Host Groups - removed due to constraint error with same writer/reader hostgroup
 
   init-proxysql.sql: |
     -- ProxySQL initialization script
