@@ -38,6 +38,12 @@ This document outlines standards and practices that all software development age
   - The [`lint` target](Makefile) runs validation for all file types including Kubernetes manifests, YAML, shell scripts, Markdown, and Dockerfiles
   - Fix all linting errors before proceeding
 
+- **CRITICAL: Verify deployment status properly**
+  - **ALWAYS use `make status`** to check actual deployment health - see [Make Targets](README.md#make-targets)
+  - Pod status "Running" ≠ Service actually working - verify service functionality
+  - Check service logs and health endpoints to confirm services are truly operational
+  - Example: A database pod might be "Running" but have authentication failures preventing actual use
+
 ### Configuration Management
 
 - Use declarative configuration approaches where possible

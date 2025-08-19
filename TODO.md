@@ -44,17 +44,33 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
 
 ## 📋 Pending Tasks by Phase
 
-### Phase 1: Initial Kubernetes Deployment *(Next)*
+### Phase 1: Initial Kubernetes Deployment *(In Progress)*
 
-- 🔄 **Deploy Boulder Services**
-  - Deploy core services: `sa`, `ca`, `ra`, `va`, `wfe2`.
+- ✅ **Infrastructure Foundation** *(Completed 2025-08-19)*
+  - ✅ Kind cluster operational
+  - ✅ cert-manager installed and issuing all certificates successfully
+  - ✅ Boulder SA deployed and serving (logs show "SERVING" state)
+  - ✅ Infrastructure pods running: MariaDB, Redis, ProxySQL
+
+- 🔄 **Fix Infrastructure Service Configuration** *(Critical - In Progress)*
+  - **Database Issues**: MariaDB access denied - authentication/configuration problems
+  - **Cache Issues**: Redis requiring authentication - configuration missing
+  - **Proxy Issues**: ProxySQL connectivity untested
+  - **Priority**: Critical (blocking all Boulder services)
+  - **Status**: Only pods running, services not functionally working
+
+- 🔴 **Fix Boulder Service Deployment Issues** *(Critical)*
+  - **RA Service**: Configuration error "unknown field clientCertificate"
+  - **Publisher Service**: Syslog connection failures (containerization issue)
+  - **SCT Provider**: Image pull policy issues preventing startup
+  - **CA/VA/WFE2**: Stuck in init containers waiting for SCT Provider
   - **Priority**: Critical
-  - **Dependencies**: Database operational.
-
-- 📋 **Deploy Supporting Services**
-  - Deploy Redis and ProxySQL.
+  - **Current State**: Most services in CrashLoopBackOff or Init states
+  
+- 📋 **Complete Boulder Service Deployment**
+  - Deploy and verify all core services: `ca`, `ra`, `va`, `wfe2`, `publisher`, `sct-provider`
   - **Priority**: High
-  - **Dependencies**: Core services operational.
+  - **Dependencies**: Infrastructure services functional, configuration fixes applied
 
 - 📋 **Medium Priority Improvements** *(Added 2025-08-19)*
   - **Pre-deployment Validation**: Create validation script that runs before deployment to check required tools, cluster access, and Docker images.
@@ -115,13 +131,22 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
 
 ## 🎯 Next Steps (Immediate Actions)
 
-1.  **Deploy Core Boulder Services**
-    - Apply the Kubernetes manifests for `sa`, `ca`, `ra`, `va`, and `wfe2`.
-    - Verify that all services start correctly and can connect to the database.
+**CRITICAL STATUS CHECK**: Use `make status` to verify actual service health, not just pod status.
 
-2.  **Deploy Redis and ProxySQL**
-    - Apply the manifests for the remaining supporting infrastructure.
-    - Ensure they are correctly configured and integrated with the Boulder services.
+1. **Fix Infrastructure Service Authentication** *(Critical)*
+   - Resolve MariaDB authentication issues preventing database access
+   - Configure Redis authentication to allow Boulder service connections
+   - Test ProxySQL connectivity and database proxy functionality
+
+2. **Fix Boulder Service Configuration Errors** *(Critical)*
+   - Fix RA service "unknown field clientCertificate" configuration error
+   - Resolve Publisher syslog connection issues for containerized environment
+   - Fix SCT Provider image pull policy to use local boulder-k8s image
+
+3. **Complete Service Deployment Chain** *(High)*
+   - Once SCT Provider is running, CA/VA/WFE2 init containers should proceed
+   - Verify all services reach "SERVING" state (check logs, not just pod status)
+   - Test end-to-end service connectivity
 
 ---
 

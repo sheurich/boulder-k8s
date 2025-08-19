@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: sct-provider
+  name: boulder-ra-sct-provider
   namespace: boulder
   labels:
     app: boulder-sct-provider

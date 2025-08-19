@@ -45,6 +45,8 @@ make health-check && make test
 
 ## Essential References
 
+- **Project Overview**: [`README.md`](README.md) - Project introduction, setup, and usage instructions
+- **Boulder Reference**: [`reference/BOULDER.md`](reference/BOULDER.md) - Comprehensive technical reference for the upstream Boulder project
 - **Task Status**: [`TODO.md`](TODO.md) - Current priorities and task tracking
 - **Project Standards**: [`AGENTS.md`](AGENTS.md) - Agent behavior and compliance requirements  
 - **Troubleshooting**: [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Comprehensive deployment issue resolution

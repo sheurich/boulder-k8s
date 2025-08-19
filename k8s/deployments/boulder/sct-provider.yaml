@@ -46,6 +46,7 @@ spec:
       containers:
         - name: boulder-sct-provider
           image: boulder-k8s:latest
+          imagePullPolicy: Never
           command: ["boulder", "boulder-sct-provider"]
           args: ["--config", "/etc/boulder/sct-provider.json"]
           ports:

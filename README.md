@@ -152,6 +152,29 @@ brew install docker kubectl kind go python3 make jq
 
 **💡 Development Setup**: For complete development environment setup, coding standards, and maintenance procedures, see [`AGENTS.md`](AGENTS.md).
 
+## Make Targets
+
+The project provides several make targets for automation and deployment management:
+
+### Development & Validation
+- **`make lint`** - Run comprehensive linting on all file types (YAML, shell, Markdown, Dockerfile)
+- **`make clean`** - Remove Kind cluster and clean up temporary files
+
+### Deployment & Infrastructure
+- **`make setup`** - Create Kind cluster for local development
+- **`make docker-build`** - Build Boulder Docker image from upstream source
+- **`make setup-tls`** - Deploy cert-manager and generate TLS certificates
+- **`make deploy`** - Complete Boulder deployment (runs setup + docker-build + setup-tls + service deployment)
+- **`make bootstrap`** - Full deployment with health checks (deploy + health-check)
+
+### Testing & Monitoring
+- **`make status`** - **CRITICAL**: Show comprehensive deployment status (cluster, pods, services)
+- **`make health-check`** - Run Boulder service health checks
+- **`make test-integration`** - Run Boulder ACME integration tests  
+- **`make test`** - Run all tests (health-check + test-integration)
+
+**⚠️ Important**: Always use `make status` to verify actual service health, not just pod status. A "Running" pod doesn't guarantee the service is functional.
+
 ## Deployment
 
 ### 1. Prepare Environment
