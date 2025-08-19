@@ -10,12 +10,15 @@ Deploy remaining Boulder services (CA, RA, VA, WFE2, Publisher) and configure mT
 
 ---
 
-## Session Requirements  
+## Session Requirements - START WORK IMMEDIATELY
 
-1. **Check TODO.md** for current 🔄 and 🔴 priority tasks
-2. **Follow AGENTS.md** standards (linting, commits, autonomous behavior)
-3. **Use existing tools**: `make deploy`, `make health-check`, `make test`
-4. **Reference TROUBLESHOOTING.md** for any deployment issues
+**CRITICAL: BEGIN WORK AUTONOMOUSLY - DO NOT WAIT FOR INSTRUCTIONS**
+
+1. **FIRST ACTION**: Check `TODO.md` and start working on current 🔄 and 🔴 priority tasks
+2. **MANDATORY**: Follow `AGENTS.md` standards (linting, commits, autonomous behavior)
+3. **EXECUTE**: Use existing tools (`make deploy`, `make health-check`, `make test`) to progress tasks
+4. **REFERENCE**: `TROUBLESHOOTING.md` for any deployment issues
+5. **UPDATE**: Mark tasks in progress and commit at logical checkpoints per `AGENTS.md`
 
 ---
 
