@@ -80,3 +80,16 @@ The goal for this phase is defined in `reference/SPECp1.md`. The primary objecti
     ```sh
     make test
     ```
+
+---
+
+## ⚠️ Contingency Plan
+
+- **If `make deploy` fails:**
+  1. Run `kubectl get pods -n boulder -o wide` to check pod statuses.
+  2. Examine the logs of any pods that are in a `CrashLoopBackOff` or `Error` state using `kubectl logs -n boulder <pod-name>`.
+  3. Consult `reference/TROUBLESHOOTING.md` for common issues.
+- **If `make test` fails:**
+  1. Review the test logs to identify the failing test case.
+  2. Examine the logs of the relevant Boulder service(s) for errors that occurred during the test run.
+  3. Consult `reference/TROUBLESHOOTING.md` for common test failures.
