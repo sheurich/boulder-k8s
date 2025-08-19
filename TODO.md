@@ -57,6 +57,17 @@ This TODO list serves as the persistent task tracking system for the Boulder Kub
   - **Configuration Templates**: Create environment-specific configuration templates (development, staging, production) with overlays.
   - **Better Logging Configuration**: Standardize logging configuration across all Boulder services with consistent format and levels.
 
+- 📋 **Documentation Consistency Tasks** *(Added 2025-08-19)*
+  - **Port Assignment Verification**: Audit and resolve potentially conflicting port assignments across architecture documents. Ensure single source of truth for all service ports.
+    - **Priority**: Medium
+    - **Scope**: Review service-matrix.md, overview.md, and SPECp1.md for port conflicts
+    - **Example**: Nonce Service shows 9501, 9601, 9502, 9602 in overview.md vs 9501/9502 in service-matrix.md
+  - **Replica Count Standardization**: Establish consistent replica count recommendations across all documentation.
+    - **Priority**: Medium  
+    - **Scope**: Review SPECp1.md, overview.md, service-matrix.md for replica inconsistencies
+    - **Example**: Nonce Service shows 2 vs 4 vs 2-4 replicas across different docs
+    - **Outcome**: Single authoritative source for all replica counts
+
 - 📋 **PKI & Certificate Management**
   - Implement file-based PKCS#11 configuration for the test environment.
   - Automate generation of WebPKI and internal mTLS certificate hierarchies.

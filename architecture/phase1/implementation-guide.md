@@ -6,127 +6,54 @@ This document outlines the phased implementation approach for deploying Boulder 
 
 ## Project Directory Structure
 
-Following the component-based structure specified in `reference/SPECp1.md`:
+Following the authoritative structure specified in `reference/SPECp1.md`:
 
 ```
 boulder-k8s/
 ├── README.md                           # Project documentation
-├── deploy.sh                          # One-command deployment script
-├── test.sh                            # Integration test runner
-├── cleanup.sh                         # Cleanup script
+├── Makefile                           # Build and deployment targets
 ├── architecture/                      # Architectural documentation
-│   ├── overview.md
-│   ├── service-matrix.md
-│   └── implementation-plan.md
+│   ├── phase1/
+│   │   ├── overview.md                # Phase 1 architecture overview
+│   │   ├── implementation-guide.md    # This document
+│   │   └── hsm-implementation-plan.md # HSM implementation for Phase 1
+│   ├── phase2/
+│   │   └── hsm-security-architecture.md # Production HSM architecture
+│   └── shared/
+│       └── service-matrix.md          # Service specifications
 ├── scripts/                           # Helper scripts
 │   ├── generate-certs.sh             # PKI certificate generation
 │   ├── wait-for-dependencies.sh      # Dependency checking
 │   └── verify-deployment.sh          # Deployment validation
-├── configs/                           # Boulder service configurations
-│   ├── sa.json
-│   ├── ca.json
-│   ├── ra.json
-│   ├── va.json
-│   ├── wfe2.json
-│   ├── publisher.json
-│   ├── nonce-service.json
-│   ├── remoteva-a.json
-│   ├── remoteva-b.json
-│   ├── remoteva-c.json
-│   ├── sfe.json
-│   ├── crl-storer.json
-│   ├── bad-key-revoker.json
-│   ├── log-validator.json
-│   ├── email-exporter.json
-│   └── ra-sct-provider.json
-├── secrets/                           # Secret templates
-│   ├── database-credentials.yaml
-│   ├── redis-credentials.yaml
-│   ├── internal-pki.yaml
-│   └── webpki.yaml
 └── manifests/                         # Kubernetes manifests
     ├── namespace.yaml
     ├── infrastructure/
+    │   ├── cert-manager/              # Certificate manager setup
     │   ├── redis/
-    │   │   ├── statefulset.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
     │   ├── mariadb/
-    │   │   ├── statefulset.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
     │   └── proxysql/
-    │       ├── deployment.yaml
-    │       ├── service.yaml
-    │       └── configmap.yaml
     ├── boulder/
     │   ├── sa/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
     │   ├── ca/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
     │   ├── ra/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
     │   ├── va/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
     │   ├── wfe2/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   ├── configmap.yaml
-    │   │   └── ingress.yaml
     │   ├── publisher/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
     │   ├── nonce-service/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
-    │   ├── remoteva/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
-    │   ├── ra-sct-provider/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
-    │   └── sfe/
-    │       ├── deployment.yaml
-    │       ├── service.yaml
-    │       └── configmap.yaml
-    ├── support/
-    │   ├── crl-storer/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
-    │   ├── bad-key-revoker/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
-    │   ├── log-validator/
-    │   │   ├── deployment.yaml
-    │   │   ├── service.yaml
-    │   │   └── configmap.yaml
-    │   └── email-exporter/
-    │       ├── deployment.yaml
-    │       ├── service.yaml
-    │       └── configmap.yaml
+    │   └── remoteva/
+    ├── security/
+    │   ├── pki/                       # Internal PKI certificates
+    │   └── network-policies/          # Phase 2 network policies
+    ├── data/
+    │   └── database-init-job.yaml     # Database initialization
     ├── shared/
     │   ├── secrets.yaml               # Combined secrets manifest
-    │   ├── rbac.yaml                  # RBAC configuration
-    │   └── network-policies.yaml      # Network security policies
+    │   └── rbac.yaml                  # RBAC configuration
     └── tests/
-        ├── integration-job.yaml        # Integration test job
-        ├── cert-generation-job.yaml   # Certificate setup job
-        └── test-config.yaml           # Test configuration
+        └── integration-test-job.yaml   # Integration test job
 ```
+
+**Note**: This structure follows SPECp1.md as the authoritative source and eliminates redundant top-level directories that were causing confusion.
 
 ## Implementation Phases
 

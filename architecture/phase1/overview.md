@@ -1,8 +1,15 @@
-# Boulder Kubernetes Architecture Overview
+# Boulder Kubernetes Architecture Overview - Phase 1
 
 ## Executive Summary
 
-This document provides a comprehensive architectural design for deploying Let's Encrypt's Boulder ACME CA to Kubernetes. Boulder's microservice architecture, consisting of 15+ specialized services, will be containerized and orchestrated using Kubernetes native patterns while maintaining full ACME protocol compliance and passing all integration tests.
+This document provides the Phase 1 architectural design for deploying Boulder ACME CA to Kubernetes. This Phase 1 implementation focuses on creating a development and integration testing environment that replicates Boulder's `docker-compose` functionality while building toward Phase 2 production deployment.
+
+**Phase 1 Goals**: 
+- Functional equivalence to Boulder's docker-compose development environment
+- Pass complete integration test suite (`test/integration-test.py --chisel`)
+- Establish foundation for Phase 2 production hardening
+
+**Authority**: `reference/SPECp1.md` is the authoritative specification for Phase 1 requirements. This document and all other architecture documents are supplementary working documents that support the specification defined in SPECp1.md.
 
 ## Important: OCSP Functionality Exclusion
 

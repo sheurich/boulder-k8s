@@ -980,30 +980,15 @@ Key metrics to monitor:
 
 ### Security Hardening
 
-1. **Run as non-root user**:
-```yaml
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 1000
-```
+**Note**: Advanced security hardening features are planned for Phase 2. Phase 1 focuses on basic security practices:
 
-2. **Read-only root filesystem**:
-```yaml
-securityContext:
-  readOnlyRootFilesystem: true
-```
+1. **Resource limits**: Always set CPU and memory limits
+2. **Basic security contexts**: Non-root execution where possible
+3. **Secret management**: Sensitive data in Kubernetes Secrets
 
-3. **Drop capabilities**:
-```yaml
-securityContext:
-  capabilities:
-    drop:
-    - ALL
-```
-
-4. **Resource limits**: Always set CPU and memory limits
-
-5. **Network policies**: Restrict traffic to declared dependencies only
-
-6. **Pod security policies**: Enforce security standards cluster-wide
+Advanced security features (Phase 2):
+- Pod Security Standards enforcement
+- Network policies for traffic restriction  
+- Read-only root filesystems
+- Capability dropping
+- Runtime security scanning
