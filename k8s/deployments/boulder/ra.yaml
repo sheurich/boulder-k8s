@@ -95,6 +95,9 @@ spec:
             - name: internal-certs
               mountPath: /etc/boulder/certs
               readOnly: true
+            - name: webpki-certs
+              mountPath: /etc/boulder/webpki
+              readOnly: true
             - name: redis-password
               mountPath: /etc/boulder/secrets
               readOnly: true
@@ -139,6 +142,9 @@ spec:
         - name: internal-certs
           secret:
             secretName: internal-pki
+        - name: webpki-certs
+          secret:
+            secretName: webpki-certs
         - name: redis-password
           secret:
             secretName: db-credentials
@@ -191,6 +197,12 @@ data:
     {
       "ra": {
         "debugAddr": ":8002",
+        "hostnamePolicyFile": "/etc/boulder/ident-policy.yaml",
+        "goodkey": {},
+        "issuerCerts": [
+          "/etc/boulder/webpki/int-ecdsa-a.cert.pem",
+          "/etc/boulder/webpki/int-ecdsa-b.cert.pem"
+        ],
         "grpc": {
           "address": ":9394",
           "maxConnectionAge": "30s",
@@ -228,6 +240,13 @@ data:
           "noWaitForReady": true
         },
 
+        "ocspService": {
+          "serverAddress": "boulder-ca:9393",
+          "hostOverride": "ca.boulder",
+          "timeout": "15s",
+          "noWaitForReady": true
+        },
+
         "saService": {
           "serverAddress": "boulder-sa:9395",
           "hostOverride": "sa.boulder",
@@ -242,6 +261,13 @@ data:
           "noWaitForReady": true
         },
 
+        "akamaiPurgerService": {
+          "serverAddress": "boulder-publisher:9391",
+          "hostOverride": "publisher.boulder",
+          "timeout": "15s",
+          "noWaitForReady": true
+        },
+
         "tls": {
           "caCertFile": "/etc/boulder/tls/ca/tls.crt",
           "certFile": "/etc/boulder/tls/server/tls.crt",
@@ -250,6 +276,7 @@ data:
 
         "limiter": {
           "redis": {
+            "username": "boulder-ra",
             "lookups": [
               {
                 "Service": "redis-client",
@@ -261,7 +288,12 @@ data:
             "readTimeout": "250ms",
             "writeTimeout": "250ms",
             "poolSize": 100,
-            "routeRandomly": true
+            "routeRandomly": true,
+            "tls": {
+              "caCertFile": "/etc/boulder/tls/ca/tls.crt",
+              "certFile": "/etc/boulder/tls/server/tls.crt",
+              "keyFile": "/etc/boulder/tls/server/tls.key"
+            }
           },
           "defaults": "/etc/boulder/ratelimit-defaults.yml",
           "overrides": "/etc/boulder/ratelimit-overrides.yml"
@@ -307,7 +339,7 @@ data:
 
       "syslog": {
         "stdoutlevel": 6,
-        "sysloglevel": 6
+        "sysloglevel": -1
       }
     }
   ratelimit-defaults.yml: |
@@ -354,3 +386,26 @@ data:
         ids:
           - id: example.com
             comment: Test domain
+  ident-policy.yaml: |
+    # Boulder identifier policy for Kubernetes deployment
+    # This is a test configuration for development use
+    
+    ExactBlockedNames:
+      - "highrisk.example.com"
+    
+    HighRiskBlockedNames:
+      - "ip6.arpa"
+      - "in-addr.arpa" 
+      - "example"
+      - "invalid"
+      - "local"
+      - "localhost"
+      - "test"
+    
+    AdminBlockedNames:
+      - "blocked.example.com"
+    
+    AdminBlockedPrefixes:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+      - "192.168.0.0/16"
