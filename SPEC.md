@@ -32,10 +32,10 @@ boulder-k8s/
 ├── boulder/            # Git submodule of the official Boulder repo
 ├── k8s/                # All Kubernetes manifests and configurations
 │   ├── helm/           # Helm chart configurations/values
-│   ├── manifests/      # Core YAML manifests (e.g., MariaDB custom resource)
+│   ├── manifests/      # Core YAML manifests (e.g., MariaDB custom resource, cert-manager resources)
 │   └── jobs/           # YAML for Kubernetes Jobs (e.g., db-priming, test-client)
 ├── justfile            # Automation recipes for setup, testing, and teardown
-├── PROMPT.md           # The prompt for the development agent
+├── AGENTS.md           # Guide for AI agents working on this project
 ├── README.md           # Project overview and user guide
 └── SPEC.md             # This specification document
 ```
@@ -66,23 +66,36 @@ A `justfile` will be the main entry point for all operations. It must contain th
 - `kind_delete`: Deletes the `kind` cluster.
 - `deploy_cert_manager`: Deploys cert-manager from its official Helm chart. Must wait for the deployment to be ready before exiting.
 - `deploy_mariadb_operator`: Deploys the MariaDB Operator from its official Helm chart. Must wait for the deployment to be ready.
-- `deploy_mariadb_instance`: Deploys an instance of MariaDB using the operator's Custom Resource. This will be a simple, single-replica instance for now.
-- `prime_db`: Creates and runs a Kubernetes Job that executes the Boulder SQL migration scripts against the MariaDB instance.
-- `test_db`: Creates and runs a Kubernetes Job that acts as a test client to verify the database setup.
+- `deploy_mariadb_instance`: Deploys an instance of MariaDB using the operator's Custom Resource. This instance will be configured to use mTLS for all connections.
+- `prime_db`: Creates and runs a Kubernetes Job that executes the Boulder SQL migration scripts against the MariaDB instance. This job will use a client certificate to connect to the database.
+- `test_db`: Creates and runs a Kubernetes Job that acts as a test client to verify the database setup. This job will also use a client certificate to connect to the database.
 
-### 4.3. Database Priming
+## 5. Database Security and Authentication
 
-The database must be primed with Boulder's schema, database, and users.
+The MariaDB instance will be secured using mutual TLS (mTLS). All connections to the database will be encrypted and will require a valid client certificate.
+
+### 5.1. Certificate Management
+
+- `cert-manager` will be used to create a self-signed Certificate Authority (CA).
+- The CA will be used to issue a server certificate for the MariaDB instance and a client certificate for the database priming and testing jobs.
+
+### 5.2. Authentication and Authorization
+
+- The MariaDB instance will be configured to require a valid client certificate for all connections.
+- The database will be configured to grant access to a user named `sa` only if the connection is made with a client certificate that has a specific subject (e.g., `CN=boulder-client`).
+- There will be no password-based authentication.
+
+## 6. Database Priming and Verification
+
+### 6.1. Database Priming
 
 - A Kubernetes Job named `db-priming-job` will be created from a YAML file in `k8s/jobs/`.
-- This Job's pod will have an `init` container responsible for running the SQL migration scripts.
-- The `boulder/sa/db/migrations` directory from the submodule must be mounted into the `init` container as a volume.
-- The `init` container will use a standard MariaDB client image.
+- This Job's pod will mount the client certificate and the Boulder SQL migration scripts.
+- The pod will use a standard MariaDB client image to connect to the database using the client certificate and execute the migration scripts.
 
-## 5. Verification
+### 6.2. Verification
 
-The `test_db` Kubernetes Job will be responsible for verifying that the database is correctly primed and ready for use.
-
-- The Job will use a MariaDB client container.
-- The client will connect to the MariaDB instance.
-- **Success Criteria**: The test client must successfully execute the command `SHOW TABLES;` and receive a non-empty result, proving that the database schema has been created.
+- A Kubernetes Job named `test-db-job` will be created from a YAML file in `k8s/jobs/`.
+- This Job's pod will mount the client certificate.
+- The pod will use a standard MariaDB client image to connect to the database using the client certificate.
+- **Success Criteria**: The test client must successfully execute the command `SHOW DATABASES;` and receive a result that includes the `boulder_sa_integration` database.
