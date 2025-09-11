@@ -1,0 +1,4 @@
+[submodule "boulder"]
+	path = boulder
+	url = https://github.com/letsencrypt/boulder
+	branch = main
