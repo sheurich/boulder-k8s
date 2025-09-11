@@ -8,10 +8,28 @@ The primary goal of this phase is to establish a foundational data layer. The en
 
 Before you begin, ensure you have the following tools installed on your local machine:
 
-*   [just](https://github.com/casey/just)
-*   [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
-*   [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-*   [helm](https://helm.sh/docs/intro/install/)
+*   [just](https://github.com/casey/just) - Task runner and automation
+*   [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) - Local Kubernetes clusters
+*   [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) - Kubernetes CLI
+*   [helm](https://helm.sh/docs/intro/install/) - Kubernetes package manager
+*   [git](https://git-scm.com/) - Version control (for submodule management)
+*   [docker](https://docs.docker.com/get-docker/) - Container runtime (required by kind)
+
+### Quick Installation (macOS)
+
+For macOS users, all prerequisites can be installed using Homebrew:
+
+```sh
+# Install all tools using the provided Brewfile
+brew bundle
+
+# Verify installations
+just --version
+kind version
+kubectl version --client
+helm version
+docker version
+```
 
 ## Getting Started
 
