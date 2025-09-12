@@ -1,0 +1,33 @@
+# MariaDB Operator Helm values for Boulder K8s
+# Minimal configuration for local development
+
+# Resource limits for local development
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 256Mi
+
+# Webhook configuration
+webhook:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 32Mi
+    limits:
+      cpu: 50m
+      memory: 128Mi
+
+# Metrics (optional for debugging)
+metrics:
+  enabled: false
+
+# Image configuration
+image:
+  pullPolicy: IfNotPresent
+
+# Service monitor (disabled for local dev)
+serviceMonitor:
+  enabled: false

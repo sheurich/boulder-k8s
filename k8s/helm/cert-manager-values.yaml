@@ -1,0 +1,35 @@
+# cert-manager Helm values for Boulder K8s
+# Minimal configuration for local development
+
+# Enable prometheus metrics (optional for debugging)
+prometheus:
+  enabled: false
+
+# Resource limits for local development
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+# Webhook configuration
+webhook:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi
+
+# CA Injector configuration  
+cainjector:
+  resources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi

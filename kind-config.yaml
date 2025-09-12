@@ -1,0 +1,11 @@
+# Kind cluster configuration for Boulder K8s
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: boulder-k8s
+nodes:
+- role: control-plane
+  extraMounts:
+  - hostPath: ./boulder
+    containerPath: /boulder-source
+    readOnly: true
+    selinuxRelabel: false

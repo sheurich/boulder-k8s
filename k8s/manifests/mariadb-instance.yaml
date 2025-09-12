@@ -1,0 +1,58 @@
+# MariaDB instance with mTLS configuration
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: boulder-mariadb
+  namespace: default
+spec:
+  # Database configuration
+  rootPasswordSecretKeyRef:
+    name: mariadb-root-password
+    key: password
+    generate: true
+  
+  # Image and storage
+  image: mariadb:10.6
+  storage:
+    size: 1Gi
+  
+  # Resource limits for local development
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  # mTLS Configuration
+  tls:
+    enabled: true
+    required: true
+    serverCASecretRef:
+      name: boulder-ca-secret
+    serverCertSecretRef:
+      name: mariadb-server-tls
+    clientCASecretRef:
+      name: boulder-ca-secret
+  
+  # Service configuration  
+  service:
+    type: ClusterIP
+    
+  # Database configuration for Boulder
+  database: boulder_sa_integration
+  username: sa
+  
+  # MariaDB configuration
+  myCnf: |
+    [mariadb]
+    bind-address=0.0.0.0
+    default_storage_engine=InnoDB
+    innodb_buffer_pool_size=128M
+    innodb_log_file_size=32M
+    innodb_flush_log_at_trx_commit=1
+    innodb_file_per_table=1
+    
+    # SSL/TLS Configuration - paths will be set by operator
+    require_secure_transport=ON

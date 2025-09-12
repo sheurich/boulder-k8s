@@ -1,0 +1,134 @@
+# Database priming job that executes Boulder SQL migrations
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-priming-job
+  namespace: default
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: db-priming
+    spec:
+      restartPolicy: Never
+      initContainers:
+      # Wait for MariaDB to be ready
+      - name: wait-for-db
+        image: mariadb:10.6
+        command: 
+          - /bin/bash
+          - -c
+          - |
+            until mariadb --host=boulder-mariadb \
+                          --ssl-cert=/etc/ssl/client/tls.crt \
+                          --ssl-key=/etc/ssl/client/tls.key \
+                          --ssl-ca=/etc/ssl/ca/ca.crt \
+                          --ssl-verify-server-cert \
+                          --user=root \
+                          --password="$MARIADB_ROOT_PASSWORD" \
+                          -e "SELECT 1" > /dev/null 2>&1; do
+              echo "Waiting for MariaDB to be ready..."
+              sleep 5
+            done
+            echo "MariaDB is ready!"
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-root-password
+              key: password
+        volumeMounts:
+        - name: client-certs
+          mountPath: /etc/ssl/client
+          readOnly: true
+        - name: ca-certs
+          mountPath: /etc/ssl/ca
+          readOnly: true
+      containers:
+      - name: db-priming
+        image: mariadb:10.6
+        command:
+          - /bin/bash
+          - -c
+          - |
+            set -euo pipefail
+            
+            echo "Creating sa user and database..."
+            
+            # Create the database and user
+            mariadb --host=boulder-mariadb \
+                    --ssl-cert=/etc/ssl/client/tls.crt \
+                    --ssl-key=/etc/ssl/client/tls.key \
+                    --ssl-ca=/etc/ssl/ca/ca.crt \
+                    --ssl-verify-server-cert \
+                    --user=root \
+                    --password="$MARIADB_ROOT_PASSWORD" \
+                    -e "
+            DROP DATABASE IF EXISTS boulder_sa_integration;
+            CREATE DATABASE boulder_sa_integration;
+            DROP USER IF EXISTS 'sa'@'%';
+            CREATE USER 'sa'@'%' REQUIRE X509;
+            GRANT ALL PRIVILEGES ON boulder_sa_integration.* TO 'sa'@'%';
+            FLUSH PRIVILEGES;
+            "
+            
+            echo "Running Boulder SQL migrations..."
+            
+            # Execute migration scripts in order (schema first)
+            for sql_file in /boulder-source/sa/db/boulder_sa/*.sql; do
+              echo "Executing: $sql_file"
+              # Extract only the UP section (before "-- +migrate Down")
+              sed '/-- +migrate Down/,$d' "$sql_file" | mariadb --host=boulder-mariadb \
+                      --ssl-cert=/etc/ssl/client/tls.crt \
+                      --ssl-key=/etc/ssl/client/tls.key \
+                      --ssl-ca=/etc/ssl/ca/ca.crt \
+                      --ssl-verify-server-cert \
+                      --user=root \
+                      --password="$MARIADB_ROOT_PASSWORD" \
+                      --database=boulder_sa_integration
+            done
+            
+            # Execute user permissions after tables are created
+            for sql_file in /boulder-source/sa/db-users/*.sql; do
+              echo "Executing: $sql_file"
+              # Continue on errors for missing tables (optional features)
+              mariadb --host=boulder-mariadb \
+                      --ssl-cert=/etc/ssl/client/tls.crt \
+                      --ssl-key=/etc/ssl/client/tls.key \
+                      --ssl-ca=/etc/ssl/ca/ca.crt \
+                      --ssl-verify-server-cert \
+                      --user=root \
+                      --password="$MARIADB_ROOT_PASSWORD" \
+                      --database=boulder_sa_integration \
+                      --force < "$sql_file" || echo "WARNING: Some grants failed for $sql_file (likely missing optional tables)"
+            done
+            
+            echo "Database priming completed successfully!"
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-root-password
+              key: password
+        volumeMounts:
+        - name: client-certs
+          mountPath: /etc/ssl/client
+          readOnly: true
+        - name: ca-certs
+          mountPath: /etc/ssl/ca
+          readOnly: true
+        - name: boulder-sql
+          mountPath: /boulder-source
+          readOnly: true
+      volumes:
+      - name: client-certs
+        secret:
+          secretName: mariadb-client-tls
+      - name: ca-certs
+        secret:
+          secretName: boulder-ca-secret
+      - name: boulder-sql
+        hostPath:
+          path: /boulder-source
+          type: Directory

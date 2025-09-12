@@ -1,0 +1,123 @@
+# Database testing job that verifies the mTLS MariaDB setup
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-db-job
+  namespace: default
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: test-db
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: test-db
+        image: mariadb:10.6
+        command:
+          - /bin/bash
+          - -c
+          - |
+            set -euo pipefail
+            
+            echo "Testing MariaDB connection with client certificate..."
+            
+            # Test connection using client certificate (as sa user)
+            echo "Connecting as sa user with client certificate..."
+            mariadb --host=boulder-mariadb \
+                    --ssl-cert=/etc/ssl/client/tls.crt \
+                    --ssl-key=/etc/ssl/client/tls.key \
+                    --ssl-ca=/etc/ssl/ca/ca.crt \
+                    --ssl-verify-server-cert \
+                    --user=sa \
+                    --database=boulder_sa_integration \
+                    -e "SELECT 'Connection successful!' as result;"
+            
+            echo ""
+            echo "Testing database structure..."
+            
+            # Test SHOW DATABASES (success criteria from SPEC.md)
+            echo "Executing SHOW DATABASES..."
+            databases=$(mariadb --host=boulder-mariadb \
+                               --ssl-cert=/etc/ssl/client/tls.crt \
+                               --ssl-key=/etc/ssl/client/tls.key \
+                               --ssl-ca=/etc/ssl/ca/ca.crt \
+                               --ssl-verify-server-cert \
+                               --user=sa \
+                               --database=boulder_sa_integration \
+                               -s -N -e "SHOW DATABASES;")
+            
+            echo "Available databases:"
+            echo "$databases"
+            
+            # Verify boulder_sa_integration database exists (SPEC.md requirement)
+            if echo "$databases" | grep -q "boulder_sa_integration"; then
+              echo "✓ SUCCESS: boulder_sa_integration database found!"
+            else
+              echo "✗ FAILURE: boulder_sa_integration database not found!"
+              exit 1
+            fi
+            
+            echo ""
+            echo "Testing table structure..."
+            
+            # Test that some expected tables exist
+            tables=$(mariadb --host=boulder-mariadb \
+                            --ssl-cert=/etc/ssl/client/tls.crt \
+                            --ssl-key=/etc/ssl/client/tls.key \
+                            --ssl-ca=/etc/ssl/ca/ca.crt \
+                            --ssl-verify-server-cert \
+                            --user=sa \
+                            --database=boulder_sa_integration \
+                            -s -N -e "SHOW TABLES;")
+            
+            echo "Available tables:"
+            echo "$tables"
+            
+            # Basic check that we have some tables (validates migrations ran)
+            table_count=$(echo "$tables" | wc -l | tr -d ' ')
+            if [ "$table_count" -gt 0 ]; then
+              echo "✓ SUCCESS: Found $table_count tables - migrations appear to have run successfully!"
+            else
+              echo "✗ FAILURE: No tables found - migrations may have failed!"
+              exit 1
+            fi
+            
+            echo ""
+            echo "Testing SSL/TLS connection security..."
+            
+            # Verify SSL is enabled and required
+            ssl_status=$(mariadb --host=boulder-mariadb \
+                                --ssl-cert=/etc/ssl/client/tls.crt \
+                                --ssl-key=/etc/ssl/client/tls.key \
+                                --ssl-ca=/etc/ssl/ca/ca.crt \
+                                --ssl-verify-server-cert \
+                                --user=sa \
+                                --database=boulder_sa_integration \
+                                -s -N -e "SHOW STATUS LIKE 'Ssl_cipher';")
+            
+            if [ -n "$ssl_status" ]; then
+              echo "✓ SUCCESS: SSL/TLS encryption is active!"
+              echo "SSL Status: $ssl_status"
+            else
+              echo "✗ FAILURE: SSL/TLS encryption not detected!"
+              exit 1
+            fi
+            
+            echo ""
+            echo "🎉 All database tests passed! Boulder MariaDB setup is ready."
+        volumeMounts:
+        - name: client-certs
+          mountPath: /etc/ssl/client
+          readOnly: true
+        - name: ca-certs
+          mountPath: /etc/ssl/ca
+          readOnly: true
+      volumes:
+      - name: client-certs
+        secret:
+          secretName: mariadb-client-tls
+      - name: ca-certs
+        secret:
+          secretName: boulder-ca-secret

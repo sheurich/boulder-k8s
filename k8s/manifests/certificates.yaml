@@ -1,0 +1,58 @@
+# MariaDB Server Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mariadb-server-cert
+  namespace: default
+spec:
+  secretName: mariadb-server-tls
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  subject:
+    organizationalUnits:
+      - "Boulder K8s"
+    organizations:
+      - "Let's Encrypt"
+    countries:
+      - "US"
+  commonName: boulder-mariadb
+  dnsNames:
+    - boulder-mariadb
+    - boulder-mariadb.default
+    - boulder-mariadb.default.svc
+    - boulder-mariadb.default.svc.cluster.local
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+# MariaDB Client Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mariadb-client-cert
+  namespace: default
+spec:
+  secretName: mariadb-client-tls
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  subject:
+    organizationalUnits:
+      - "Boulder K8s"
+    organizations:
+      - "Let's Encrypt"
+    countries:
+      - "US"
+  commonName: boulder-client
+  issuerRef:
+    name: boulder-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
