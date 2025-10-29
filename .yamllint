@@ -1,0 +1,38 @@
+extends: default
+
+rules:
+  braces:
+    max-spaces-inside: 1
+    level: error
+  brackets:
+    max-spaces-inside: 1
+    level: error
+  colons:
+    max-spaces-after: -1
+    level: error
+  commas:
+    max-spaces-after: 1
+    level: error
+  comments: disable
+  comments-indentation: disable
+  document-start: disable
+  empty-lines:
+    max: 3
+    level: error
+  hyphens:
+    level: error
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+    level: error
+  line-length:
+    max: 1000
+    ignore: |
+      k8s/boulder-cm0-configmap.yaml
+      k8s/boulder-config-configmap.yaml
+      k8s/proxysql-configmap.yaml
+    level: warning
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+  trailing-spaces:
+    level: error

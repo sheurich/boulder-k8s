@@ -1,0 +1,21 @@
+repos:
+  - repo: local
+    hooks:
+      - id: kubeconform
+        name: kubeconform
+        entry: kubeconform
+        language: system
+        args:
+          - "-summary"
+          - "-ignore-missing-schemas"
+          - "-kubernetes-version=1.27.5"
+          - "-schema-location=default"
+          - "-skip=CustomResourceDefinition"
+        files: k8s/.*\.yaml$
+
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [--strict, --config-file, .yamllint]
