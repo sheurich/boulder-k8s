@@ -14,6 +14,16 @@ repos:
         files: k8s/.*\.yaml$
 
 
+  # - repo: https://github.com/zegl/kube-score
+  #   rev: v1.16.1
+  #   hooks:
+  #     - id: kube-score
+  #       args:
+  #         - --ignore-test=container-security-context,container-resources,ephemeral-storage-request-and-limit,pod-networkpolicy,container-image-pull-policy,pod-probes,deployment-replicas,readonly-root-filesystem,service-targets-pod,container-security-context-user-group-id,security-context
+  #         - --enable-optional-test=network-policy
+  #         - --exit-one-on-warning
+  #       files: 'k8s/.*\.yaml$'
+
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.37.1
     hooks:
