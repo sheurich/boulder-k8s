@@ -19,14 +19,14 @@ ARG VERSION=dev
 ARG TARGETOS
 ARG TARGETARCH
 
-WORKDIR /src
+WORKDIR /src/boulder
 
 # Copy dependency files first for better layer caching
-COPY go.mod go.sum ./
-COPY vendor/ vendor/
+COPY boulder/go.mod boulder/go.sum ./
+COPY boulder/vendor/ ./vendor/
 
 # Copy source code
-COPY . .
+COPY boulder/ .
 
 # Build all Boulder binaries
 # CGO_ENABLED=1 required for certain Boulder functionality
@@ -86,11 +86,11 @@ RUN apt-get update \
 COPY --from=builder /go/bin/ /usr/local/bin/
 
 # Copy data files needed at runtime
-COPY --from=builder /src/data /opt/boulder/data
-COPY --from=builder /src/sa/db /opt/boulder/sa/db
+COPY --from=builder /src/boulder/data /opt/boulder/data
+COPY --from=builder /src/boulder/sa/db /opt/boulder/sa/db
 
 # Copy test configs (useful for dev, small footprint)
-COPY --from=builder /src/test/config /opt/boulder/test/config
+COPY --from=builder /src/boulder/test/config /opt/boulder/test/config
 
 WORKDIR /opt/boulder
 
@@ -120,8 +120,8 @@ LABEL org.opencontainers.image.vendor="Internet Security Research Group"
 COPY --from=builder /go/bin/ /usr/local/bin/
 
 # Copy data files needed at runtime
-COPY --from=builder /src/data /opt/boulder/data
-COPY --from=builder /src/sa/db /opt/boulder/sa/db
+COPY --from=builder /src/boulder/data /opt/boulder/data
+COPY --from=builder /src/boulder/sa/db /opt/boulder/sa/db
 
 WORKDIR /opt/boulder
 

@@ -82,6 +82,9 @@ configMapGenerator:
   - name: boulder-cert-checker-config
     files:
       - config/cert-checker.json
+  - name: boulder-crl-checker-config
+    files:
+      - config/crl-checker.json
   # Shared config files used by multiple services
   - name: boulder-shared-config
     files:

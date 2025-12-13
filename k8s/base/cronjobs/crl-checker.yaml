@@ -25,8 +25,12 @@ spec:
               args:
                 - boulder
                 - crl-checker
-                - --config
+                - -crls
                 - /config/crl-checker.json
+                - -issuer
+                - "-"
+                - -ageLimit
+                - 168h
               resources:
                 requests:
                   cpu: 100m
