@@ -7,6 +7,9 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "==> Validating Kubernetes manifests..."
 
+# Ensure go bin is in PATH
+export PATH="$PATH:$(go env GOPATH)/bin"
+
 # Check if kubeconform is installed
 if ! command -v kubeconform &> /dev/null; then
     echo "Installing kubeconform..."

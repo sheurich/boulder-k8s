@@ -1,0 +1,11 @@
+{
+	"crlChecker": {
+		"dbConnectFile": "test/secrets/sa_dburl",
+		"crlShardMappings": "test/crl-shard-mappings.yaml",
+		"crlDP": "http://boulder:4001/crl/"
+	},
+	"syslog": {
+		"stdoutlevel": 6,
+		"sysloglevel": 6
+	}
+}

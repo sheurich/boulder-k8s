@@ -1,0 +1,15 @@
+{
+	"syslog": {
+		"stdoutLevel": 7
+	},
+	"openTelemetry": {
+		"endpoint": "bjaeger:4317",
+		"sampleratio": 1
+	},
+	"files": [
+		"/var/log/bad-key-revoker.log",
+		"/var/log/boulder-*.log",
+		"/var/log/crl-*.log",
+		"/var/log/nonce-service.log"
+	]
+}
