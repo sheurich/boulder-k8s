@@ -53,17 +53,16 @@ helm upgrade --install redis bitnami/redis \
     --wait \
     --timeout 5m
 
-# Run PKI ceremony (dev only)
-if [ "$OVERLAY" = "dev" ]; then
-    echo "==> Running PKI ceremony..."
-    kubectl apply -n "$NAMESPACE" -f "$ROOT_DIR/k8s/overlays/$OVERLAY/ceremony/"
-    kubectl wait --for=condition=complete job/boulder-pki-ceremony \
-        -n "$NAMESPACE" --timeout=300s || true
-fi
-
-# Deploy Boulder services
+# Deploy Boulder services (includes PKI ceremony for dev)
 echo "==> Deploying Boulder services..."
 kubectl apply -k "$ROOT_DIR/k8s/overlays/$OVERLAY"
+
+# Wait for PKI ceremony to complete (dev only)
+if [ "$OVERLAY" = "dev" ]; then
+    echo "==> Waiting for PKI ceremony..."
+    kubectl wait --for=condition=complete job/boulder-pki-ceremony \
+        -n "$NAMESPACE" --timeout=300s || echo "  ⚠ PKI ceremony not completed yet"
+fi
 
 echo "==> Deployment complete"
 echo "  Namespace: $NAMESPACE"
