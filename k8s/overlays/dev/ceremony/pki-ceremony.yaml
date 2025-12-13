@@ -210,6 +210,50 @@ data:
         --dry-run=client -o yaml | kubectl apply -f -
     done
 
+    # Create WFE2 web TLS secret (same as grpc for dev)
+    kubectl create secret tls boulder-wfe2-web-tls \
+      --cert=ipki/wfe2/cert.pem \
+      --key=ipki/wfe2/key.pem \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Create service-specific secrets with minimal config
+    # WFE2 secrets
+    kubectl create secret generic boulder-wfe2-secrets \
+      --from-literal=tls_session_ticket_key="0000000000000000000000000000000000000000000000000000000000000000" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # RA secrets
+    kubectl create secret generic boulder-ra-secrets \
+      --from-literal=ra_dburl="boulder@tcp(vitess:3306)/boulder" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # SA secrets
+    kubectl create secret generic boulder-sa-secrets \
+      --from-literal=sa_dburl="boulder@tcp(vitess:3306)/boulder" \
+      --from-literal=sa_ro_dburl="boulder@tcp(vitess:3306)/boulder" \
+      --from-literal=redis_password="boulder-redis-dev" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # CA secrets (including HSM config)
+    kubectl create secret generic boulder-ca-secrets \
+      --from-literal=ca_dburl="boulder@tcp(vitess:3306)/boulder" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    kubectl create secret generic boulder-ca-hsm-config \
+      --from-literal=softhsm.conf="directories.tokendir = /var/lib/softhsm/tokens/" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Email exporter secrets
+    kubectl create secret generic boulder-email-exporter-secrets \
+      --from-literal=salesforce_client_id="test" \
+      --from-literal=salesforce_client_secret="test" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # SFE secrets
+    kubectl create secret generic boulder-sfe-secrets \
+      --from-literal=unpause_key="0000000000000000000000000000000000000000000000000000000000000000" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
     # Create WebPKI chain configmap
     kubectl create configmap boulder-chain-certs \
       --from-file=root-rsa.crt=webpki/root-rsa.crt \
