@@ -1,0 +1,136 @@
+# Simple MariaDB deployment for Boulder dev/CI
+# Uses official mariadb:10.11 image matching Boulder's docker-compose setup
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-data
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-credentials
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: boulder-root-dev
+  MYSQL_DATABASE: boulder_sa_test
+  MYSQL_USER: boulder
+  MYSQL_PASSWORD: boulder-dev-password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-init
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+data:
+  init-boulder.sql: |
+    -- Create additional databases needed by Boulder
+    CREATE DATABASE IF NOT EXISTS incidents_sa_test;
+    GRANT ALL PRIVILEGES ON incidents_sa_test.* TO 'boulder'@'%';
+    FLUSH PRIVILEGES;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mariadb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mariadb
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.11.13
+          args:
+            - mysqld
+            - --bind-address=0.0.0.0
+            - --slow-query-log
+            - --long-query-time=2
+          envFrom:
+            - secretRef:
+                name: mariadb-credentials
+          ports:
+            - name: mysql
+              containerPort: 3306
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+                - -uboulder
+                - -pboulder-dev-password
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+                - -uboulder
+                - -pboulder-dev-password
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mariadb-data
+        - name: init-scripts
+          configMap:
+            name: mariadb-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: mysql
+      protocol: TCP
+      name: mysql
+  selector:
+    app.kubernetes.io/name: mariadb

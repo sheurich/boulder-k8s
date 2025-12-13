@@ -1,9 +1,8 @@
 # Redis configuration for Boulder dev/CI environment
 # Uses Bitnami Redis chart
 
-# Override name to create service as redis.boulder.svc.cluster.local
-# (Boulder configs expect this name, not redis-master)
-fullnameOverride: redis
+# Service name will be redis-master (Bitnami chart default for standalone)
+# Boulder configs updated to use redis-master.boulder.svc.cluster.local
 
 # Architecture: standalone for dev, sentinel for prod
 architecture: standalone
@@ -33,22 +32,13 @@ master:
 replica:
   replicaCount: 0
 
-# TLS configuration
+# TLS configuration - disabled for dev simplicity
 tls:
-  enabled: true
-  # Use cert-manager for TLS certs in production
-  # For dev, generate self-signed
-  authClients: true
-  certFilename: tls.crt
-  certKeyFilename: tls.key
-  certCAFilename: ca.crt
+  enabled: false
 
-# Metrics for Prometheus
+# Metrics for Prometheus - disabled for dev (requires Prometheus Operator CRDs)
 metrics:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    namespace: boulder
+  enabled: false
 
 # Service configuration
 service:

@@ -3,9 +3,11 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/letsencrypt/pkcs11-proxy
-  tag: latest
-  pullPolicy: IfNotPresent
+  # Local dev image - build with: docker build -t boulder-k8s/softhsm-proxy:dev helm/softhsm-proxy/
+  # Load to kind with: kind load docker-image boulder-k8s/softhsm-proxy:dev --name boulder-dev
+  repository: boulder-k8s/softhsm-proxy
+  tag: dev
+  pullPolicy: Never
 
 # SoftHSM token configuration
 softhsm:

@@ -54,28 +54,22 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
-            - pkcs11-daemon
-          args:
-            - /usr/lib/softhsm/libsofthsm2.so
+            - sleep
+            - infinity
           env:
-            - name: PKCS11_DAEMON_SOCKET
-              value: "tcp://0.0.0.0:{{ .Values.proxy.port }}"
             - name: SOFTHSM2_CONF
-              value: /etc/softhsm2.conf
-          ports:
-            - name: pkcs11
-              containerPort: {{ .Values.proxy.port }}
-              protocol: TCP
+              value: /etc/softhsm/softhsm2.conf
+          # For dev: no ports needed, CA accesses token files via shared volume
           livenessProbe:
-            tcpSocket:
-              port: pkcs11
+            exec:
+              command: ["softhsm2-util", "--show-slots"]
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command: ["softhsm2-util", "--show-slots"]
             initialDelaySeconds: 5
             periodSeconds: 10
-          readinessProbe:
-            tcpSocket:
-              port: pkcs11
-            initialDelaySeconds: 5
-            periodSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:

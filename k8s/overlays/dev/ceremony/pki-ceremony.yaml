@@ -24,6 +24,7 @@ spec:
       containers:
         - name: ceremony
           image: letsencrypt/boulder:latest
+          imagePullPolicy: Never
           command:
             - /bin/sh
             - -c

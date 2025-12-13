@@ -85,7 +85,7 @@
 			"redis": {
 				"username": "boulder",
 				"passwordFile": "/secrets/redis_password",
-				"address": "redis.boulder.svc.cluster.local:6379",
+				"address": "redis-master.boulder.svc.cluster.local:6379",
 				"readTimeout": "250ms",
 				"writeTimeout": "250ms",
 				"poolSize": 100,
@@ -118,6 +118,6 @@
 	},
 	"syslog": {
 		"stdoutlevel": 7,
-		"sysloglevel": 6
+		"sysloglevel": -1
 	}
 }

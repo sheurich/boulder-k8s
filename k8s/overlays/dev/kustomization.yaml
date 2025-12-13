@@ -22,6 +22,10 @@ patches:
   - path: patches/resources.yaml
   # Relax network policies for dev
   - path: patches/network-policies.yaml
+  # Set imagePullPolicy: Never for local images
+  - path: patches/image-pull-policy.yaml
+  # Fix boulder command/args for local images
+  - path: patches/boulder-commands.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment
