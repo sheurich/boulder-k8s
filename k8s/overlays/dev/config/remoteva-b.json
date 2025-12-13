@@ -13,7 +13,7 @@
 		"dnsTimeout": "1s",
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {
-			"caCertfile": "test/certs/ipki/minica.pem",
+			"caCertFile": "test/certs/ipki/minica.pem",
 			"certFile": "test/certs/ipki/rva.boulder/cert.pem",
 			"keyFile": "test/certs/ipki/rva.boulder/key.pem"
 		},

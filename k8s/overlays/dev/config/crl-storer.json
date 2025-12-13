@@ -2,7 +2,7 @@
 	"crlStorer": {
 		"debugAddr": ":9667",
 		"tls": {
-			"caCertfile": "test/certs/ipki/minica.pem",
+			"caCertFile": "test/certs/ipki/minica.pem",
 			"certFile": "test/certs/ipki/crl-storer.boulder/cert.pem",
 			"keyFile": "test/certs/ipki/crl-storer.boulder/key.pem"
 		},
