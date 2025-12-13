@@ -51,8 +51,15 @@ spec:
             - name: config
               mountPath: /config
               readOnly: true
-            - name: grpc-tls
-              mountPath: /certs/grpc
+            - name: ipki-ca
+              mountPath: /certs/ipki/ca.crt
+              subPath: ca.crt
+              readOnly: true
+            - name: ipki-service
+              mountPath: /certs/ipki/ra
+              readOnly: true
+            - name: webpki
+              mountPath: /certs/webpki
               readOnly: true
             - name: secrets
               mountPath: /secrets
@@ -61,9 +68,15 @@ spec:
         - name: config
           configMap:
             name: boulder-ra-config
-        - name: grpc-tls
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+        - name: ipki-service
           secret:
             secretName: boulder-ra-grpc-tls
+        - name: webpki
+          configMap:
+            name: boulder-webpki-certs
         - name: secrets
           secret:
             secretName: boulder-ra-secrets

@@ -1,6 +1,10 @@
 # Redis configuration for Boulder dev/CI environment
 # Uses Bitnami Redis chart
 
+# Override name to create service as redis.boulder.svc.cluster.local
+# (Boulder configs expect this name, not redis-master)
+fullnameOverride: redis
+
 # Architecture: standalone for dev, sentinel for prod
 architecture: standalone
 

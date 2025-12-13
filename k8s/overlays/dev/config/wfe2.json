@@ -3,8 +3,8 @@
 		"timeout": "30s",
 		"listenAddress": "0.0.0.0:4001",
 		"TLSListenAddress": "0.0.0.0:4431",
-		"serverCertificatePath": "/certs/webserver/cert.pem",
-		"serverKeyPath": "/certs/webserver/key.pem",
+		"serverCertificatePath": "/certs/web/cert.pem",
+		"serverKeyPath": "/certs/web/key.pem",
 		"allowOrigins": [
 			"*"
 		],
@@ -16,9 +16,9 @@
 		"legacyKeyIDPrefix": "http://boulder-wfe2.boulder.svc.cluster.local:4001/reg/",
 		"goodkey": {},
 		"tls": {
-			"caCertFile": "/certs/ipki/minica.pem",
-			"certFile": "/certs/ipki/wfe.boulder/cert.pem",
-			"keyFile": "/certs/ipki/wfe.boulder/key.pem"
+			"caCertFile": "/certs/ipki/ca.crt",
+			"certFile": "/certs/ipki/wfe2/cert.pem",
+			"keyFile": "/certs/ipki/wfe2/key.pem"
 		},
 		"raService": {
 			"serverAddress": "boulder-ra.boulder.svc.cluster.local:9094",
@@ -91,9 +91,9 @@
 				"poolSize": 100,
 				"routeRandomly": true,
 				"tls": {
-					"caCertFile": "/certs/ipki/minica.pem",
-					"certFile": "/certs/ipki/wfe.boulder/cert.pem",
-					"keyFile": "/certs/ipki/wfe.boulder/key.pem"
+					"caCertFile": "/certs/ipki/ca.crt",
+					"certFile": "/certs/ipki/wfe2/cert.pem",
+					"keyFile": "/certs/ipki/wfe2/key.pem"
 				}
 			},
 			"Defaults": "/config/ratelimit-defaults.yml",

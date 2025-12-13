@@ -99,8 +99,7 @@ USER boulder
 
 ENV PATH="/usr/local/bin:${PATH}"
 
-# Default entrypoint - override with specific boulder command
-ENTRYPOINT ["boulder"]
+# No default entrypoint - K8s deployments specify the command via args
 
 # =============================================================================
 # Distroless variant - more secure, smaller attack surface
@@ -127,4 +126,4 @@ WORKDIR /opt/boulder
 
 ENV PATH="/usr/local/bin:${PATH}"
 
-ENTRYPOINT ["boulder"]
+# No default entrypoint - K8s deployments specify the command via args

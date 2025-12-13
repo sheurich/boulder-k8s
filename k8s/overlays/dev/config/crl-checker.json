@@ -1,2 +1,6 @@
 [
+	"http://ca.example.org:4501/lets-encrypt-crls/43104258997432926/0.crl",
+	"http://ca.example.org:4501/lets-encrypt-crls/17302365692836921/0.crl",
+	"http://ca.example.org:4501/lets-encrypt-crls/29947985078257530/0.crl",
+	"http://ca.example.org:4501/lets-encrypt-crls/6762885421992935/0.crl"
 ]

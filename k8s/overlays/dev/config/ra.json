@@ -10,9 +10,9 @@
 				"poolSize": 100,
 				"routeRandomly": true,
 				"tls": {
-					"caCertFile": "/certs/ipki/minica.pem",
-					"certFile": "/certs/ipki/ra.boulder/cert.pem",
-					"keyFile": "/certs/ipki/ra.boulder/key.pem"
+					"caCertFile": "/certs/ipki/ca.crt",
+					"certFile": "/certs/ipki/ra/cert.pem",
+					"keyFile": "/certs/ipki/ra/key.pem"
 				}
 			},
 			"Defaults": "/config/ratelimit-defaults.yml",
@@ -62,9 +62,9 @@
 		},
 		"defaultProfileName": "legacy",
 		"tls": {
-			"caCertFile": "/certs/ipki/minica.pem",
-			"certFile": "/certs/ipki/ra.boulder/cert.pem",
-			"keyFile": "/certs/ipki/ra.boulder/key.pem"
+			"caCertFile": "/certs/ipki/ca.crt",
+			"certFile": "/certs/ipki/ra/cert.pem",
+			"keyFile": "/certs/ipki/ra/key.pem"
 		},
 		"vaService": {
 			"serverAddress": "boulder-va.boulder.svc.cluster.local:9092",

@@ -52,8 +52,12 @@ spec:
             - name: config
               mountPath: /config
               readOnly: true
-            - name: grpc-tls
-              mountPath: /certs/grpc
+            - name: ipki-ca
+              mountPath: /certs/ipki/ca.crt
+              subPath: ca.crt
+              readOnly: true
+            - name: ipki-service
+              mountPath: /certs/ipki/email-exporter
               readOnly: true
             - name: secrets
               mountPath: /secrets
@@ -62,7 +66,10 @@ spec:
         - name: config
           configMap:
             name: boulder-email-exporter-config
-        - name: grpc-tls
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+        - name: ipki-service
           secret:
             secretName: boulder-email-exporter-grpc-tls
         - name: secrets

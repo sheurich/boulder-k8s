@@ -1,9 +1,9 @@
 {
 	"crlUpdater": {
 		"tls": {
-			"caCertFile": "/certs/ipki/minica.pem",
-			"certFile": "/certs/ipki/crl-updater.boulder/cert.pem",
-			"keyFile": "/certs/ipki/crl-updater.boulder/key.pem"
+			"caCertFile": "/certs/ipki/ca.crt",
+			"certFile": "/certs/ipki/crl-updater/cert.pem",
+			"keyFile": "/certs/ipki/crl-updater/key.pem"
 		},
 		"saService": {
 			"serverAddress": "boulder-sa.boulder.svc.cluster.local:9095",

@@ -123,7 +123,7 @@ data:
 
     # Generate certificates for each service
     for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
-                   crl-updater crl-storer observer email-exporter sfe; do
+                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker; do
       mkdir -p ipki/$service
       openssl ecparam -name prime256v1 -genkey -noout -out ipki/$service/key.pem
       openssl req -new -key ipki/$service/key.pem -out ipki/$service/csr.pem \
@@ -182,12 +182,32 @@ data:
 
   init-softhsm.sh: |
     #!/bin/sh
-    # Initialize SoftHSM with the intermediate CA keys
-    # Note: This runs inside the ceremony container, but the actual
-    # SoftHSM token storage is on the softhsm-proxy PVC
+    # Initialize SoftHSM with the intermediate CA keys via pkcs11-proxy
+    # This creates PKCS#11 config files that point to the proxy
 
-    echo "SoftHSM initialization placeholder"
-    echo "In dev/CI, keys are imported to SoftHSM via pkcs11-proxy"
+    cd /output
+    mkdir -p hsm
+
+    # Create PKCS#11 config files for each issuer
+    # These configs tell Boulder how to connect to the HSM via pkcs11-proxy
+    for issuer in int-rsa-a int-rsa-b int-rsa-c int-ecdsa-a int-ecdsa-b int-ecdsa-c; do
+      cat > hsm/$issuer.pkcs11.json << EOF
+    {
+      "module": "/usr/lib/pkcs11/libpkcs11-proxy.so",
+      "tokenLabel": "boulder-$issuer",
+      "pin": "1234",
+      "proxyHost": "softhsm-proxy.boulder.svc.cluster.local:5657"
+    }
+    EOF
+    done
+
+    # Create HSM config secret for CA
+    kubectl create secret generic boulder-ca-hsm-config \
+      --from-file=hsm/ \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    echo "SoftHSM config files created"
+    echo "Note: Actual key import to SoftHSM happens when softhsm-proxy starts"
 
   create-secrets.sh: |
     #!/bin/sh
@@ -203,7 +223,7 @@ data:
 
     # Create service TLS secrets
     for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
-                   crl-updater crl-storer observer email-exporter sfe; do
+                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker; do
       kubectl create secret tls boulder-$service-grpc-tls \
         --cert=ipki/$service/cert.pem \
         --key=ipki/$service/key.pem \
@@ -211,11 +231,51 @@ data:
     done
 
     # Create WebPKI chain configmap
-    kubectl create configmap boulder-chain-certs \
-      --from-file=root-rsa.crt=webpki/root-rsa.crt \
-      --from-file=root-ecdsa.crt=webpki/root-ecdsa.crt \
-      --from-file=int-rsa-a.crt=webpki/int-rsa-a.crt \
-      --from-file=int-ecdsa-a.crt=webpki/int-ecdsa-a.crt \
+    kubectl create configmap boulder-webpki-certs \
+      --from-file=root-rsa.cert.pem=webpki/root-rsa.crt \
+      --from-file=root-ecdsa.cert.pem=webpki/root-ecdsa.crt \
+      --from-file=int-rsa-a.cert.pem=webpki/int-rsa-a.crt \
+      --from-file=int-ecdsa-a.cert.pem=webpki/int-ecdsa-a.crt \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Generate random secrets for dev environment
+    NONCE_KEY=$(openssl rand -base64 32)
+    UNPAUSE_KEY=$(openssl rand -base64 32)
+    REDIS_PASSWORD="boulder-redis-dev"
+
+    # Create WFE2 application secrets
+    kubectl create secret generic boulder-wfe2-secrets \
+      --from-literal=nonce_prefix_key="$NONCE_KEY" \
+      --from-literal=redis_password="$REDIS_PASSWORD" \
+      --from-literal=sfe_unpause_key="$UNPAUSE_KEY" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Create RA application secrets
+    kubectl create secret generic boulder-ra-secrets \
+      --from-literal=redis_password="$REDIS_PASSWORD" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Create SFE application secrets
+    kubectl create secret generic boulder-sfe-secrets \
+      --from-literal=sfe_unpause_key="$UNPAUSE_KEY" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Create SA application secrets (database URLs)
+    kubectl create secret generic boulder-sa-secrets \
+      --from-literal=sa_dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/boulder_sa_test" \
+      --from-literal=sa_ro_dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/boulder_sa_test" \
+      --from-literal=incidents_dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/incidents_sa_test" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Create email-exporter secrets
+    kubectl create secret generic boulder-email-exporter-secrets \
+      --from-literal=salesforce_client_id="test-client-id" \
+      --from-literal=salesforce_client_secret="test-client-secret" \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Create database credentials secret (for db-migrate job)
+    kubectl create secret generic boulder-db-credentials \
+      --from-literal=dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/boulder_sa_test" \
       --dry-run=client -o yaml | kubectl apply -f -
 
     echo "Kubernetes secrets created"

@@ -53,14 +53,21 @@ spec:
             - name: config
               mountPath: /config
               readOnly: true
-            - name: grpc-tls
-              mountPath: /certs/grpc
+            - name: ipki-ca
+              mountPath: /certs/ipki/ca.crt
+              subPath: ca.crt
+              readOnly: true
+            - name: ipki-service
+              mountPath: /certs/ipki/nonce-a
               readOnly: true
       volumes:
         - name: config
           configMap:
             name: boulder-nonce-a-config
-        - name: grpc-tls
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+        - name: ipki-service
           secret:
             secretName: boulder-nonce-a-grpc-tls
 ---
@@ -138,14 +145,21 @@ spec:
             - name: config
               mountPath: /config
               readOnly: true
-            - name: grpc-tls
-              mountPath: /certs/grpc
+            - name: ipki-ca
+              mountPath: /certs/ipki/ca.crt
+              subPath: ca.crt
+              readOnly: true
+            - name: ipki-service
+              mountPath: /certs/ipki/nonce-b
               readOnly: true
       volumes:
         - name: config
           configMap:
             name: boulder-nonce-b-config
-        - name: grpc-tls
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+        - name: ipki-service
           secret:
             secretName: boulder-nonce-b-grpc-tls
 ---
