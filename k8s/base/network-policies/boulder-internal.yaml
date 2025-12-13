@@ -1,0 +1,166 @@
+# Allow Boulder internal gRPC communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: boulder-internal
+  labels:
+    app.kubernetes.io/name: boulder-internal
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: boulder
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow ingress from other Boulder pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: boulder
+      ports:
+        - protocol: TCP
+    # Allow metrics scraping from Prometheus
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8011
+        - protocol: TCP
+          port: 8012
+        - protocol: TCP
+          port: 8013
+        - protocol: TCP
+          port: 8014
+        - protocol: TCP
+          port: 8015
+        - protocol: TCP
+          port: 8017
+        - protocol: TCP
+          port: 8018
+        - protocol: TCP
+          port: 8019
+        - protocol: TCP
+          port: 8020
+        - protocol: TCP
+          port: 8021
+        - protocol: TCP
+          port: 8022
+        - protocol: TCP
+          port: 8023
+        - protocol: TCP
+          port: 8024
+        - protocol: TCP
+          port: 8025
+        - protocol: TCP
+          port: 8026
+        - protocol: TCP
+          port: 8040
+  egress:
+    # Allow egress to other Boulder pods
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: boulder
+      ports:
+        - protocol: TCP
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow egress to Vitess
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vitess
+      ports:
+        - protocol: TCP
+          port: 3306
+        - protocol: TCP
+          port: 15991
+    # Allow egress to Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+---
+# WFE2 external access
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wfe2-external
+  labels:
+    app.kubernetes.io/name: wfe2-external
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-wfe2
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow external HTTPS traffic
+    - ports:
+        - protocol: TCP
+          port: 4431
+        - protocol: TCP
+          port: 4001
+---
+# VA external egress for validation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: va-external
+  labels:
+    app.kubernetes.io/name: va-external
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: validation-authority
+  policyTypes:
+    - Egress
+  egress:
+    # Allow all egress for domain validation (HTTP-01, DNS-01, TLS-ALPN-01)
+    - ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# Publisher egress to CT logs
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: publisher-external
+  labels:
+    app.kubernetes.io/name: publisher-external
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-publisher
+  policyTypes:
+    - Egress
+  egress:
+    # Allow HTTPS egress to CT logs
+    - ports:
+        - protocol: TCP
+          port: 443

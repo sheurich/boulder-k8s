@@ -1,0 +1,80 @@
+# Mock Certificate Transparency log server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ct-test-srv
+  labels:
+    app.kubernetes.io/name: ct-test-srv
+    app.kubernetes.io/component: test-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ct-test-srv
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ct-test-srv
+        app.kubernetes.io/component: test-mock
+    spec:
+      containers:
+        - name: ct-test-srv
+          image: letsencrypt/boulder:latest
+          command:
+            - ct-test-srv
+          args:
+            - -config
+            - /config/ct-test-srv.json
+          ports:
+            - name: http
+              containerPort: 4500
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: ct-test-srv-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ct-test-srv
+  labels:
+    app.kubernetes.io/name: ct-test-srv
+    app.kubernetes.io/component: test-mock
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 4500
+      targetPort: http
+  selector:
+    app.kubernetes.io/name: ct-test-srv
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ct-test-srv-config
+  labels:
+    app.kubernetes.io/name: ct-test-srv
+    app.kubernetes.io/component: test-mock
+data:
+  ct-test-srv.json: |
+    {
+      "listenAddress": ":4500",
+      "logID": "test-log",
+      "key": {
+        "type": "ecdsa",
+        "curve": "P-256"
+      }
+    }

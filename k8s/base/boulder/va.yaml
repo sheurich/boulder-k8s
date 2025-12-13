@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-va
+  labels:
+    app.kubernetes.io/name: boulder-va
+    app.kubernetes.io/component: validation-authority
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-va
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-va
+        app.kubernetes.io/component: validation-authority
+    spec:
+      containers:
+        - name: boulder-va
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder-va
+            - --config
+            - /config/va.json
+          ports:
+            - name: grpc
+              containerPort: 9092
+              protocol: TCP
+            - name: metrics
+              containerPort: 8014
+              protocol: TCP
+          livenessProbe:
+            grpc:
+              port: 9092
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            grpc:
+              port: 9092
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-va-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-va-grpc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-va
+  labels:
+    app.kubernetes.io/name: boulder-va
+    app.kubernetes.io/component: validation-authority
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9092
+      targetPort: grpc
+    - name: metrics
+      port: 8014
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-va

@@ -1,0 +1,169 @@
+# Nonce Service A (taro)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-a
+  labels:
+    app.kubernetes.io/name: boulder-nonce-a
+    app.kubernetes.io/component: nonce-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-nonce-a
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-nonce-a
+        app.kubernetes.io/component: nonce-service
+    spec:
+      containers:
+        - name: boulder-nonce
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder
+            - nonce-service
+            - --config
+            - /config/nonce-a.json
+          ports:
+            - name: grpc
+              containerPort: 9101
+              protocol: TCP
+            - name: metrics
+              containerPort: 8021
+              protocol: TCP
+          livenessProbe:
+            grpc:
+              port: 9101
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            grpc:
+              port: 9101
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-nonce-a-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-nonce-a-grpc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-nonce-a
+  labels:
+    app.kubernetes.io/name: boulder-nonce-a
+    app.kubernetes.io/component: nonce-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9101
+      targetPort: grpc
+    - name: metrics
+      port: 8021
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-nonce-a
+---
+# Nonce Service B (zinc)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-b
+  labels:
+    app.kubernetes.io/name: boulder-nonce-b
+    app.kubernetes.io/component: nonce-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-nonce-b
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-nonce-b
+        app.kubernetes.io/component: nonce-service
+    spec:
+      containers:
+        - name: boulder-nonce
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder
+            - nonce-service
+            - --config
+            - /config/nonce-b.json
+          ports:
+            - name: grpc
+              containerPort: 9102
+              protocol: TCP
+            - name: metrics
+              containerPort: 8022
+              protocol: TCP
+          livenessProbe:
+            grpc:
+              port: 9102
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            grpc:
+              port: 9102
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-nonce-b-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-nonce-b-grpc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-nonce-b
+  labels:
+    app.kubernetes.io/name: boulder-nonce-b
+    app.kubernetes.io/component: nonce-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9102
+      targetPort: grpc
+    - name: metrics
+      port: 8022
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-nonce-b

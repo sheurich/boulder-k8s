@@ -1,0 +1,38 @@
+# ServiceMonitor for all Boulder services
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: boulder
+  labels:
+    app.kubernetes.io/name: boulder
+    app.kubernetes.io/component: observability
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: boulder
+  namespaceSelector:
+    matchNames:
+      - boulder
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+---
+# PodMonitor for CronJobs (no persistent service)
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: boulder-cronjobs
+  labels:
+    app.kubernetes.io/name: boulder-cronjobs
+    app.kubernetes.io/component: observability
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: compliance
+  namespaceSelector:
+    matchNames:
+      - boulder
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 30s

@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: boulder
+
+resources:
+  # Namespace
+  - namespace.yaml
+
+  # Boulder services
+  - boulder/wfe2.yaml
+  - boulder/ra.yaml
+  - boulder/sa.yaml
+  - boulder/ca.yaml
+  - boulder/va.yaml
+  - boulder/rva.yaml
+  - boulder/publisher.yaml
+  - boulder/nonce.yaml
+  - boulder/crl-updater.yaml
+  - boulder/crl-storer.yaml
+  - boulder/observer.yaml
+  - boulder/email-exporter.yaml
+  - boulder/sfe.yaml
+
+  # Bootstrap jobs
+  - bootstrap/db-migrate.yaml
+
+  # CronJobs
+  - cronjobs/bad-key-revoker.yaml
+  - cronjobs/log-validator.yaml
+  - cronjobs/cert-checker.yaml
+  - cronjobs/crl-checker.yaml
+
+  # Network policies
+  - network-policies/default-deny.yaml
+  - network-policies/boulder-internal.yaml
+
+  # Observability
+  - observability/servicemonitors.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: boulder

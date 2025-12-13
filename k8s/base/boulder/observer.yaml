@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-observer
+  labels:
+    app.kubernetes.io/name: boulder-observer
+    app.kubernetes.io/component: observer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-observer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-observer
+        app.kubernetes.io/component: observer
+    spec:
+      containers:
+        - name: boulder-observer
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder-observer
+            - --config
+            - /config/observer.yml
+          ports:
+            - name: metrics
+              containerPort: 8040
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-observer-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-observer
+  labels:
+    app.kubernetes.io/name: boulder-observer
+    app.kubernetes.io/component: observer
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8040
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-observer

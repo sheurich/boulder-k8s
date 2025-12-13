@@ -1,0 +1,91 @@
+# Vitess configuration for Boulder dev/CI environment
+# Uses minimal resources for local kind clusters
+
+# Global settings
+global:
+  vtctld:
+    enabled: true
+  vtgate:
+    enabled: true
+
+# vtctld - Vitess cluster management
+vtctld:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# vtgate - Query routing
+vtgate:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # MySQL protocol port
+  mysqlPort: 3306
+  # gRPC port
+  grpcPort: 15991
+  # Web UI port
+  webPort: 15001
+
+# etcd - Topology store
+etcd:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  persistence:
+    enabled: true
+    size: 1Gi
+
+# Keyspace configuration for Boulder
+keyspaces:
+  - name: boulder
+    shards:
+      - name: "0"
+        tablets:
+          - type: primary
+            vttablet:
+              replicas: 1
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              mysqlResources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              persistence:
+                enabled: true
+                size: 5Gi
+
+# Service configuration
+service:
+  type: ClusterIP
+
+# Boulder-specific MySQL settings
+mysql:
+  # Database name
+  database: boulder
+  # User for Boulder services
+  user: boulder
+  # Password (use secret in production)
+  password: boulder-dev-password

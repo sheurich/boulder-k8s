@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sfe
+  labels:
+    app.kubernetes.io/name: boulder-sfe
+    app.kubernetes.io/component: self-service-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-sfe
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-sfe
+        app.kubernetes.io/component: self-service-frontend
+    spec:
+      containers:
+        - name: boulder-sfe
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder
+            - sfe
+            - --config
+            - /config/sfe.json
+          ports:
+            - name: http
+              containerPort: 4003
+              protocol: TCP
+            - name: metrics
+              containerPort: 8026
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-sfe-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-sfe-grpc-tls
+        - name: secrets
+          secret:
+            secretName: boulder-sfe-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-sfe
+  labels:
+    app.kubernetes.io/name: boulder-sfe
+    app.kubernetes.io/component: self-service-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 4003
+      targetPort: http
+    - name: metrics
+      port: 8026
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-sfe
