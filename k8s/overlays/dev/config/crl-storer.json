@@ -1,0 +1,42 @@
+{
+	"crlStorer": {
+		"debugAddr": ":9667",
+		"tls": {
+			"caCertfile": "/certs/ipki/minica.pem",
+			"certFile": "/certs/ipki/crl-storer.boulder/cert.pem",
+			"keyFile": "/certs/ipki/crl-storer.boulder/key.pem"
+		},
+		"grpc": {
+			"address": ":9309",
+			"maxConnectionAge": "30s",
+			"services": {
+				"storer.CRLStorer": {
+					"clientNames": [
+						"crl-updater.boulder"
+					]
+				},
+				"grpc.health.v1.Health": {
+					"clientNames": [
+						"health-checker.boulder"
+					]
+				}
+			}
+		},
+		"issuerCerts": [
+			"/certs/webpki/int-rsa-a.cert.pem",
+			"/certs/webpki/int-rsa-b.cert.pem",
+			"/certs/webpki/int-rsa-c.cert.pem",
+			"/certs/webpki/int-ecdsa-a.cert.pem",
+			"/certs/webpki/int-ecdsa-b.cert.pem",
+			"/certs/webpki/int-ecdsa-c.cert.pem"
+		],
+		"s3Endpoint": "http://minio.boulder.svc.cluster.local:9000",
+		"s3Bucket": "lets-encrypt-crls",
+		"awsConfigFile": "/config/crl-storer.ini",
+		"awsCredsFile": "/secrets/aws_creds.ini"
+	},
+	"syslog": {
+		"stdoutlevel": 6,
+		"sysloglevel": 6
+	}
+}

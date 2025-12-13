@@ -1,0 +1,29 @@
+{
+	"BadKeyRevoker": {
+		"db": {
+			"dbConnectFile": "/secrets/badkeyrevoker_dburl",
+			"maxOpenConns": 10
+		},
+		"debugAddr": ":8020",
+		"tls": {
+			"caCertFile": "/certs/ipki/minica.pem",
+			"certFile": "/certs/ipki/bad-key-revoker.boulder/cert.pem",
+			"keyFile": "/certs/ipki/bad-key-revoker.boulder/key.pem"
+		},
+		"raService": {
+			"serverAddress": "boulder-ra.boulder.svc.cluster.local:9094",
+			"hostOverride": "ra.boulder",
+			"noWaitForReady": true,
+			"timeout": "15s"
+		},
+		"maximumRevocations": 15,
+		"findCertificatesBatchSize": 10,
+		"interval": "50ms",
+		"backoffIntervalMax": "2s",
+		"maxExpectedReplicationLag": "100ms"
+	},
+	"syslog": {
+		"stdoutlevel": 4,
+		"sysloglevel": 4
+	}
+}

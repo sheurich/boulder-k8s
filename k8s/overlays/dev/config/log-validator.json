@@ -1,0 +1,8 @@
+{
+	"syslog": {
+		"stdoutLevel": 7
+	},
+	"files": [
+		"/var/log/boulder/*.log"
+	]
+}

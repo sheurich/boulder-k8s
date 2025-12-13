@@ -82,9 +82,15 @@ configMapGenerator:
   - name: boulder-cert-checker-config
     files:
       - config/cert-checker.json
-  - name: boulder-crl-checker-config
+  # Shared config files used by multiple services
+  - name: boulder-shared-config
     files:
-      - config/crl-checker.json
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
+      - config/ident-policy.yaml
+      - config/zlint.toml
+      - config/ct-log-list.json
+      - config/crl-storer.ini
 
 images:
   - name: letsencrypt/boulder

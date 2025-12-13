@@ -1,0 +1,33 @@
+{
+	"sfe": {
+		"listenAddress": "0.0.0.0:4003",
+		"debugAddr": ":8015",
+		"timeout": "30s",
+		"shutdownStopTimeout": "10s",
+		"tls": {
+			"caCertFile": "/certs/ipki/minica.pem",
+			"certFile": "/certs/ipki/sfe.boulder/cert.pem",
+			"keyFile": "/certs/ipki/sfe.boulder/key.pem"
+		},
+		"raService": {
+			"serverAddress": "boulder-ra.boulder.svc.cluster.local:9094",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "ra.boulder"
+		},
+		"saService": {
+			"serverAddress": "boulder-sa.boulder.svc.cluster.local:9095",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "sa.boulder"
+		},
+		"unpauseHMACKey": {
+			"keyFile": "/secrets/sfe_unpause_key"
+		},
+		"features": {}
+	},
+	"syslog": {
+		"stdoutlevel": 6,
+		"sysloglevel": -1
+	}
+}
