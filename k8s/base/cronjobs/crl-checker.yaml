@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-crl-checker
+  labels:
+    app.kubernetes.io/name: boulder-crl-checker
+    app.kubernetes.io/component: compliance
+spec:
+  schedule: "15 * * * *"  # Every hour at :15
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: boulder-crl-checker
+            app.kubernetes.io/component: compliance
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: crl-checker
+              image: letsencrypt/boulder:latest
+              args:
+                - boulder
+                - crl-checker
+                - --config
+                - /config/crl-checker.json
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+          volumes:
+            - name: config
+              configMap:
+                name: boulder-crl-checker-config

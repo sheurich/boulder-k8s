@@ -1,0 +1,31 @@
+# Patch CA deployment to use SoftHSM proxy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ca
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-ca
+          env:
+            - name: PKCS11_PROXY_SOCKET
+              value: "tcp://softhsm-proxy.boulder.svc.cluster.local:5657"
+          volumeMounts:
+            - name: pkcs11-lib
+              mountPath: /usr/lib/pkcs11
+              readOnly: true
+      # Init container to copy pkcs11-proxy client library
+      initContainers:
+        - name: copy-pkcs11-lib
+          image: ghcr.io/letsencrypt/pkcs11-proxy:latest
+          command:
+            - cp
+            - /usr/lib/libpkcs11-proxy.so
+            - /pkcs11/libpkcs11-proxy.so
+          volumeMounts:
+            - name: pkcs11-lib
+              mountPath: /pkcs11
+      volumes:
+        - name: pkcs11-lib
+          emptyDir: {}

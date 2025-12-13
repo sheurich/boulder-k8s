@@ -1,0 +1,9 @@
+# Relax network policies for dev - allow all egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: boulder-internal
+spec:
+  egress:
+    # Allow all egress in dev for easier debugging
+    - {}

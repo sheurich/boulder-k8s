@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-publisher
+  labels:
+    app.kubernetes.io/name: boulder-publisher
+    app.kubernetes.io/component: publisher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-publisher
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-publisher
+        app.kubernetes.io/component: publisher
+    spec:
+      containers:
+        - name: boulder-publisher
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder-publisher
+            - --config
+            - /config/publisher.json
+          ports:
+            - name: grpc
+              containerPort: 9091
+              protocol: TCP
+            - name: metrics
+              containerPort: 8015
+              protocol: TCP
+          livenessProbe:
+            grpc:
+              port: 9091
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            grpc:
+              port: 9091
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-publisher-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-publisher-grpc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-publisher
+  labels:
+    app.kubernetes.io/name: boulder-publisher
+    app.kubernetes.io/component: publisher
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9091
+      targetPort: grpc
+    - name: metrics
+      port: 8015
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-publisher

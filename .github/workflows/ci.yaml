@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dec]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install kubeconform
+        run: go install github.com/yannh/kubeconform/cmd/kubeconform@latest
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.14.0'
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.29.0'
+
+      - name: Validate manifests
+        run: ./scripts/validate-manifests.sh
+
+  deploy-test:
+    name: Deploy and Test
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.14.0'
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.29.0'
+
+      - name: Install kind
+        uses: helm/kind-action@v1
+        with:
+          install_only: true
+
+      - name: Create kind cluster
+        run: ./scripts/kind-create.sh
+        env:
+          CLUSTER_NAME: boulder-ci
+
+      - name: Deploy Boulder
+        run: ./scripts/deploy.sh dev
+        env:
+          NAMESPACE: boulder
+
+      - name: Wait for services
+        run: ./scripts/wait-ready.sh
+        env:
+          NAMESPACE: boulder
+          TIMEOUT: 600s
+
+      - name: Test certificate issuance
+        run: ./scripts/test-issuance.sh
+        env:
+          NAMESPACE: boulder
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          echo "==> Pod status:"
+          kubectl get pods -n boulder -o wide
+          echo ""
+          echo "==> Recent events:"
+          kubectl get events -n boulder --sort-by='.lastTimestamp' | tail -50
+          echo ""
+          echo "==> Pod logs:"
+          for pod in $(kubectl get pods -n boulder -o name); do
+            echo "--- $pod ---"
+            kubectl logs "$pod" -n boulder --tail=100 || true
+          done
+
+      - name: Teardown
+        if: always()
+        run: ./scripts/teardown.sh
+        env:
+          DELETE_CLUSTER: true
+          CLUSTER_NAME: boulder-ci
+
+  helm-lint:
+    name: Lint Helm Charts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.14.0'
+
+      - name: Lint softhsm-proxy chart
+        run: helm lint helm/softhsm-proxy

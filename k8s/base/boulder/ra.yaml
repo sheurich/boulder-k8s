@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ra
+  labels:
+    app.kubernetes.io/name: boulder-ra
+    app.kubernetes.io/component: registration-authority
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-ra
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-ra
+        app.kubernetes.io/component: registration-authority
+    spec:
+      containers:
+        - name: boulder-ra
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder-ra
+            - --config
+            - /config/ra.json
+          ports:
+            - name: grpc
+              containerPort: 9094
+              protocol: TCP
+            - name: metrics
+              containerPort: 8012
+              protocol: TCP
+          livenessProbe:
+            grpc:
+              port: 9094
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            grpc:
+              port: 9094
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-ra-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-ra-grpc-tls
+        - name: secrets
+          secret:
+            secretName: boulder-ra-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-ra
+  labels:
+    app.kubernetes.io/name: boulder-ra
+    app.kubernetes.io/component: registration-authority
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9094
+      targetPort: grpc
+    - name: metrics
+      port: 8012
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-ra

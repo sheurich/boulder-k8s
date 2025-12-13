@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ca
+  labels:
+    app.kubernetes.io/name: boulder-ca
+    app.kubernetes.io/component: certificate-authority
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-ca
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-ca
+        app.kubernetes.io/component: certificate-authority
+    spec:
+      containers:
+        - name: boulder-ca
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder-ca
+            - --config
+            - /config/ca.json
+          ports:
+            - name: grpc
+              containerPort: 9093
+              protocol: TCP
+            - name: metrics
+              containerPort: 8011
+              protocol: TCP
+          livenessProbe:
+            grpc:
+              port: 9093
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            grpc:
+              port: 9093
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+            - name: hsm-config
+              mountPath: /hsm
+              readOnly: true
+            # HSM PKCS#11 library - path set via overlay
+            - name: pkcs11-lib
+              mountPath: /usr/lib/pkcs11
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-ca-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-ca-grpc-tls
+        - name: secrets
+          secret:
+            secretName: boulder-ca-secrets
+        - name: hsm-config
+          secret:
+            secretName: boulder-ca-hsm-config
+        # PKCS#11 library volume - configured via overlay
+        - name: pkcs11-lib
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-ca
+  labels:
+    app.kubernetes.io/name: boulder-ca
+    app.kubernetes.io/component: certificate-authority
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9093
+      targetPort: grpc
+    - name: metrics
+      port: 8011
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-ca

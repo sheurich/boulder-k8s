@@ -1,0 +1,221 @@
+# Automated PKI ceremony job for dev/CI
+# Generates root CA, intermediate CAs, and internal PKI certificates
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: boulder-pki-ceremony
+  labels:
+    app.kubernetes.io/name: boulder-pki-ceremony
+    app.kubernetes.io/component: bootstrap
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-10"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-pki-ceremony
+        app.kubernetes.io/component: bootstrap
+    spec:
+      restartPolicy: Never
+      serviceAccountName: boulder-pki-ceremony
+      containers:
+        - name: ceremony
+          image: letsencrypt/boulder:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Starting PKI ceremony..."
+
+              # Generate internal PKI (gRPC mTLS)
+              echo "Generating internal PKI certificates..."
+              /scripts/generate-internal-pki.sh
+
+              # Generate WebPKI hierarchy (root + intermediates)
+              echo "Generating WebPKI hierarchy..."
+              /scripts/generate-webpki.sh
+
+              # Initialize SoftHSM and import keys
+              echo "Initializing SoftHSM..."
+              /scripts/init-softhsm.sh
+
+              # Create Kubernetes secrets
+              echo "Creating Kubernetes secrets..."
+              /scripts/create-secrets.sh
+
+              echo "PKI ceremony completed successfully"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: output
+              mountPath: /output
+      volumes:
+        - name: scripts
+          configMap:
+            name: boulder-pki-ceremony-scripts
+            defaultMode: 0755
+        - name: output
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: boulder-pki-ceremony
+  labels:
+    app.kubernetes.io/name: boulder-pki-ceremony
+    app.kubernetes.io/component: bootstrap
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: boulder-pki-ceremony
+  labels:
+    app.kubernetes.io/name: boulder-pki-ceremony
+    app.kubernetes.io/component: bootstrap
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: boulder-pki-ceremony
+  labels:
+    app.kubernetes.io/name: boulder-pki-ceremony
+    app.kubernetes.io/component: bootstrap
+subjects:
+  - kind: ServiceAccount
+    name: boulder-pki-ceremony
+roleRef:
+  kind: Role
+  name: boulder-pki-ceremony
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boulder-pki-ceremony-scripts
+  labels:
+    app.kubernetes.io/name: boulder-pki-ceremony
+    app.kubernetes.io/component: bootstrap
+data:
+  generate-internal-pki.sh: |
+    #!/bin/sh
+    # Generate internal PKI for gRPC mTLS
+    # This creates a CA and certificates for all Boulder services
+
+    cd /output
+    mkdir -p ipki
+
+    # Generate internal CA
+    openssl ecparam -name prime256v1 -genkey -noout -out ipki/ca.key
+    openssl req -new -x509 -sha256 -key ipki/ca.key -out ipki/ca.crt \
+      -days 365 -subj "/CN=Boulder Internal CA"
+
+    # Generate certificates for each service
+    for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
+                   crl-updater crl-storer observer email-exporter sfe; do
+      mkdir -p ipki/$service
+      openssl ecparam -name prime256v1 -genkey -noout -out ipki/$service/key.pem
+      openssl req -new -key ipki/$service/key.pem -out ipki/$service/csr.pem \
+        -subj "/CN=boulder-$service"
+
+      # Create SAN extension file
+      cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local
+    EOF
+
+      openssl x509 -req -in ipki/$service/csr.pem -CA ipki/ca.crt -CAkey ipki/ca.key \
+        -CAcreateserial -out ipki/$service/cert.pem -days 365 -sha256 \
+        -extfile ipki/$service/ext.cnf
+      rm ipki/$service/csr.pem ipki/$service/ext.cnf
+    done
+
+    echo "Internal PKI generated"
+
+  generate-webpki.sh: |
+    #!/bin/sh
+    # Generate WebPKI hierarchy for certificate issuance
+
+    cd /output
+    mkdir -p webpki
+
+    # Generate RSA Root CA
+    openssl genrsa -out webpki/root-rsa.key 4096
+    openssl req -new -x509 -sha256 -key webpki/root-rsa.key \
+      -out webpki/root-rsa.crt -days 3650 \
+      -subj "/CN=Boulder Test Root RSA/O=Boulder Test"
+
+    # Generate ECDSA Root CA
+    openssl ecparam -name prime256v1 -genkey -noout -out webpki/root-ecdsa.key
+    openssl req -new -x509 -sha256 -key webpki/root-ecdsa.key \
+      -out webpki/root-ecdsa.crt -days 3650 \
+      -subj "/CN=Boulder Test Root ECDSA/O=Boulder Test"
+
+    # Generate RSA Intermediate A
+    openssl genrsa -out webpki/int-rsa-a.key 2048
+    openssl req -new -key webpki/int-rsa-a.key -out webpki/int-rsa-a.csr \
+      -subj "/CN=Boulder Test Intermediate RSA A/O=Boulder Test"
+    openssl x509 -req -in webpki/int-rsa-a.csr -CA webpki/root-rsa.crt \
+      -CAkey webpki/root-rsa.key -CAcreateserial \
+      -out webpki/int-rsa-a.crt -days 1825 -sha256
+
+    # Generate ECDSA Intermediate A
+    openssl ecparam -name prime256v1 -genkey -noout -out webpki/int-ecdsa-a.key
+    openssl req -new -key webpki/int-ecdsa-a.key -out webpki/int-ecdsa-a.csr \
+      -subj "/CN=Boulder Test Intermediate ECDSA A/O=Boulder Test"
+    openssl x509 -req -in webpki/int-ecdsa-a.csr -CA webpki/root-ecdsa.crt \
+      -CAkey webpki/root-ecdsa.key -CAcreateserial \
+      -out webpki/int-ecdsa-a.crt -days 1825 -sha256
+
+    rm webpki/*.csr
+    echo "WebPKI hierarchy generated"
+
+  init-softhsm.sh: |
+    #!/bin/sh
+    # Initialize SoftHSM with the intermediate CA keys
+    # Note: This runs inside the ceremony container, but the actual
+    # SoftHSM token storage is on the softhsm-proxy PVC
+
+    echo "SoftHSM initialization placeholder"
+    echo "In dev/CI, keys are imported to SoftHSM via pkcs11-proxy"
+
+  create-secrets.sh: |
+    #!/bin/sh
+    # Create Kubernetes secrets from generated certificates
+
+    cd /output
+
+    # Create internal CA secret
+    kubectl create secret generic boulder-internal-ca \
+      --from-file=ca.crt=ipki/ca.crt \
+      --from-file=ca.key=ipki/ca.key \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    # Create service TLS secrets
+    for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
+                   crl-updater crl-storer observer email-exporter sfe; do
+      kubectl create secret tls boulder-$service-grpc-tls \
+        --cert=ipki/$service/cert.pem \
+        --key=ipki/$service/key.pem \
+        --dry-run=client -o yaml | kubectl apply -f -
+    done
+
+    # Create WebPKI chain configmap
+    kubectl create configmap boulder-chain-certs \
+      --from-file=root-rsa.crt=webpki/root-rsa.crt \
+      --from-file=root-ecdsa.crt=webpki/root-ecdsa.crt \
+      --from-file=int-rsa-a.crt=webpki/int-rsa-a.crt \
+      --from-file=int-ecdsa-a.crt=webpki/int-ecdsa-a.crt \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+    echo "Kubernetes secrets created"

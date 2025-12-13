@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-wfe2
+  labels:
+    app.kubernetes.io/name: boulder-wfe2
+    app.kubernetes.io/component: web-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-wfe2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-wfe2
+        app.kubernetes.io/component: web-frontend
+    spec:
+      containers:
+        - name: boulder-wfe2
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder-wfe2
+            - --config
+            - /config/wfe2.json
+          ports:
+            - name: http
+              containerPort: 4001
+              protocol: TCP
+            - name: https
+              containerPort: 4431
+              protocol: TCP
+            - name: metrics
+              containerPort: 8013
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /build
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /build
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: grpc-tls
+              mountPath: /certs/grpc
+              readOnly: true
+            - name: web-tls
+              mountPath: /certs/web
+              readOnly: true
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+            - name: chain-certs
+              mountPath: /chain
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-wfe2-config
+        - name: grpc-tls
+          secret:
+            secretName: boulder-wfe2-grpc-tls
+        - name: web-tls
+          secret:
+            secretName: boulder-wfe2-web-tls
+        - name: secrets
+          secret:
+            secretName: boulder-wfe2-secrets
+        - name: chain-certs
+          configMap:
+            name: boulder-chain-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-wfe2
+  labels:
+    app.kubernetes.io/name: boulder-wfe2
+    app.kubernetes.io/component: web-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 4001
+      targetPort: http
+    - name: https
+      port: 4431
+      targetPort: https
+    - name: metrics
+      port: 8013
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: boulder-wfe2
+---
+# LoadBalancer for external ACME access
+apiVersion: v1
+kind: Service
+metadata:
+  name: boulder-wfe2-external
+  labels:
+    app.kubernetes.io/name: boulder-wfe2
+    app.kubernetes.io/component: web-frontend
+spec:
+  type: LoadBalancer
+  ports:
+    - name: https
+      port: 443
+      targetPort: https
+  selector:
+    app.kubernetes.io/name: boulder-wfe2

@@ -1,0 +1,94 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: boulder
+
+resources:
+  - ../../base
+  # Test mocks
+  - mocks/challtestsrv.yaml
+  - mocks/ct-test-srv.yaml
+  - mocks/pardot-test-srv.yaml
+  # PKI ceremony job
+  - ceremony/pki-ceremony.yaml
+
+# Patch for dev-specific settings
+patches:
+  # Use SoftHSM for CA
+  - path: patches/ca-softhsm.yaml
+  # Reduce replicas for dev
+  - path: patches/replicas.yaml
+  # Reduce resource limits for dev
+  - path: patches/resources.yaml
+  # Relax network policies for dev
+  - path: patches/network-policies.yaml
+
+configMapGenerator:
+  # Boulder configs for dev environment
+  - name: boulder-wfe2-config
+    files:
+      - config/wfe2.json
+  - name: boulder-ra-config
+    files:
+      - config/ra.json
+  - name: boulder-sa-config
+    files:
+      - config/sa.json
+  - name: boulder-ca-config
+    files:
+      - config/ca.json
+  - name: boulder-va-config
+    files:
+      - config/va.json
+  - name: boulder-rva1-config
+    files:
+      - config/remoteva-a.json
+  - name: boulder-rva2-config
+    files:
+      - config/remoteva-b.json
+  - name: boulder-rva3-config
+    files:
+      - config/remoteva-c.json
+  - name: boulder-publisher-config
+    files:
+      - config/publisher.json
+  - name: boulder-nonce-a-config
+    files:
+      - config/nonce-a.json
+  - name: boulder-nonce-b-config
+    files:
+      - config/nonce-b.json
+  - name: boulder-crl-updater-config
+    files:
+      - config/crl-updater.json
+  - name: boulder-crl-storer-config
+    files:
+      - config/crl-storer.json
+  - name: boulder-observer-config
+    files:
+      - config/observer.yml
+  - name: boulder-email-exporter-config
+    files:
+      - config/email-exporter.json
+  - name: boulder-sfe-config
+    files:
+      - config/sfe.json
+  - name: boulder-bad-key-revoker-config
+    files:
+      - config/bad-key-revoker.json
+  - name: boulder-log-validator-config
+    files:
+      - config/log-validator.json
+  - name: boulder-cert-checker-config
+    files:
+      - config/cert-checker.json
+  - name: boulder-crl-checker-config
+    files:
+      - config/crl-checker.json
+
+images:
+  - name: letsencrypt/boulder
+    newTag: latest
+
+commonLabels:
+  environment: dev

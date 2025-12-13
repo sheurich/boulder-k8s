@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-bad-key-revoker
+  labels:
+    app.kubernetes.io/name: boulder-bad-key-revoker
+    app.kubernetes.io/component: compliance
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: boulder-bad-key-revoker
+            app.kubernetes.io/component: compliance
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: bad-key-revoker
+              image: letsencrypt/boulder:latest
+              args:
+                - boulder
+                - bad-key-revoker
+                - --config
+                - /config/bad-key-revoker.json
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                - name: grpc-tls
+                  mountPath: /certs/grpc
+                  readOnly: true
+          volumes:
+            - name: config
+              configMap:
+                name: boulder-bad-key-revoker-config
+            - name: grpc-tls
+              secret:
+                secretName: boulder-bad-key-revoker-grpc-tls

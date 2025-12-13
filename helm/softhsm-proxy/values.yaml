@@ -1,0 +1,48 @@
+# SoftHSM Proxy configuration
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/letsencrypt/pkcs11-proxy
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# SoftHSM token configuration
+softhsm:
+  # Token label for the HSM slot
+  tokenLabel: "boulder"
+  # PIN for the token (set via secret in production)
+  pin: "1234"
+  # SO (Security Officer) PIN
+  soPin: "5678"
+
+# PKCS#11 proxy server settings
+proxy:
+  # Port for the PKCS#11 proxy server
+  port: 5657
+
+# Persistent storage for HSM token data
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 1Gi
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 5657
