@@ -28,7 +28,7 @@ Reference implementation for deploying Boulder to Kubernetes.
 
 Boulder signs certificates using keys stored in HSMs via PKCS#11.
 
-**Dev/CI:** SoftHSM accessed via pkcs11-proxy. Boulder-CA loads `libpkcs11-proxy.so`, which connects to a proxy server container backed by SoftHSM with persistent storage.
+**Dev/CI:** SoftHSM as CA pod sidecar. PKI ceremony generates keys in SoftHSM, stores token directory in K8s Secret. CA init container restores tokens; CA loads `libsofthsm2.so` directly. Supports multiple CA replicas (each imports same tokens).
 
 **Staging/Production:** Thales Luna HSM accessed via NTLS. Boulder-CA loads `libCryptoki2.so` (Luna client), which connects directly to Luna appliances (physical or Cloud HSM).
 
@@ -46,6 +46,57 @@ CA/Browser Forum requires multi-perspective validation for WebPKI. Running full 
 - Production: Real CT logs (Google, Cloudflare, etc.)
 
 Staging uses mocks to avoid polluting real CT logs with test certificates.
+
+## Boulder Architecture
+
+Boulder implements ACME (RFC 8555) as a microservices architecture. Each service runs as a separate Go binary, communicating via gRPC with mutual TLS.
+
+### Request Flow
+
+```
+Client → WFE2 → RA → VA (validation)
+                  → CA (issuance)
+                  → SA (persistence)
+                  → Publisher → CT Logs
+```
+
+1. **WFE2** receives ACME requests, validates signatures, forwards to RA
+2. **RA** orchestrates the workflow: creates orders, schedules validation, requests issuance
+3. **VA** validates domain control via HTTP-01, DNS-01, or TLS-ALPN-01 challenges
+4. **CA** signs certificates using HSM-stored keys
+5. **SA** persists all state to Vitess (registrations, orders, certificates)
+6. **Publisher** submits certificates to CT logs asynchronously
+
+### Service Roles
+
+| Service | Role |
+|---------|------|
+| WFE2 | ACME protocol endpoint, signature validation |
+| RA | Policy enforcement, workflow orchestration |
+| VA | Domain validation, CAA checking |
+| CA | Certificate signing via PKCS#11/HSM |
+| SA | Database access layer (only service with DB access) |
+| Publisher | CT log submission, async certificate storage |
+| Nonce | Cryptographic nonce generation for replay protection |
+| SFE | Internal admin interface for support operations |
+
+### Background Services
+
+| Service | Role |
+|---------|------|
+| CRL Updater | Generates Certificate Revocation Lists |
+| CRL Storer | Publishes CRLs to storage/CDN |
+| OCSP Updater | Generates OCSP responses |
+| Bad Key Revoker | Revokes certificates using compromised keys |
+| Log Validator | Validates CT log submissions |
+| Email Exporter | Sends expiration notifications |
+
+### Security Model
+
+- **Internal mTLS**: All gRPC calls require mutual TLS with service-specific certificates
+- **HSM isolation**: Only CA accesses HSM; other services cannot sign certificates
+- **SA gating**: Only SA accesses database; enforces data access patterns
+- **Nonce validation**: Prevents replay attacks in ACME protocol
 
 ## Architecture Decisions
 
@@ -135,11 +186,33 @@ Staging uses mocks to avoid polluting real CT logs with test certificates.
 
 ### Test Infrastructure (Dev/CI only)
 
-| Service | Purpose |
-|---------|---------|
-| challtestsrv | Mock DNS and HTTP challenge responder |
-| ct-test-srv | Mock Certificate Transparency log |
-| pardot-test-srv | Mock Salesforce for email-exporter |
+These services simulate the external Internet and third-party services for end-to-end testing. Production uses real equivalents.
+
+| Service | Simulates | Purpose |
+|---------|-----------|---------|
+| challtestsrv | Public Internet | Answers DNS queries, hosts HTTP-01/TLS-ALPN-01 challenge responses |
+| ct-test-srv | CT Logs (Google, Cloudflare) | Accepts precertificate submissions |
+| aia-test-srv | AIA endpoints | Serves issuer certificates for chain validation |
+| mail-test-srv | SMTP provider | Captures expiration notification emails |
+| pardot-test-srv | Salesforce API | Mocks CRM integration for email-exporter |
+| s3-test-srv | Amazon S3 | Mocks object storage for CRL/backup |
+
+**challtestsrv** is the most critical—it acts as the "Internet" for validation, providing both a fake DNS authority and challenge responder that the VA queries during domain validation.
+
+### Infrastructure Dependencies
+
+| Component | Role | Dev/CI | Production |
+|-----------|------|--------|------------|
+| Vitess | Sharded MySQL (registrations, orders, certs) | vtgate + vttablet | Managed cluster |
+| Redis | Rate limiting, nonce cache, operational state | Single instance | Clustered |
+| HSM | CA private key storage | SoftHSM sidecar | Thales Luna |
+| DNS Resolver | DNSSEC-validating recursive resolver for VA | CoreDNS | Unbound |
+| Jaeger | Distributed tracing | Optional | Required |
+| Prometheus | Metrics scraping | ServiceMonitors | ServiceMonitors |
+
+**Vitess** replaces Boulder's deprecated MariaDB/ProxySQL architecture. Components: vtgate (routing), vttablet (MySQL management), etcd (topology store).
+
+**Redis** handles high-frequency operations: rate limit counters, nonce validation, and short-term state. Dev uses separate instances to simulate availability zone separation.
 
 ## Implementation Phases
 
