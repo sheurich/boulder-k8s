@@ -64,10 +64,6 @@ spec:
             - name: hsm-config
               mountPath: /hsm
               readOnly: true
-            # HSM PKCS#11 library - path set via overlay
-            - name: pkcs11-lib
-              mountPath: /usr/lib/pkcs11
-              readOnly: true
       volumes:
         - name: config
           configMap:
@@ -84,9 +80,6 @@ spec:
         - name: hsm-config
           secret:
             secretName: boulder-ca-hsm-config
-        # PKCS#11 library volume - configured via overlay
-        - name: pkcs11-lib
-          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

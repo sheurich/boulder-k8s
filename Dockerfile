@@ -76,11 +76,17 @@ LABEL org.opencontainers.image.vendor="Internet Security Research Group"
 # Install runtime dependencies:
 # - ca-certificates: TLS verification
 # - libc6: required for cgo binaries
+# - softhsm2: Software HSM for dev/CI PKI ceremony
+# - openssl: For internal PKI certificate generation
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        softhsm2 \
+        openssl \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd -r -u 1000 -s /usr/sbin/nologin boulder
+    && useradd -r -u 1000 -s /usr/sbin/nologin boulder \
+    && mkdir -p /var/lib/softhsm/tokens \
+    && chown -R boulder:boulder /var/lib/softhsm
 
 # Copy binaries from builder
 COPY --from=builder /go/bin/ /usr/local/bin/

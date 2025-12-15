@@ -89,6 +89,10 @@ configMapGenerator:
   - name: boulder-crl-checker-config
     files:
       - config/crl-checker.json
+  # SoftHSM configuration
+  - name: boulder-softhsm-config
+    files:
+      - softhsm2.conf=config/softhsm2.conf
   # Shared config files used by multiple services
   - name: boulder-shared-config
     files:

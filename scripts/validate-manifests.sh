@@ -33,15 +33,12 @@ for overlay in dev staging prod; do
     fi
 done
 
-# Validate Helm charts
-echo "==> Validating Helm charts..."
-
-for chart in softhsm-proxy; do
-    chart_dir="$ROOT_DIR/helm/$chart"
-    if [ -d "$chart_dir" ]; then
-        echo "  Linting $chart..."
-        helm lint "$chart_dir"
-        echo "  ✓ $chart chart valid"
+# Validate Helm values files
+echo "==> Validating Helm values files..."
+for values_dir in vitess redis; do
+    values_path="$ROOT_DIR/helm/$values_dir"
+    if [ -d "$values_path" ]; then
+        echo "  ✓ $values_dir values present"
     fi
 done
 

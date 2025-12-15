@@ -24,7 +24,6 @@ done
 echo "  Deleting Helm releases..."
 helm uninstall redis -n "$NAMESPACE" 2>/dev/null || true
 helm uninstall vitess -n "$NAMESPACE" 2>/dev/null || true
-helm uninstall softhsm-proxy -n "$NAMESPACE" 2>/dev/null || true
 
 # Delete namespace if requested
 if [ "$DELETE_NAMESPACE" = "true" ]; then

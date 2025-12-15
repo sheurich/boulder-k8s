@@ -1,4 +1,6 @@
-# Patch CA deployment to use SoftHSM proxy
+# Patch CA deployment to use SoftHSM directly (sidecar pattern)
+# SoftHSM tokens are initialized by PKI ceremony and stored in a Secret.
+# Init container restores tokens to emptyDir, CA loads libsofthsm2.so directly.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -9,23 +11,64 @@ spec:
       containers:
         - name: boulder-ca
           env:
-            - name: PKCS11_PROXY_SOCKET
-              value: "tcp://softhsm-proxy.boulder.svc.cluster.local:5657"
+            # SoftHSM config file location
+            - name: SOFTHSM2_CONF
+              value: /etc/softhsm/softhsm2.conf
           volumeMounts:
-            - name: pkcs11-lib
-              mountPath: /usr/lib/pkcs11
+            # SoftHSM token storage (populated by init container)
+            - name: softhsm-tokens
+              mountPath: /var/lib/softhsm/tokens
+            # SoftHSM config file
+            - name: softhsm-config
+              mountPath: /etc/softhsm
               readOnly: true
-      # Init container to copy pkcs11-proxy client library
+            # WebPKI certificates (intermediates need public keys for pkcs11.json)
+            - name: webpki-certs
+              mountPath: /certs/webpki
+              readOnly: true
+      # Init container restores SoftHSM tokens from Secret
+      # Note: Image inherited from deployment, overridden by image-pull-policy patch
       initContainers:
-        - name: copy-pkcs11-lib
-          image: ghcr.io/letsencrypt/pkcs11-proxy:latest
+        - name: restore-softhsm-tokens
+          image: boulder:latest
           command:
-            - cp
-            - /usr/lib/libpkcs11-proxy.so
-            - /pkcs11/libpkcs11-proxy.so
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Restoring SoftHSM tokens from secret..."
+              # Extract token archive from secret
+              cd /var/lib/softhsm
+              tar xzf /secret-tokens/softhsm-tokens.tar.gz
+              # Fix permissions
+              chmod -R 700 /var/lib/softhsm/tokens
+              echo "SoftHSM tokens restored:"
+              ls -la /var/lib/softhsm/tokens/
+              # Verify tokens are accessible
+              export SOFTHSM2_CONF=/etc/softhsm/softhsm2.conf
+              softhsm2-util --show-slots
           volumeMounts:
-            - name: pkcs11-lib
-              mountPath: /pkcs11
+            - name: softhsm-tokens
+              mountPath: /var/lib/softhsm/tokens
+            - name: softhsm-token-secret
+              mountPath: /secret-tokens
+              readOnly: true
+            - name: softhsm-config
+              mountPath: /etc/softhsm
+              readOnly: true
       volumes:
-        - name: pkcs11-lib
+        # EmptyDir for SoftHSM token storage at runtime
+        - name: softhsm-tokens
           emptyDir: {}
+        # Secret containing SoftHSM token archive (created by PKI ceremony)
+        - name: softhsm-token-secret
+          secret:
+            secretName: boulder-softhsm-tokens
+        # SoftHSM configuration
+        - name: softhsm-config
+          configMap:
+            name: boulder-softhsm-config
+        # WebPKI certificates
+        - name: webpki-certs
+          configMap:
+            name: boulder-webpki-certs

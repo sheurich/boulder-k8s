@@ -23,13 +23,7 @@ kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -
 # Deploy infrastructure dependencies
 echo "==> Deploying infrastructure..."
 
-# Deploy SoftHSM proxy (dev/staging only)
-if [ "$OVERLAY" = "dev" ] || [ "$OVERLAY" = "staging" ]; then
-    echo "  Installing SoftHSM proxy..."
-    helm upgrade --install softhsm-proxy "$ROOT_DIR/helm/softhsm-proxy" \
-        --namespace "$NAMESPACE" \
-        --wait
-fi
+# Note: SoftHSM runs as a sidecar in the CA pod (no separate deployment needed)
 
 # Deploy Vitess
 echo "  Installing Vitess..."
