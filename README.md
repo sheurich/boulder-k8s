@@ -162,6 +162,11 @@ GitHub Actions runs on every PR:
 2. **deploy-test** - Deploy to kind, run integration tests
 3. **helm-lint** - Validate Helm charts
 
+## Documentation
+
+- [Design](docs/design.md) — Goals, requirements, architecture decisions
+- [Boulder](https://github.com/letsencrypt/boulder) — Upstream ACME CA
+
 ## Contributing
 
 1. Fork the repository
