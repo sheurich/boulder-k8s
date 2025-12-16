@@ -106,11 +106,11 @@ Client → WFE2 → RA → VA (validation)
 
 **Rationale:** Helm charts exist for Vitess and Redis with production-tested defaults. Kustomize keeps Boulder manifests readable without Go templating. Overlays handle environment differences cleanly.
 
-### Database: Vitess Only
+### Database: MySQL + ProxySQL
 
-**Choice:** Target Vitess exclusively. Do not support MariaDB/ProxySQL.
+**Choice:** MySQL 8.4 with ProxySQL connection pooling for dev/CI/staging. Production uses managed MySQL or equivalent.
 
-**Rationale:** Boulder is deprecating MariaDB/ProxySQL in favor of Vitess. Building for the deprecated path wastes effort.
+**Rationale:** Aligns with upstream Boulder's docker-compose architecture. ProxySQL provides connection pooling, query routing, and timeout management. MySQL 8.4 ensures compatibility with Boulder's SQL requirements. Vitess available as optional overlay for horizontal scaling at extreme scale (10M+ certs/month).
 
 ### Service Discovery: Kubernetes DNS
 
@@ -203,14 +203,15 @@ These services simulate the external Internet and third-party services for end-t
 
 | Component | Role | Dev/CI | Production |
 |-----------|------|--------|------------|
-| Vitess | Sharded MySQL (registrations, orders, certs) | vtgate + vttablet | Managed cluster |
+| MySQL 8 | Relational database (registrations, orders, certs) | Single instance | Managed cluster |
+| ProxySQL | Connection pooling, query routing | Single instance | HA pair |
 | Redis | Rate limiting, nonce cache, operational state | Single instance | Clustered |
 | HSM | CA private key storage | SoftHSM sidecar | Thales Luna |
 | DNS Resolver | DNSSEC-validating recursive resolver for VA | CoreDNS | Unbound |
 | Jaeger | Distributed tracing | Optional | Required |
 | Prometheus | Metrics scraping | ServiceMonitors | ServiceMonitors |
 
-**Vitess** replaces Boulder's deprecated MariaDB/ProxySQL architecture. Components: vtgate (routing), vttablet (MySQL management), etcd (topology store).
+**MySQL + ProxySQL** follows upstream Boulder's production architecture. ProxySQL handles connection pooling, query timeout management, and enables future read/write splitting with replicas.
 
 **Redis** handles high-frequency operations: rate limit counters, nonce validation, and short-term state. Dev uses separate instances to simulate availability zone separation.
 

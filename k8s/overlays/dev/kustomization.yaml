@@ -5,8 +5,9 @@ namespace: boulder
 
 resources:
   - ../../base
-  # Infrastructure
-  - infra/vitess.yaml
+  # Infrastructure - MySQL 8 + ProxySQL
+  - infra/mysql.yaml
+  - infra/proxysql.yaml
   # Database secrets
   - secrets/db-urls.yaml
   # Redis secrets

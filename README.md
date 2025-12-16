@@ -30,14 +30,14 @@ This repository provides production-grade Kubernetes manifests for deploying Bou
    └────┬────┘           └─────┬─────┘          └───────────┘
         │                      │
    ┌────┼────┐            ┌────▼────┐
-   │    │    │            │  Vitess │
-┌──▼─┐┌─▼──┐┌▼──┐         │   (DB)  │
-│ VA ││ CA ││...│         └─────────┘
-└────┘└──┬─┘└───┘
-         │
-    ┌────▼────┐
-    │   HSM   │
-    │(SoftHSM │
+   │    │    │            │ProxySQL │
+┌──▼─┐┌─▼──┐┌▼──┐         │ (pool)  │
+│ VA ││ CA ││...│         └────┬────┘
+└────┘└──┬─┘└───┘              │
+         │                ┌────▼────┐
+    ┌────▼────┐           │ MySQL 8 │
+    │   HSM   │           │  (DB)   │
+    │(SoftHSM │           └─────────┘
     │or Luna) │
     └─────────┘
 ```
@@ -79,10 +79,8 @@ DELETE_CLUSTER=true ./scripts/teardown.sh
 
 ```
 boulder-k8s/
-├── boulder/                 # Boulder submodule
-├── helm/                    # Helm charts
-│   ├── softhsm-proxy/       # SoftHSM PKCS#11 proxy
-│   ├── vitess/              # Vitess database values
+├── boulder/                 # Boulder submodule (for reference)
+├── helm/                    # Helm values files
 │   └── redis/               # Redis values
 ├── k8s/
 │   ├── base/                # Kustomize base manifests
@@ -93,6 +91,10 @@ boulder-k8s/
 │   │   └── observability/   # ServiceMonitors
 │   └── overlays/
 │       ├── dev/             # Kind + SoftHSM + mocks
+│       │   ├── infra/       # MySQL, ProxySQL
+│       │   ├── config/      # Boulder configs
+│       │   ├── patches/     # Dev-specific patches
+│       │   └── ceremony/    # PKI ceremony job
 │       ├── staging/         # Production-like
 │       └── prod/            # Luna HSM + real CT
 ├── scripts/                 # Deployment scripts
@@ -134,25 +136,36 @@ boulder-k8s/
 
 | Aspect | Dev | Staging | Prod |
 |--------|-----|---------|------|
-| HSM | SoftHSM | SoftHSM or Luna | Luna |
+| Database | MySQL + ProxySQL | Managed MySQL | Managed MySQL |
+| HSM | SoftHSM sidecar | SoftHSM or Luna | Luna |
 | CT logs | Mock | Mock | Real |
 | Secrets | K8s Secrets | K8s or ESO | ESO |
 | Replicas | 1 | 2+ | HA |
 
+### Database Configuration
+
+**Dev/CI (MySQL + ProxySQL):**
+- MySQL 8.4 single instance with init scripts
+- ProxySQL 2.7.2 for connection pooling
+- Boulder services connect to `proxysql:6033`
+- Aligned with upstream Boulder's docker-compose architecture
+
+**Production:**
+- Managed MySQL (RDS, Cloud SQL) or replicated MySQL
+- ProxySQL for connection pooling and read/write splitting
+- Optional: Vitess for horizontal scaling at extreme scale
+
 ### HSM Configuration
 
 **Dev/CI (SoftHSM):**
-```yaml
-# Deployed automatically via softhsm-proxy Helm chart
-# CA connects via PKCS#11 proxy
-```
+- SoftHSM runs as sidecar container in CA pod
+- PKI ceremony generates keys using Boulder's `ceremony` tool
+- Tokens stored in K8s Secret, restored by init container
 
 **Production (Luna HSM):**
-```yaml
-# Configure via staging/prod overlay
-# Mount Luna client library
-# Configure NTLS connection to HSM
-```
+- Mount Luna client library (`libCryptoki2.so`)
+- Configure NTLS connection to Luna appliances
+- Key ceremony performed manually with HSM admin
 
 ## CI/CD
 

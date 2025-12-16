@@ -35,7 +35,7 @@ done
 
 # Validate Helm values files
 echo "==> Validating Helm values files..."
-for values_dir in vitess redis; do
+for values_dir in redis; do
     values_path="$ROOT_DIR/helm/$values_dir"
     if [ -d "$values_path" ]; then
         echo "  ✓ $values_dir values present"

@@ -20,18 +20,18 @@ spec:
     spec:
       restartPolicy: OnFailure
       initContainers:
-        # Wait for Vitess to be ready
+        # Wait for ProxySQL to be ready (which waits for MySQL)
         - name: wait-for-db
           image: busybox:1.36
           command:
             - sh
             - -c
             - |
-              echo "Waiting for Vitess..."
-              until nc -z vitess 3306; do
+              echo "Waiting for ProxySQL..."
+              until nc -z proxysql 6033; do
                 sleep 2
               done
-              echo "Vitess is ready"
+              echo "ProxySQL is ready"
         # Clone Boulder source for migration SQL files
         - name: clone-boulder
           image: alpine/git:latest

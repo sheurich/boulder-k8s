@@ -1,105 +1,98 @@
-# Simple MariaDB deployment for Boulder dev/CI
-# Uses official mariadb:10.11 image matching Boulder's docker-compose setup
+# MySQL 8.4 deployment for Boulder dev/CI
+# Uses official mysql:8.4 image with init scripts for Boulder databases
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mariadb-data
+  name: mysql-data
   labels:
-    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/name: mysql
     app.kubernetes.io/component: database
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mariadb-credentials
-  labels:
-    app.kubernetes.io/name: mariadb
-    app.kubernetes.io/component: database
-type: Opaque
-stringData:
-  MYSQL_ROOT_PASSWORD: boulder-root-dev
-  MYSQL_DATABASE: boulder_sa_test
-  MYSQL_USER: boulder
-  MYSQL_PASSWORD: boulder-dev-password
+      storage: 5Gi
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mariadb-init
+  name: mysql-init
   labels:
-    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/name: mysql
     app.kubernetes.io/component: database
 data:
   init-boulder.sql: |
-    -- Create databases needed by Boulder
+    -- Boulder database initialization for dev/CI
+    -- Creates databases and users required by Boulder services
+
+    -- Create databases
     CREATE DATABASE IF NOT EXISTS boulder_sa_test;
     CREATE DATABASE IF NOT EXISTS incidents_sa_test;
 
-    -- Create Boulder service users (matching Boulder's docker-compose setup)
-    -- SA user - full access to boulder_sa_test
-    CREATE USER IF NOT EXISTS 'sa'@'%' IDENTIFIED BY 'boulder-dev-password';
+    -- SA user - primary read/write access to boulder_sa_test
+    CREATE USER IF NOT EXISTS 'sa'@'%';
     GRANT ALL PRIVILEGES ON boulder_sa_test.* TO 'sa'@'%';
 
     -- SA read-only user
-    CREATE USER IF NOT EXISTS 'sa_ro'@'%' IDENTIFIED BY 'boulder-dev-password';
+    CREATE USER IF NOT EXISTS 'sa_ro'@'%';
     GRANT SELECT ON boulder_sa_test.* TO 'sa_ro'@'%';
 
-    -- Incidents SA user
-    CREATE USER IF NOT EXISTS 'incidents_sa'@'%' IDENTIFIED BY 'boulder-dev-password';
+    -- Incidents SA user - access to incidents_sa_test, read-only to boulder_sa_test
+    CREATE USER IF NOT EXISTS 'incidents_sa'@'%';
     GRANT ALL PRIVILEGES ON incidents_sa_test.* TO 'incidents_sa'@'%';
     GRANT SELECT ON boulder_sa_test.* TO 'incidents_sa'@'%';
 
     -- Cert checker user (read-only)
-    CREATE USER IF NOT EXISTS 'cert_checker'@'%' IDENTIFIED BY 'boulder-dev-password';
+    CREATE USER IF NOT EXISTS 'cert_checker'@'%';
     GRANT SELECT ON boulder_sa_test.* TO 'cert_checker'@'%';
 
     -- Bad key revoker user
-    CREATE USER IF NOT EXISTS 'badkeyrevoker'@'%' IDENTIFIED BY 'boulder-dev-password';
+    CREATE USER IF NOT EXISTS 'badkeyrevoker'@'%';
     GRANT SELECT, UPDATE ON boulder_sa_test.* TO 'badkeyrevoker'@'%';
 
     -- Revoker user
-    CREATE USER IF NOT EXISTS 'revoker'@'%' IDENTIFIED BY 'boulder-dev-password';
+    CREATE USER IF NOT EXISTS 'revoker'@'%';
     GRANT SELECT, UPDATE ON boulder_sa_test.* TO 'revoker'@'%';
+
+    -- ProxySQL monitor user
+    CREATE USER IF NOT EXISTS 'proxysql'@'%';
+    GRANT USAGE ON *.* TO 'proxysql'@'%';
 
     FLUSH PRIVILEGES;
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mariadb
+  name: mysql
   labels:
-    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/name: mysql
     app.kubernetes.io/component: database
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: mariadb
+      app.kubernetes.io/name: mysql
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: mariadb
+        app.kubernetes.io/name: mysql
         app.kubernetes.io/component: database
     spec:
       containers:
-        - name: mariadb
-          image: mariadb:10.11.13
+        - name: mysql
+          image: mysql:8.4
           args:
             - mysqld
             - --bind-address=0.0.0.0
-            - --slow-query-log
+            - --slow-query-log=ON
             - --long-query-time=2
-          envFrom:
-            - secretRef:
-                name: mariadb-credentials
+            - --mysql-native-password=ON
+          env:
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "yes"
           ports:
             - name: mysql
               containerPort: 3306
@@ -122,8 +115,6 @@ spec:
                 - ping
                 - -h
                 - localhost
-                - -uboulder
-                - -pboulder-dev-password
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
@@ -133,24 +124,22 @@ spec:
                 - ping
                 - -h
                 - localhost
-                - -uboulder
-                - -pboulder-dev-password
             initialDelaySeconds: 10
             periodSeconds: 5
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: mariadb-data
+            claimName: mysql-data
         - name: init-scripts
           configMap:
-            name: mariadb-init
+            name: mysql-init
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mariadb
+  name: mysql
   labels:
-    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/name: mysql
     app.kubernetes.io/component: database
 spec:
   type: ClusterIP
@@ -160,4 +149,4 @@ spec:
       protocol: TCP
       name: mysql
   selector:
-    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/name: mysql
