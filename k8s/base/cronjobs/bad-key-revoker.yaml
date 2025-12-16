@@ -41,6 +41,9 @@ spec:
                 - name: grpc-tls
                   mountPath: /certs/grpc
                   readOnly: true
+                - name: secrets
+                  mountPath: /secrets
+                  readOnly: true
           volumes:
             - name: config
               configMap:
@@ -48,3 +51,6 @@ spec:
             - name: grpc-tls
               secret:
                 secretName: boulder-bad-key-revoker-grpc-tls
+            - name: secrets
+              secret:
+                secretName: boulder-bad-key-revoker-secrets

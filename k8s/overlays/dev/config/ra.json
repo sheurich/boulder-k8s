@@ -2,18 +2,13 @@
 	"ra": {
 		"limiter": {
 			"redis": {
-				"username": "boulder",
+				"username": "default",
 				"passwordFile": "/secrets/redis_password",
 				"address": "redis-master.boulder.svc.cluster.local:6379",
 				"readTimeout": "250ms",
 				"writeTimeout": "250ms",
 				"poolSize": 100,
-				"routeRandomly": true,
-				"tls": {
-					"caCertFile": "/certs/ipki/ca.crt",
-					"certFile": "/certs/ipki/ra/cert.pem",
-					"keyFile": "/certs/ipki/ra/key.pem"
-				}
+				"routeRandomly": true
 			},
 			"Defaults": "/config/ratelimit-defaults.yml",
 			"Overrides": "/config/ratelimit-overrides.yml"

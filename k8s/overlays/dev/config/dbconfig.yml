@@ -1,0 +1,13 @@
+# sql-migrate configuration for Boulder K8s dev environment
+# https://github.com/rubenv/sql-migrate#readme
+# Note: Vitess vtcomboserver allows passwordless root access in dev mode
+
+boulder_sa_test:
+  dialect: mysql
+  datasource: root@tcp(vitess:3306)/boulder_sa_test?parseTime=true
+  dir: boulder_sa
+
+incidents_sa_test:
+  dialect: mysql
+  datasource: root@tcp(vitess:3306)/incidents_sa_test?parseTime=true
+  dir: incidents_sa

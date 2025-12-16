@@ -37,9 +37,36 @@ metadata:
     app.kubernetes.io/component: database
 data:
   init-boulder.sql: |
-    -- Create additional databases needed by Boulder
+    -- Create databases needed by Boulder
+    CREATE DATABASE IF NOT EXISTS boulder_sa_test;
     CREATE DATABASE IF NOT EXISTS incidents_sa_test;
-    GRANT ALL PRIVILEGES ON incidents_sa_test.* TO 'boulder'@'%';
+
+    -- Create Boulder service users (matching Boulder's docker-compose setup)
+    -- SA user - full access to boulder_sa_test
+    CREATE USER IF NOT EXISTS 'sa'@'%' IDENTIFIED BY 'boulder-dev-password';
+    GRANT ALL PRIVILEGES ON boulder_sa_test.* TO 'sa'@'%';
+
+    -- SA read-only user
+    CREATE USER IF NOT EXISTS 'sa_ro'@'%' IDENTIFIED BY 'boulder-dev-password';
+    GRANT SELECT ON boulder_sa_test.* TO 'sa_ro'@'%';
+
+    -- Incidents SA user
+    CREATE USER IF NOT EXISTS 'incidents_sa'@'%' IDENTIFIED BY 'boulder-dev-password';
+    GRANT ALL PRIVILEGES ON incidents_sa_test.* TO 'incidents_sa'@'%';
+    GRANT SELECT ON boulder_sa_test.* TO 'incidents_sa'@'%';
+
+    -- Cert checker user (read-only)
+    CREATE USER IF NOT EXISTS 'cert_checker'@'%' IDENTIFIED BY 'boulder-dev-password';
+    GRANT SELECT ON boulder_sa_test.* TO 'cert_checker'@'%';
+
+    -- Bad key revoker user
+    CREATE USER IF NOT EXISTS 'badkeyrevoker'@'%' IDENTIFIED BY 'boulder-dev-password';
+    GRANT SELECT, UPDATE ON boulder_sa_test.* TO 'badkeyrevoker'@'%';
+
+    -- Revoker user
+    CREATE USER IF NOT EXISTS 'revoker'@'%' IDENTIFIED BY 'boulder-dev-password';
+    GRANT SELECT, UPDATE ON boulder_sa_test.* TO 'revoker'@'%';
+
     FLUSH PRIVILEGES;
 ---
 apiVersion: apps/v1

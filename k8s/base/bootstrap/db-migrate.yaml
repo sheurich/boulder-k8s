@@ -19,21 +19,45 @@ spec:
         app.kubernetes.io/component: bootstrap
     spec:
       restartPolicy: OnFailure
+      initContainers:
+        # Wait for Vitess to be ready
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Vitess..."
+              until nc -z vitess 3306; do
+                sleep 2
+              done
+              echo "Vitess is ready"
+        # Clone Boulder source for migration SQL files
+        - name: clone-boulder
+          image: alpine/git:latest
+          command:
+            - sh
+            - -c
+            - |
+              git clone --depth 1 https://github.com/letsencrypt/boulder.git /boulder
+          volumeMounts:
+            - name: boulder-source
+              mountPath: /boulder
       containers:
         - name: db-migrate
-          image: letsencrypt/boulder:latest
-          args:
-            - boulder-sa
-            - --config
-            - /config/sa.json
-            - --db-connect
-            - $(DB_CONNECT)
-          env:
-            - name: DB_CONNECT
-              valueFrom:
-                secretKeyRef:
-                  name: boulder-db-credentials
-                  key: connection-string
+          # Boulder tools image includes sql-migrate
+          image: letsencrypt/boulder-tools:latest
+          workingDir: /boulder/sa/db
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              echo "Running Boulder SA migrations..."
+              sql-migrate up -config=/config/dbconfig.yml -env=boulder_sa_test
+              echo "Running Incidents SA migrations..."
+              sql-migrate up -config=/config/dbconfig.yml -env=incidents_sa_test
+              echo "Migrations complete"
           resources:
             requests:
               cpu: 100m
@@ -45,7 +69,14 @@ spec:
             - name: config
               mountPath: /config
               readOnly: true
+            - name: boulder-source
+              mountPath: /boulder
+              readOnly: true
       volumes:
         - name: config
           configMap:
-            name: boulder-sa-config
+            name: boulder-db-migrate-config
+        - name: boulder-source
+          # In dev, we need Boulder source for migration SQL files
+          # Production would use an init container to clone the repo
+          emptyDir: {}

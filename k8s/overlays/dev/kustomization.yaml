@@ -5,6 +5,12 @@ namespace: boulder
 
 resources:
   - ../../base
+  # Infrastructure
+  - infra/vitess.yaml
+  # Database secrets
+  - secrets/db-urls.yaml
+  # Redis secrets
+  - secrets/redis-password.yaml
   # Test mocks
   - mocks/challtestsrv.yaml
   - mocks/ct-test-srv.yaml
@@ -16,6 +22,8 @@ resources:
 patches:
   # Use SoftHSM for CA
   - path: patches/ca-softhsm.yaml
+  # Mount DB URL secrets
+  - path: patches/db-secrets.yaml
   # Reduce replicas for dev
   - path: patches/replicas.yaml
   # Reduce resource limits for dev
@@ -89,6 +97,10 @@ configMapGenerator:
   - name: boulder-crl-checker-config
     files:
       - config/crl-checker.json
+  # Database migration config
+  - name: boulder-db-migrate-config
+    files:
+      - dbconfig.yml=config/dbconfig.yml
   # SoftHSM configuration
   - name: boulder-softhsm-config
     files:

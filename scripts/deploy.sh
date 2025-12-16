@@ -20,22 +20,15 @@ fi
 echo "==> Creating namespace $NAMESPACE..."
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
+# Build required images
+echo "==> Building required images..."
+"$SCRIPT_DIR/build-images.sh"
+
 # Deploy infrastructure dependencies
 echo "==> Deploying infrastructure..."
 
 # Note: SoftHSM runs as a sidecar in the CA pod (no separate deployment needed)
-
-# Deploy Vitess
-echo "  Installing Vitess..."
-# Note: In real deployment, use official Vitess operator or helm chart
-# For MVP, we'll use a simplified deployment
-helm repo add vitess https://vitess.io/helm-charts 2>/dev/null || true
-helm repo update
-helm upgrade --install vitess vitess/vitess \
-    --namespace "$NAMESPACE" \
-    --values "$ROOT_DIR/helm/vitess/values-$OVERLAY.yaml" \
-    --wait \
-    --timeout 10m || echo "  ⚠ Vitess deployment skipped (chart may not be available)"
+# Note: Vitess is deployed via kustomize (k8s/overlays/dev/infra/vitess.yaml)
 
 # Deploy Redis
 echo "  Installing Redis..."
