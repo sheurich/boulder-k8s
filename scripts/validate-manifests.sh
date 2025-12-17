@@ -14,7 +14,7 @@ if ! command -v kubeconform &> /dev/null; then
 fi
 
 # Build all overlays and validate
-for overlay in dev staging prod; do
+for overlay in dev dev-vitess staging prod; do
     echo "==> Validating $overlay overlay..."
 
     overlay_dir="$ROOT_DIR/k8s/overlays/$overlay"

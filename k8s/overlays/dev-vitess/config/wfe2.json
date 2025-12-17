@@ -1,0 +1,123 @@
+{
+	"wfe": {
+		"timeout": "30s",
+		"listenAddress": "0.0.0.0:4001",
+		"TLSListenAddress": "0.0.0.0:4431",
+		"serverCertificatePath": "/certs/web/cert.pem",
+		"serverKeyPath": "/certs/web/key.pem",
+		"allowOrigins": [
+			"*"
+		],
+		"shutdownStopTimeout": "10s",
+		"subscriberAgreementURL": "https://boulder-wfe2.boulder.svc.cluster.local:4431/terms/v7",
+		"debugAddr": ":8013",
+		"directoryCAAIdentity": "happy-hacker-ca.invalid",
+		"directoryWebsite": "https://github.com/letsencrypt/boulder",
+		"legacyKeyIDPrefix": "http://boulder-wfe2.boulder.svc.cluster.local:4001/reg/",
+		"goodkey": {},
+		"tls": {
+			"caCertFile": "/certs/ipki/ca.crt",
+			"certFile": "/certs/ipki/wfe2/cert.pem",
+			"keyFile": "/certs/ipki/wfe2/key.pem"
+		},
+		"raService": {
+			"serverAddress": "boulder-ra.boulder.svc.cluster.local:9094",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "ra.boulder"
+		},
+		"saService": {
+			"serverAddress": "boulder-sa.boulder.svc.cluster.local:9095",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "sa.boulder"
+		},
+		"accountCache": {
+			"size": 9000,
+			"ttl": "5s"
+		},
+		"getNonceService": {
+			"serverAddress": "boulder-nonce-a.boulder.svc.cluster.local:9101",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "nonce.boulder"
+		},
+		"redeemNonceService": {
+			"serverAddresses": [
+				"boulder-nonce-a.boulder.svc.cluster.local:9101",
+				"boulder-nonce-b.boulder.svc.cluster.local:9102"
+			],
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "nonce.boulder"
+		},
+		"nonceHMACKey": {
+			"keyFile": "/secrets/nonce_prefix_key"
+		},
+		"chains": [
+			[
+				"/certs/webpki/int-rsa-a.cert.pem",
+				"/certs/webpki/root-rsa.cert.pem"
+			],
+			[
+				"/certs/webpki/int-rsa-b.cert.pem",
+				"/certs/webpki/root-rsa.cert.pem"
+			],
+			[
+				"/certs/webpki/int-ecdsa-a.cert.pem",
+				"/certs/webpki/root-ecdsa.cert.pem"
+			],
+			[
+				"/certs/webpki/int-ecdsa-b.cert.pem",
+				"/certs/webpki/root-ecdsa.cert.pem"
+			],
+			[
+				"/certs/webpki/int-ecdsa-a-cross.cert.pem",
+				"/certs/webpki/root-rsa.cert.pem"
+			],
+			[
+				"/certs/webpki/int-ecdsa-b-cross.cert.pem",
+				"/certs/webpki/root-rsa.cert.pem"
+			]
+		],
+		"staleTimeout": "5m",
+		"limiter": {
+			"redis": {
+				"username": "boulder",
+				"passwordFile": "/secrets/redis_password",
+				"address": "redis-master.boulder.svc.cluster.local:6379",
+				"readTimeout": "250ms",
+				"writeTimeout": "250ms",
+				"poolSize": 100,
+				"routeRandomly": true,
+				"tls": {
+					"caCertFile": "/certs/ipki/ca.crt",
+					"certFile": "/certs/ipki/wfe2/cert.pem",
+					"keyFile": "/certs/ipki/wfe2/key.pem"
+				}
+			},
+			"Defaults": "/config/ratelimit-defaults.yml",
+			"Overrides": "/config/ratelimit-overrides.yml"
+		},
+		"features": {
+			"ServeRenewalInfo": true,
+			"CheckIdentifiersPaused": true
+		},
+		"certProfiles": {
+			"legacy": "The normal profile you know and love",
+			"modern": "Profile 2: Electric Boogaloo",
+			"shortlived": "Like modern, but smaller"
+		},
+		"unpause": {
+			"hmacKey": {
+				"keyFile": "/secrets/sfe_unpause_key"
+			},
+			"jwtLifetime": "336h",
+			"url": "https://boulder-sfe.boulder.svc.cluster.local:4003"
+		}
+	},
+	"syslog": {
+		"stdoutlevel": 7,
+		"sysloglevel": -1
+	}
+}

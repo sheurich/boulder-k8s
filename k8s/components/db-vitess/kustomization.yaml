@@ -1,0 +1,9 @@
+# Vitess database component
+# Provides Vitess vtcomboserver for MySQL-compatible database with sharding
+# Suitable for extreme scale (10M+ certs/month) or when Vitess expertise exists
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - vitess.yaml
+  - secrets/db-urls.yaml

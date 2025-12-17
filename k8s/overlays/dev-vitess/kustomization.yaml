@@ -3,10 +3,10 @@ kind: Kustomization
 
 namespace: boulder
 
-# Database architecture: MySQL 8 + ProxySQL
-# Use dev-vitess overlay for Vitess alternative
+# Database architecture: Vitess
+# For extreme scale (10M+ certs/month) or when Vitess expertise exists
 components:
-  - ../../components/db-proxysql
+  - ../../components/db-vitess
 
 resources:
   - ../../base
@@ -19,7 +19,7 @@ resources:
   # PKI ceremony job
   - ceremony/pki-ceremony.yaml
 
-# Patch for dev-specific settings
+# Patches for dev-specific settings
 patches:
   # Use SoftHSM for CA
   - path: patches/ca-softhsm.yaml
@@ -98,7 +98,7 @@ configMapGenerator:
   - name: boulder-crl-checker-config
     files:
       - config/crl-checker.json
-  # Database migration config
+  # Database migration config (Vitess-specific)
   - name: boulder-db-migrate-config
     files:
       - dbconfig.yml=config/dbconfig.yml

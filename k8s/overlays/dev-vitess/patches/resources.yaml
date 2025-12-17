@@ -1,0 +1,272 @@
+# Reduce resource limits for dev environment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-wfe2
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-wfe2
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ra
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-ra
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sa
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-sa
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ca
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-ca
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-va
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-va
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva1
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-rva
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva2
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-rva
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva3
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-rva
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-publisher
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-publisher
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-a
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-nonce
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-b
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-nonce
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-crl-updater
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-crl-updater
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-crl-storer
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-crl-storer
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-observer
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-observer
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-email-exporter
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-email-exporter
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sfe
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-sfe
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

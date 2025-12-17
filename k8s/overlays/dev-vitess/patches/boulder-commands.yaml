@@ -1,0 +1,226 @@
+# Fix boulder command for all deployments
+# Boulder uses 'boulder <subcommand>' not 'boulder-<subcommand>'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-wfe2
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-wfe2
+          command: ["boulder"]
+          args: ["boulder-wfe2", "--config", "/config/wfe2.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ra
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-ra
+          command: ["boulder"]
+          args: ["boulder-ra", "--config", "/config/ra.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sa
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-sa
+          command: ["boulder"]
+          args: ["boulder-sa", "--config", "/config/sa.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ca
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-ca
+          command: ["boulder"]
+          args: ["boulder-ca", "--config", "/config/ca.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-va
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-va
+          command: ["boulder"]
+          args: ["boulder-va", "--config", "/config/va.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva1
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-rva
+          command: ["boulder"]
+          args: ["remoteva", "--config", "/config/remoteva-a.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva2
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-rva
+          command: ["boulder"]
+          args: ["remoteva", "--config", "/config/remoteva-b.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva3
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-rva
+          command: ["boulder"]
+          args: ["remoteva", "--config", "/config/remoteva-c.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-publisher
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-publisher
+          command: ["boulder"]
+          args: ["boulder-publisher", "--config", "/config/publisher.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-a
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-nonce
+          command: ["boulder"]
+          args: ["nonce-service", "--config", "/config/nonce-a.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-b
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-nonce
+          command: ["boulder"]
+          args: ["nonce-service", "--config", "/config/nonce-b.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-crl-updater
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-crl-updater
+          command: ["boulder"]
+          args: ["crl-updater", "--config", "/config/crl-updater.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-crl-storer
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-crl-storer
+          command: ["boulder"]
+          args: ["crl-storer", "--config", "/config/crl-storer.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-observer
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-observer
+          command: ["boulder"]
+          args: ["boulder-observer", "--config", "/config/observer.yml"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-email-exporter
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-email-exporter
+          command: ["boulder"]
+          args: ["email-exporter", "--config", "/config/email-exporter.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sfe
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-sfe
+          command: ["boulder"]
+          args: ["sfe", "--config", "/config/sfe.json"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: challtestsrv
+spec:
+  template:
+    spec:
+      containers:
+        - name: challtestsrv
+          command: ["chall-test-srv"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ct-test-srv
+spec:
+  template:
+    spec:
+      containers:
+        - name: ct-test-srv
+          command: ["ct-test-srv"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pardot-test-srv
+spec:
+  template:
+    spec:
+      containers:
+        - name: pardot-test-srv
+          command: ["pardot-test-srv"]

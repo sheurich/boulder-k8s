@@ -1,0 +1,49 @@
+{
+	"crlUpdater": {
+		"tls": {
+			"caCertFile": "/certs/ipki/ca.crt",
+			"certFile": "/certs/ipki/crl-updater/cert.pem",
+			"keyFile": "/certs/ipki/crl-updater/key.pem"
+		},
+		"saService": {
+			"serverAddress": "boulder-sa.boulder.svc.cluster.local:9095",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "sa.boulder"
+		},
+		"crlGeneratorService": {
+			"serverAddress": "boulder-ca.boulder.svc.cluster.local:9093",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "ca.boulder"
+		},
+		"crlStorerService": {
+			"serverAddress": "boulder-crl-storer.boulder.svc.cluster.local:9309",
+			"timeout": "15s",
+			"noWaitForReady": true,
+			"hostOverride": "crl-storer.boulder"
+		},
+		"issuerCerts": [
+			"/certs/webpki/int-rsa-a.cert.pem",
+			"/certs/webpki/int-rsa-b.cert.pem",
+			"/certs/webpki/int-rsa-c.cert.pem",
+			"/certs/webpki/int-ecdsa-a.cert.pem",
+			"/certs/webpki/int-ecdsa-b.cert.pem",
+			"/certs/webpki/int-ecdsa-c.cert.pem"
+		],
+		"numShards": 10,
+		"shardWidth": "240h",
+		"lookbackPeriod": "24h",
+		"updatePeriod": "10m",
+		"updateTimeout": "1m",
+		"expiresMargin": "5m",
+		"cacheControl": "stale-if-error=60",
+		"maxParallelism": 10,
+		"maxAttempts": 2,
+		"features": {}
+	},
+	"syslog": {
+		"stdoutlevel": 4,
+		"sysloglevel": -1
+	}
+}

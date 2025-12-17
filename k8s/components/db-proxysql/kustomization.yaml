@@ -1,0 +1,10 @@
+# MySQL + ProxySQL database component
+# Provides MySQL 8.4 with ProxySQL connection pooling
+# Matches upstream Boulder's docker-compose architecture
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - mysql.yaml
+  - proxysql.yaml
+  - secrets/db-urls.yaml

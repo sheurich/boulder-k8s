@@ -1,12 +1,14 @@
 # Boulder K8s Design
 
-Reference implementation for deploying Boulder to Kubernetes.
+Architecturally-accurate reference implementation for deploying Boulder to Kubernetes.
 
 ## Goals
 
-1. **Production deployment** — Deploy Boulder for internal PKI and WebPKI certificate authorities
-2. **Clear reference** — Provide deployment guidance clearer than Boulder's integration test setup
+1. **Architecturally-accurate reference** — Demonstrate correct Boulder architecture for production environments without production capacity or hardware security
+2. **Clear documentation** — Provide deployment guidance clearer than Boulder's integration test setup
 3. **Multi-environment** — Support dev/CI (kind), staging, and production (managed/self-hosted K8s)
+
+This project shows how Boulder components connect, communicate, and depend on each other. It uses SoftHSM (not production HSMs) and single-instance databases (not clustered). Organizations deploy to production by replacing dev components with production equivalents while preserving the architecture.
 
 ## Non-Goals
 
@@ -64,7 +66,7 @@ Client → WFE2 → RA → VA (validation)
 2. **RA** orchestrates the workflow: creates orders, schedules validation, requests issuance
 3. **VA** validates domain control via HTTP-01, DNS-01, or TLS-ALPN-01 challenges
 4. **CA** signs certificates using HSM-stored keys
-5. **SA** persists all state to Vitess (registrations, orders, certificates)
+5. **SA** persists all state to the database (registrations, orders, certificates)
 6. **Publisher** submits certificates to CT logs asynchronously
 
 ### Service Roles
@@ -106,11 +108,23 @@ Client → WFE2 → RA → VA (validation)
 
 **Rationale:** Helm charts exist for Vitess and Redis with production-tested defaults. Kustomize keeps Boulder manifests readable without Go templating. Overlays handle environment differences cleanly.
 
-### Database: MySQL + ProxySQL
+### Database Architecture
 
-**Choice:** MySQL 8.4 with ProxySQL connection pooling for dev/CI/staging. Production uses managed MySQL or equivalent.
+Two database architectures supported as first-class options:
 
-**Rationale:** Aligns with upstream Boulder's docker-compose architecture. ProxySQL provides connection pooling, query routing, and timeout management. MySQL 8.4 ensures compatibility with Boulder's SQL requirements. Vitess available as optional overlay for horizontal scaling at extreme scale (10M+ certs/month).
+**MySQL + ProxySQL (default)**
+- Overlay: `k8s/overlays/dev`
+- Connection: `proxysql:6033`
+- Use when: Starting fresh, running typical volumes (<10M certs/month), or no Vitess expertise on team
+
+Aligns with upstream Boulder's docker-compose architecture. ProxySQL provides connection pooling, query routing, and timeout management. MySQL 8.4 ensures compatibility with Boulder's SQL requirements.
+
+**Vitess**
+- Overlay: `k8s/overlays/dev-vitess`
+- Connection: `vitess:3306`
+- Use when: Extreme scale (10M+ certs/month), existing Vitess infrastructure, or need horizontal sharding
+
+Vitess provides MySQL-compatible interface with built-in sharding. Let's Encrypt uses Vitess in production. Requires Vitess operational expertise.
 
 ### Service Discovery: Kubernetes DNS
 
@@ -203,15 +217,14 @@ These services simulate the external Internet and third-party services for end-t
 
 | Component | Role | Dev/CI | Production |
 |-----------|------|--------|------------|
-| MySQL 8 | Relational database (registrations, orders, certs) | Single instance | Managed cluster |
-| ProxySQL | Connection pooling, query routing | Single instance | HA pair |
+| Database | Relational storage (registrations, orders, certs) | MySQL+ProxySQL or Vitess | Managed MySQL cluster or Vitess |
 | Redis | Rate limiting, nonce cache, operational state | Single instance | Clustered |
 | HSM | CA private key storage | SoftHSM sidecar | Thales Luna |
 | DNS Resolver | DNSSEC-validating recursive resolver for VA | CoreDNS | Unbound |
 | Jaeger | Distributed tracing | Optional | Required |
 | Prometheus | Metrics scraping | ServiceMonitors | ServiceMonitors |
 
-**MySQL + ProxySQL** follows upstream Boulder's production architecture. ProxySQL handles connection pooling, query timeout management, and enables future read/write splitting with replicas.
+**MySQL + ProxySQL** follows upstream Boulder's docker-compose architecture. ProxySQL handles connection pooling, query timeout management, and enables future read/write splitting with replicas. **Vitess** follows Let's Encrypt's production architecture with horizontal sharding for extreme scale.
 
 **Redis** handles high-frequency operations: rate limit counters, nonce validation, and short-term state. Dev uses separate instances to simulate availability zone separation.
 
