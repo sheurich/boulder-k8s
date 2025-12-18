@@ -3,7 +3,7 @@
 		"userAgent": "boulder",
 		"debugAddr": ":8004",
 		"dnsTries": 3,
-		"dnsStaticResolvers": ["challtestsrv.boulder.svc.cluster.local:8053"],
+		"dnsStaticResolvers": ["10.96.99.195:8443"],
 		"dnsTimeout": "1s",
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {

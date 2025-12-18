@@ -3,7 +3,7 @@
 		"userAgent": "remoteva-b",
 		"debugAddr": ":8212",
 		"dnsTries": 3,
-		"dnsStaticResolvers": ["8.8.8.8:53"],
+		"dnsStaticResolvers": ["10.96.99.195:8443"],
 		"dnsTimeout": "1s",
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {

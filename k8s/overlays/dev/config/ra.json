@@ -101,7 +101,9 @@
 						"admin.boulder",
 						"bad-key-revoker.boulder",
 						"wfe.boulder",
-						"sfe.boulder"
+						"sfe.boulder",
+						"boulder-wfe2",
+						"boulder-sfe"
 					]
 				},
 				"ra.SCTProvider": {
