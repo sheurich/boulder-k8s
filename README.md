@@ -89,12 +89,17 @@ boulder-k8s/
 │   │   ├── cronjobs/        # Compliance jobs
 │   │   ├── network-policies/
 │   │   └── observability/   # ServiceMonitors
+│   ├── components/          # Reusable database components
+│   │   ├── db-proxysql/     # MySQL 8 + ProxySQL
+│   │   └── db-vitess/       # Vitess alternative
 │   └── overlays/
-│       ├── dev/             # Kind + SoftHSM + mocks
-│       │   ├── infra/       # MySQL, ProxySQL
+│       ├── dev/             # Kind + SoftHSM + ProxySQL (default)
 │       │   ├── config/      # Boulder configs
 │       │   ├── patches/     # Dev-specific patches
-│       │   └── ceremony/    # PKI ceremony job
+│       │   ├── ceremony/    # PKI ceremony job
+│       │   ├── mocks/       # Test mock services
+│       │   └── secrets/     # Dev secrets
+│       ├── dev-vitess/      # Kind + SoftHSM + Vitess
 │       ├── staging/         # Production-like
 │       └── prod/            # Luna HSM + real CT
 ├── scripts/                 # Deployment scripts
@@ -144,16 +149,32 @@ boulder-k8s/
 
 ### Database Configuration
 
-**Dev/CI (MySQL + ProxySQL):**
+Two database backends available via Kustomize overlays:
+
+| Overlay | Backend | Use Case |
+|---------|---------|----------|
+| `k8s/overlays/dev` | MySQL 8 + ProxySQL | Default, matches upstream Boulder |
+| `k8s/overlays/dev-vitess` | Vitess | Teams with existing Vitess expertise |
+
+```bash
+kubectl kustomize k8s/overlays/dev        # ProxySQL (default)
+kubectl kustomize k8s/overlays/dev-vitess # Vitess
+```
+
+**MySQL + ProxySQL (default):**
 - MySQL 8.4 single instance with init scripts
 - ProxySQL 2.7.2 for connection pooling
 - Boulder services connect to `proxysql:6033`
 - Aligned with upstream Boulder's docker-compose architecture
 
+**Vitess:**
+- Vitess vtcomboserver (MySQL-compatible)
+- Boulder services connect to `vitess:3306`
+- Horizontal sharding for extreme scale (10M+ certs/month)
+
 **Production:**
 - Managed MySQL (RDS, Cloud SQL) or replicated MySQL
 - ProxySQL for connection pooling and read/write splitting
-- Optional: Vitess for horizontal scaling at extreme scale
 
 ### HSM Configuration
 

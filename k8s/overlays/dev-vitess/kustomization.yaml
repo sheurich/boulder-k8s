@@ -5,6 +5,11 @@ namespace: boulder
 
 # Database architecture: Vitess
 # For extreme scale (10M+ certs/month) or when Vitess expertise exists
+#
+# SYNC NOTE: This overlay duplicates patches/, mocks/, ceremony/, and most
+# config/ files from overlays/dev/. Kustomize security prevents cross-directory
+# references. When updating those directories in dev/, sync changes here.
+# Only config/dbconfig.yml differs (uses vitess:3306 instead of proxysql:6033).
 components:
   - ../../components/db-vitess
 
