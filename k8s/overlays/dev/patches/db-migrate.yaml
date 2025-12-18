@@ -9,7 +9,7 @@ spec:
       containers:
         - name: db-migrate
           # Use golang alpine image and install sql-migrate
-          image: golang:1.23-alpine
+          image: golang:1.25-alpine
           imagePullPolicy: IfNotPresent
           env:
             - name: GOBIN
