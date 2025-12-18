@@ -31,15 +31,23 @@ spec:
       initContainers:
         - name: restore-softhsm-tokens
           image: boulder:latest
+          imagePullPolicy: Never
+          securityContext:
+            runAsUser: 0
           command:
             - /bin/sh
             - -c
             - |
               set -e
               echo "Restoring SoftHSM tokens from secret..."
-              # Extract token archive from secret
-              cd /var/lib/softhsm
-              tar xzf /secret-tokens/softhsm-tokens.tar.gz
+              # Extract to temp directory first to avoid permission issues with BusyBox tar
+              mkdir -p /tmp/softhsm-extract
+              cd /tmp/softhsm-extract
+              tar xzf /secret-tokens/softhsm-tokens.tar.gz 2>/dev/null || true
+              # Copy files to destination (ignoring permission errors on metadata)
+              cp -r /tmp/softhsm-extract/tokens/* /var/lib/softhsm/tokens/ 2>/dev/null || \
+                cp -a /tmp/softhsm-extract/tokens/* /var/lib/softhsm/tokens/ 2>/dev/null || \
+                (cd /tmp/softhsm-extract && find tokens -type f -exec cp {} /var/lib/softhsm/tokens/ \;)
               # Fix permissions
               chmod -R 700 /var/lib/softhsm/tokens
               echo "SoftHSM tokens restored:"

@@ -1,0 +1,20 @@
+# Patch db-migrate job to wait for Vitess instead of ProxySQL
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: boulder-db-migrate
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Vitess..."
+              until nc -z vitess.boulder.svc.cluster.local 3306; do
+                sleep 2
+              done
+              echo "Vitess is ready"

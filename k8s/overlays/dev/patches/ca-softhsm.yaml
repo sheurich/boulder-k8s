@@ -32,22 +32,24 @@ spec:
         - name: restore-softhsm-tokens
           image: boulder:latest
           imagePullPolicy: Never
+          securityContext:
+            runAsUser: 0
           command:
             - /bin/sh
             - -c
             - |
               set -e
               echo "Restoring SoftHSM tokens from secret..."
-              # Extract token archive - use tar flags to prevent permission issues
-              cd /var/lib/softhsm
-              # Extract to a temp location first, then copy
+              # Extract to temp directory first to avoid permission issues with BusyBox tar
               mkdir -p /tmp/softhsm-extract
               cd /tmp/softhsm-extract
-              tar -xzf /secret-tokens/softhsm-tokens.tar.gz 2>/dev/null || tar --warning=no-unknown-keyword -xzf /secret-tokens/softhsm-tokens.tar.gz
-              # Copy extracted files to target
-              cp -r tokens/* /var/lib/softhsm/tokens/ || cp -r * /var/lib/softhsm/tokens/
-              # Fix permissions (may fail in restricted environment, which is OK)
-              chmod -R 700 /var/lib/softhsm/tokens || true
+              tar xzf /secret-tokens/softhsm-tokens.tar.gz 2>/dev/null || true
+              # Copy files to destination (ignoring permission errors on metadata)
+              cp -r /tmp/softhsm-extract/tokens/* /var/lib/softhsm/tokens/ 2>/dev/null || \
+                cp -a /tmp/softhsm-extract/tokens/* /var/lib/softhsm/tokens/ 2>/dev/null || \
+                (cd /tmp/softhsm-extract && find tokens -type f -exec cp {} /var/lib/softhsm/tokens/ \;)
+              # Fix permissions
+              chmod -R 700 /var/lib/softhsm/tokens
               echo "SoftHSM tokens restored:"
               ls -la /var/lib/softhsm/tokens/
               # Verify tokens are accessible

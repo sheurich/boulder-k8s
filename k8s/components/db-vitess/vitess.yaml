@@ -21,6 +21,7 @@ metadata:
   labels:
     app.kubernetes.io/name: vitess
     app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: boulder
 spec:
   replicas: 1
   selector:
@@ -33,6 +34,7 @@ spec:
       labels:
         app.kubernetes.io/name: vitess
         app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: boulder
     spec:
       containers:
         - name: vtcombo
@@ -44,9 +46,13 @@ spec:
               value: boulder_sa_test,incidents_sa_test
             - name: NUM_SHARDS
               value: "1,1"
+            # MySQL database name for install_trigger.sh
+            - name: MYSQL_DATABASE
+              value: boulder_sa_test
           ports:
+            # VTGate MySQL protocol port (default 33577)
             - name: mysql
-              containerPort: 3306
+              containerPort: 33577
             - name: vtgate-grpc
               containerPort: 15999
             - name: vtadmin
@@ -83,6 +89,7 @@ metadata:
   labels:
     app.kubernetes.io/name: vitess
     app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: boulder
 spec:
   type: ClusterIP
   ports:
