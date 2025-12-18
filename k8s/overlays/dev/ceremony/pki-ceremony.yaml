@@ -143,10 +143,46 @@ data:
       openssl req -new -key ipki/$service/key.pem -out ipki/$service/csr.pem \
         -subj "/CN=boulder-$service"
 
-      # Create SAN extension file
-      cat > ipki/$service/ext.cnf << EOF
+      # Create SAN extension file with service-specific hostOverride SANs
+      # These match the hostOverride values in Boulder config files
+      case "$service" in
+        nonce-a|nonce-b)
+          # Nonce services need shared "nonce.boulder" SAN for hostOverride
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:nonce.boulder
+    EOF
+          ;;
+        ra)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:ra.boulder
+    EOF
+          ;;
+        sa)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:sa.boulder
+    EOF
+          ;;
+        ca)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:ca.boulder
+    EOF
+          ;;
+        va)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:va.boulder
+    EOF
+          ;;
+        publisher)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:publisher.boulder
+    EOF
+          ;;
+        *)
+          cat > ipki/$service/ext.cnf << EOF
     subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local
     EOF
+          ;;
+      esac
 
       openssl x509 -req -in ipki/$service/csr.pem -CA ipki/ca.crt -CAkey ipki/ca.key \
         -CAcreateserial -out ipki/$service/cert.pem -days 365 -sha256 \
