@@ -35,6 +35,8 @@ patches:
   - path: patches/image-pull-policy.yaml
   # Fix boulder command/args for local images
   - path: patches/boulder-commands.yaml
+  # Mount WebPKI certificates for services that need issuer certs
+  - path: patches/webpki-certs.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment
@@ -118,6 +120,7 @@ configMapGenerator:
 
 images:
   - name: letsencrypt/boulder
+    newName: boulder
     newTag: latest
 
 commonLabels:

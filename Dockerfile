@@ -78,15 +78,22 @@ LABEL org.opencontainers.image.vendor="Internet Security Research Group"
 # - libc6: required for cgo binaries
 # - softhsm2: Software HSM for dev/CI PKI ceremony
 # - openssl: For internal PKI certificate generation
+# - curl: For downloading kubectl
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         softhsm2 \
         openssl \
+        curl \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -r -u 1000 -s /usr/sbin/nologin boulder \
     && mkdir -p /var/lib/softhsm/tokens \
     && chown -R boulder:boulder /var/lib/softhsm
+
+# Install kubectl for PKI ceremony secret creation
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/$(dpkg --print-architecture)/kubectl" \
+    && chmod +x kubectl \
+    && mv kubectl /usr/local/bin/
 
 # Copy binaries from builder
 COPY --from=builder /go/bin/ /usr/local/bin/

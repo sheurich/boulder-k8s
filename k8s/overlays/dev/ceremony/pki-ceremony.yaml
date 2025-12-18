@@ -23,7 +23,7 @@ spec:
       serviceAccountName: boulder-pki-ceremony
       containers:
         - name: ceremony
-          image: letsencrypt/boulder:latest
+          image: boulder:latest
           imagePullPolicy: Never
           command:
             - /bin/sh
@@ -94,10 +94,10 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["create", "update", "patch"]
+    verbs: ["get", "create", "update", "patch"]
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["create", "update", "patch"]
+    verbs: ["get", "create", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -222,12 +222,19 @@ data:
     key:
       type: rsa
       rsa-mod-length: 4096
-    certificate:
-      profile: root
+    certificate-profile:
+      signature-algorithm: SHA384WithRSA
       common-name: Boulder Test Root RSA
       organization: Boulder Test
+      country: US
       not-before: 2024-01-01 00:00:00
-      not-after: 2034-01-01 00:00:00
+      not-after: 2033-12-31 23:59:59
+      key-usages:
+        - Digital Signature
+        - Cert Sign
+        - CRL Sign
+    skip-lints:
+      - w_validity_period_has_extra_second
     outputs:
       public-key-path: /output/webpki/root-rsa.pubkey.pem
       certificate-path: /output/webpki/root-rsa.cert.pem
@@ -245,12 +252,19 @@ data:
     key:
       type: ecdsa
       ecdsa-curve: P-384
-    certificate:
-      profile: root
+    certificate-profile:
+      signature-algorithm: ECDSAWithSHA384
       common-name: Boulder Test Root ECDSA
       organization: Boulder Test
+      country: US
       not-before: 2024-01-01 00:00:00
-      not-after: 2034-01-01 00:00:00
+      not-after: 2033-12-31 23:59:59
+      key-usages:
+        - Digital Signature
+        - Cert Sign
+        - CRL Sign
+    skip-lints:
+      - w_validity_period_has_extra_second
     outputs:
       public-key-path: /output/webpki/root-ecdsa.pubkey.pem
       certificate-path: /output/webpki/root-ecdsa.cert.pem
@@ -274,6 +288,8 @@ data:
       for inst in a b c; do
         name="int-${alg}-${inst}"
         label="int $alg $inst"
+        ALG_UPPER=$(echo $alg | tr a-z A-Z)
+        INST_UPPER=$(echo $inst | tr a-z A-Z)
 
         echo "Creating intermediate: $name"
 
@@ -299,6 +315,11 @@ data:
         run_ceremony ceremony-configs/${name}-key.yaml
 
         # Generate intermediate certificate (signed by root)
+        if [ "$alg" = "rsa" ]; then
+          SIG_ALG="SHA384WithRSA"
+        else
+          SIG_ALG="ECDSAWithSHA384"
+        fi
         cat > ceremony-configs/${name}-cert.yaml << EOF
     ceremony-type: intermediate
     pkcs11:
@@ -309,12 +330,23 @@ data:
     inputs:
       public-key-path: /output/webpki/${name}.pubkey.pem
       issuer-certificate-path: /output/webpki/root-${alg}.cert.pem
-    certificate:
-      profile: intermediate
-      common-name: Boulder Test Intermediate ${alg^^} ${inst^^}
+    certificate-profile:
+      signature-algorithm: ${SIG_ALG}
+      common-name: Boulder Test Intermediate ${ALG_UPPER} ${INST_UPPER}
       organization: Boulder Test
+      country: US
       not-before: 2024-01-01 00:00:00
-      not-after: 2029-01-01 00:00:00
+      not-after: 2028-12-31 23:59:59
+      crl-url: http://crl.boulder.test/${name}.crl
+      issuer-url: http://certs.boulder.test/root-${alg}.crt
+      policies:
+        - oid: "2.23.140.1.2.1"
+      key-usages:
+        - Cert Sign
+        - CRL Sign
+        - Digital Signature
+    skip-lints:
+      - w_validity_period_has_extra_second
     outputs:
       certificate-path: /output/webpki/${name}.cert.pem
     EOF
@@ -329,6 +361,7 @@ data:
     for inst in a b c; do
       name="int-ecdsa-${inst}"
       label="int ecdsa $inst"
+      INST_UPPER=$(echo $inst | tr a-z A-Z)
 
       cat > ceremony-configs/${name}-cross.yaml << EOF
     ceremony-type: cross-certificate
@@ -340,12 +373,24 @@ data:
     inputs:
       public-key-path: /output/webpki/${name}.pubkey.pem
       issuer-certificate-path: /output/webpki/root-rsa.cert.pem
-    certificate:
-      profile: cross
-      common-name: Boulder Test Intermediate ECDSA ${inst^^}
+      certificate-to-cross-sign-path: /output/webpki/${name}.cert.pem
+    certificate-profile:
+      signature-algorithm: SHA384WithRSA
+      common-name: Boulder Test Intermediate ECDSA ${INST_UPPER}
       organization: Boulder Test
+      country: US
       not-before: 2024-01-01 00:00:00
-      not-after: 2029-01-01 00:00:00
+      not-after: 2028-12-31 23:59:59
+      crl-url: http://crl.boulder.test/${name}.crl
+      issuer-url: http://certs.boulder.test/root-rsa.crt
+      policies:
+        - oid: "2.23.140.1.2.1"
+      key-usages:
+        - Cert Sign
+        - CRL Sign
+        - Digital Signature
+    skip-lints:
+      - w_validity_period_has_extra_second
     outputs:
       certificate-path: /output/webpki/${name}.cross.cert.pem
     EOF
@@ -380,11 +425,12 @@ data:
       --dry-run=client -o yaml | kubectl apply -f -
 
     # Create service TLS secrets
+    # Use generic secrets with cert.pem/key.pem keys to match Boulder config expectations
     for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
                    crl-updater crl-storer observer email-exporter sfe bad-key-revoker; do
-      kubectl create secret tls boulder-$service-grpc-tls \
-        --cert=ipki/$service/cert.pem \
-        --key=ipki/$service/key.pem \
+      kubectl create secret generic boulder-$service-grpc-tls \
+        --from-file=cert.pem=ipki/$service/cert.pem \
+        --from-file=key.pem=ipki/$service/key.pem \
         --dry-run=client -o yaml | kubectl apply -f -
     done
 
