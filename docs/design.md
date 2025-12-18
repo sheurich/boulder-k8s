@@ -95,10 +95,34 @@ Client → WFE2 → RA → VA (validation)
 
 ### Security Model
 
-- **Internal mTLS**: All gRPC calls require mutual TLS with service-specific certificates
+**Principle:** All internal communication uses mTLS. No plaintext connections between components.
+
+#### Transport Security Matrix
+
+| Connection | Protocol | TLS Required | Client Auth | Notes |
+|------------|----------|--------------|-------------|-------|
+| Boulder service ↔ service | gRPC | mTLS | Certificate | Internal PKI certs per service |
+| Boulder → ProxySQL | MySQL | TLS | Certificate | ProxySQL terminates, re-encrypts to MySQL |
+| ProxySQL → MySQL | MySQL | TLS | Certificate | Backend connection encryption |
+| Boulder → Redis | Redis | TLS | Certificate | Rate limiter connections |
+| Boulder → Vitess | MySQL | TLS | Certificate | vtgate connection |
+| WFE2 → Internet | HTTPS | TLS | None | Server-side TLS only |
+
+#### Internal PKI
+
+PKI ceremony generates certificates for all Boulder services. Each service has:
+- Unique certificate with service-specific SAN (e.g., `sa.boulder`, `ra.boulder`)
+- Mounted at `/certs/ipki/{service}/cert.pem` and `key.pem`
+- CA certificate at `/certs/ipki/ca.crt`
+
+Services validate peer certificates against the internal CA and expected SANs (via `hostOverride` in configs).
+
+#### Access Controls
+
 - **HSM isolation**: Only CA accesses HSM; other services cannot sign certificates
 - **SA gating**: Only SA accesses database; enforces data access patterns
 - **Nonce validation**: Prevents replay attacks in ACME protocol
+- **NetworkPolicies**: Default-deny with explicit allow rules
 
 ## Architecture Decisions
 
