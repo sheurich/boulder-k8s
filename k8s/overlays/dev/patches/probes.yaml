@@ -1,0 +1,90 @@
+# Relax probe timeouts for dev environment (kind cluster is slower)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sa
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-sa
+          livenessProbe:
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ca
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-ca
+          livenessProbe:
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ra
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-ra
+          livenessProbe:
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-va
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-va
+          livenessProbe:
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-wfe2
+spec:
+  template:
+    spec:
+      containers:
+        - name: boulder-wfe2
+          livenessProbe:
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10

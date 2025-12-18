@@ -41,6 +41,8 @@ patches:
   - path: patches/db-migrate.yaml
   # Mount nonce HMAC key secrets in nonce services
   - path: patches/nonce-secrets.yaml
+  # Relax probe timeouts for dev (kind is slower)
+  - path: patches/probes.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment
