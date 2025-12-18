@@ -193,6 +193,24 @@ data:
     subjectAltName=DNS:challtestsrv,DNS:challtestsrv.boulder.svc.cluster.local,IP:10.96.99.195
     EOF
           ;;
+        rva1)
+          # Remote VA 1 needs hostOverride SAN
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-rva1,DNS:boulder-rva1.boulder.svc.cluster.local,DNS:rva1.boulder
+    EOF
+          ;;
+        rva2)
+          # Remote VA 2 needs hostOverride SAN
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-rva2,DNS:boulder-rva2.boulder.svc.cluster.local,DNS:rva2.boulder
+    EOF
+          ;;
+        rva3)
+          # Remote VA 3 needs hostOverride SAN
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-rva3,DNS:boulder-rva3.boulder.svc.cluster.local,DNS:rva3.boulder
+    EOF
+          ;;
         *)
           cat > ipki/$service/ext.cnf << EOF
     subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local
