@@ -219,3 +219,55 @@ spec:
       containers:
         - name: db-migrate
           imagePullPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-bad-key-revoker
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: bad-key-revoker
+              imagePullPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-cert-checker
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: cert-checker
+              imagePullPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-crl-checker
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: crl-checker
+              imagePullPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-log-validator
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: log-validator
+              imagePullPolicy: Never
