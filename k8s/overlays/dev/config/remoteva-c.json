@@ -3,13 +3,11 @@
 		"userAgent": "remoteva-c",
 		"debugAddr": ":8213",
 		"dnsTries": 3,
-		"dnsProvider": {
-			"serverAddress": "8.8.8.8:53"
-		},
+		"dnsStaticResolvers": ["8.8.8.8:53"],
 		"dnsTimeout": "1s",
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {
-			"caCertfile": "/certs/ipki/ca.crt",
+			"caCertFile": "/certs/ipki/ca.crt",
 			"certFile": "/certs/ipki/rva3/cert.pem",
 			"keyFile": "/certs/ipki/rva3/key.pem"
 		},

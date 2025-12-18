@@ -4,7 +4,9 @@
 			"redis": {
 				"username": "default",
 				"passwordFile": "/secrets/redis_password",
-				"address": "redis-master.boulder.svc.cluster.local:6379",
+				"shardAddrs": {
+					"shard1": "redis-master.boulder.svc.cluster.local:6379"
+				},
 				"readTimeout": "250ms",
 				"writeTimeout": "250ms",
 				"poolSize": 100,
@@ -86,6 +88,7 @@
 			"hostOverride": "sa.boulder"
 		},
 		"grpc": {
+			"address": ":9094",
 			"maxConnectionAge": "30s",
 			"services": {
 				"ra.RegistrationAuthority": {

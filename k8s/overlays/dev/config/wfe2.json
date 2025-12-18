@@ -43,10 +43,18 @@
 			"hostOverride": "nonce.boulder"
 		},
 		"redeemNonceService": {
-			"serverAddresses": [
-				"boulder-nonce-a.boulder.svc.cluster.local:9101",
-				"boulder-nonce-b.boulder.svc.cluster.local:9102"
+			"dnsAuthority": "kube-dns.kube-system.svc.cluster.local:53",
+			"srvLookups": [
+				{
+					"service": "grpc",
+					"domain": "boulder-nonce-a.boulder.svc.cluster.local"
+				},
+				{
+					"service": "grpc",
+					"domain": "boulder-nonce-b.boulder.svc.cluster.local"
+				}
 			],
+			"srvResolver": "nonce-srv",
 			"timeout": "15s",
 			"noWaitForReady": true,
 			"hostOverride": "nonce.boulder"
@@ -85,16 +93,13 @@
 			"redis": {
 				"username": "boulder",
 				"passwordFile": "/secrets/redis_password",
-				"address": "redis-master.boulder.svc.cluster.local:6379",
+				"shardAddrs": {
+					"shard1": "redis-master.boulder.svc.cluster.local:6379"
+				},
 				"readTimeout": "250ms",
 				"writeTimeout": "250ms",
 				"poolSize": 100,
-				"routeRandomly": true,
-				"tls": {
-					"caCertFile": "/certs/ipki/ca.crt",
-					"certFile": "/certs/ipki/wfe2/cert.pem",
-					"keyFile": "/certs/ipki/wfe2/key.pem"
-				}
+				"routeRandomly": true
 			},
 			"Defaults": "/config/ratelimit-defaults.yml",
 			"Overrides": "/config/ratelimit-overrides.yml"

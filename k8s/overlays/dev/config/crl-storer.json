@@ -2,7 +2,7 @@
 	"crlStorer": {
 		"debugAddr": ":9667",
 		"tls": {
-			"caCertfile": "/certs/ipki/ca.crt",
+			"caCertFile": "/certs/ipki/ca.crt",
 			"certFile": "/certs/ipki/crl-storer/cert.pem",
 			"keyFile": "/certs/ipki/crl-storer/key.pem"
 		},

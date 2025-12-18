@@ -79,14 +79,16 @@ metadata:
     app.kubernetes.io/name: boulder-nonce-a
     app.kubernetes.io/component: nonce-service
 spec:
-  type: ClusterIP
+  clusterIP: None
   ports:
     - name: grpc
       port: 9101
       targetPort: grpc
+      protocol: TCP
     - name: metrics
       port: 8021
       targetPort: metrics
+      protocol: TCP
   selector:
     app.kubernetes.io/name: boulder-nonce-a
 ---
@@ -171,13 +173,15 @@ metadata:
     app.kubernetes.io/name: boulder-nonce-b
     app.kubernetes.io/component: nonce-service
 spec:
-  type: ClusterIP
+  clusterIP: None
   ports:
     - name: grpc
       port: 9102
       targetPort: grpc
+      protocol: TCP
     - name: metrics
       port: 8022
       targetPort: metrics
+      protocol: TCP
   selector:
     app.kubernetes.io/name: boulder-nonce-b
