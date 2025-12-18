@@ -48,9 +48,8 @@ data:
 
     mysql_servers = (
       {
-        # Using headless service DNS resolves directly to pod IP
-        # In dev environment, the service ClusterIP works reliably
-        address = "10.96.188.65";
+        # Use K8s DNS name - works across pod restarts
+        address = "mysql.boulder.svc.cluster.local";
         port = 3306;
         hostgroup = 0;
         max_connections = 100;
