@@ -5,6 +5,7 @@
 		"dnsTries": 3,
 		"dnsStaticResolvers": ["10.96.99.195:8443"],
 		"dnsTimeout": "1s",
+		"dnsAllowLoopbackAddresses": true,
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {
 			"caCertFile": "/certs/ipki/ca.crt",

@@ -17,6 +17,7 @@ spec:
       labels:
         app.kubernetes.io/name: challtestsrv
         app.kubernetes.io/component: test-mock
+        environment: dev
     spec:
       containers:
         - name: challtestsrv
@@ -41,6 +42,8 @@ spec:
             - /certs/ipki/challtestsrv/cert.pem
             - -doh-cert-key
             - /certs/ipki/challtestsrv/key.pem
+            - -defaultIPv6
+            - ""
           securityContext:
             capabilities:
               add:
@@ -78,7 +81,7 @@ spec:
       volumes:
         - name: ipki-service
           secret:
-            secretName: boulder-va-grpc-tls
+            secretName: boulder-challtestsrv-grpc-tls
 ---
 apiVersion: v1
 kind: Service
@@ -89,6 +92,7 @@ metadata:
     app.kubernetes.io/component: test-mock
 spec:
   type: ClusterIP
+  clusterIP: 10.96.99.195
   ports:
     - name: management
       port: 8055
