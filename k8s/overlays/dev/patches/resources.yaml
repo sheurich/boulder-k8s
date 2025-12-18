@@ -1,4 +1,4 @@
-# Reduce resource limits for dev environment
+# Reduce resource limits for dev environment (minimal for kind cluster)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -10,8 +10,8 @@ spec:
         - name: boulder-wfe2
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -27,8 +27,8 @@ spec:
         - name: boulder-ra
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -44,8 +44,8 @@ spec:
         - name: boulder-sa
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -61,8 +61,8 @@ spec:
         - name: boulder-ca
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 20m
+              memory: 64Mi
             limits:
               cpu: 500m
               memory: 512Mi
@@ -78,8 +78,8 @@ spec:
         - name: boulder-va
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -95,8 +95,8 @@ spec:
         - name: boulder-rva
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -112,8 +112,8 @@ spec:
         - name: boulder-rva
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -129,8 +129,8 @@ spec:
         - name: boulder-rva
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -146,8 +146,8 @@ spec:
         - name: boulder-publisher
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -163,8 +163,8 @@ spec:
         - name: boulder-nonce
           resources:
             requests:
-              cpu: 25m
-              memory: 32Mi
+              cpu: 5m
+              memory: 16Mi
             limits:
               cpu: 100m
               memory: 128Mi
@@ -180,8 +180,8 @@ spec:
         - name: boulder-nonce
           resources:
             requests:
-              cpu: 25m
-              memory: 32Mi
+              cpu: 5m
+              memory: 16Mi
             limits:
               cpu: 100m
               memory: 128Mi
@@ -197,8 +197,8 @@ spec:
         - name: boulder-crl-updater
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -214,8 +214,8 @@ spec:
         - name: boulder-crl-storer
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 200m
               memory: 256Mi
@@ -231,8 +231,8 @@ spec:
         - name: boulder-observer
           resources:
             requests:
-              cpu: 25m
-              memory: 32Mi
+              cpu: 5m
+              memory: 16Mi
             limits:
               cpu: 100m
               memory: 128Mi
@@ -248,8 +248,8 @@ spec:
         - name: boulder-email-exporter
           resources:
             requests:
-              cpu: 25m
-              memory: 32Mi
+              cpu: 5m
+              memory: 16Mi
             limits:
               cpu: 100m
               memory: 128Mi
@@ -265,8 +265,94 @@ spec:
         - name: boulder-sfe
           resources:
             requests:
-              cpu: 25m
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+# Infrastructure services
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  template:
+    spec:
+      containers:
+        - name: mysql
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxysql
+spec:
+  template:
+    spec:
+      containers:
+        - name: proxysql
+          resources:
+            requests:
+              cpu: 10m
               memory: 32Mi
             limits:
               cpu: 100m
               memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: challtestsrv
+spec:
+  template:
+    spec:
+      containers:
+        - name: challtestsrv
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ct-test-srv
+spec:
+  template:
+    spec:
+      containers:
+        - name: ct-test-srv
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pardot-test-srv
+spec:
+  template:
+    spec:
+      containers:
+        - name: pardot-test-srv
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi

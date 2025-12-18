@@ -25,6 +25,13 @@ spec:
             - nonce-service
             - --config
             - /config/nonce-a.json
+            - --addr
+            - $(POD_IP):9101
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           ports:
             - name: grpc
               containerPort: 9101
@@ -119,6 +126,13 @@ spec:
             - nonce-service
             - --config
             - /config/nonce-b.json
+            - --addr
+            - $(POD_IP):9102
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           ports:
             - name: grpc
               containerPort: 9102

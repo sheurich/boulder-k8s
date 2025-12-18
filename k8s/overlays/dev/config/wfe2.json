@@ -80,11 +80,11 @@
 				"/certs/webpki/root-ecdsa.cert.pem"
 			],
 			[
-				"/certs/webpki/int-ecdsa-a-cross.cert.pem",
+				"/certs/webpki/int-ecdsa-a.cross.cert.pem",
 				"/certs/webpki/root-rsa.cert.pem"
 			],
 			[
-				"/certs/webpki/int-ecdsa-b-cross.cert.pem",
+				"/certs/webpki/int-ecdsa-b.cross.cert.pem",
 				"/certs/webpki/root-rsa.cert.pem"
 			]
 		],
@@ -99,7 +99,12 @@
 				"readTimeout": "250ms",
 				"writeTimeout": "250ms",
 				"poolSize": 100,
-				"routeRandomly": true
+				"routeRandomly": true,
+				"tls": {
+					"caCertFile": "/certs/ipki/ca.crt",
+					"certFile": "/certs/ipki/wfe2/cert.pem",
+					"keyFile": "/certs/ipki/wfe2/key.pem"
+				}
 			},
 			"Defaults": "/config/ratelimit-defaults.yml",
 			"Overrides": "/config/ratelimit-overrides.yml"

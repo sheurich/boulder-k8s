@@ -434,6 +434,13 @@ data:
         --dry-run=client -o yaml | kubectl apply -f -
     done
 
+    # Create WFE2 web TLS secret (for HTTPS endpoint)
+    # In dev, reuse the internal PKI cert; in prod, use a real cert
+    kubectl create secret generic boulder-wfe2-web-tls \
+      --from-file=cert.pem=ipki/wfe2/cert.pem \
+      --from-file=key.pem=ipki/wfe2/key.pem \
+      --dry-run=client -o yaml | kubectl apply -f -
+
     # Create SoftHSM tokens secret (contains the token directory contents)
     # This will be mounted in CA pods to restore SoftHSM state
     echo "Creating SoftHSM tokens secret..."
@@ -476,8 +483,9 @@ data:
       --dry-run=client -o yaml | kubectl apply -f -
 
     # Generate random secrets for dev environment
-    NONCE_KEY=$(openssl rand -base64 32)
-    UNPAUSE_KEY=$(openssl rand -base64 32)
+    # HMAC keys must be hex-encoded (not base64)
+    NONCE_KEY=$(openssl rand -hex 32)
+    UNPAUSE_KEY=$(openssl rand -hex 32)
     REDIS_PASSWORD="boulder-redis-dev"
 
     # Create WFE2 application secrets

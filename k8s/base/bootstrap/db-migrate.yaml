@@ -28,7 +28,7 @@ spec:
             - -c
             - |
               echo "Waiting for ProxySQL..."
-              until nc -z proxysql 6033; do
+              until nc -z proxysql.boulder.svc.cluster.local 6033; do
                 sleep 2
               done
               echo "ProxySQL is ready"

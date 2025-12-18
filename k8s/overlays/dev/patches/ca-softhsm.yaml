@@ -38,11 +38,16 @@ spec:
             - |
               set -e
               echo "Restoring SoftHSM tokens from secret..."
-              # Extract token archive from secret
+              # Extract token archive - use tar flags to prevent permission issues
               cd /var/lib/softhsm
-              tar xzf /secret-tokens/softhsm-tokens.tar.gz
-              # Fix permissions
-              chmod -R 700 /var/lib/softhsm/tokens
+              # Extract to a temp location first, then copy
+              mkdir -p /tmp/softhsm-extract
+              cd /tmp/softhsm-extract
+              tar -xzf /secret-tokens/softhsm-tokens.tar.gz 2>/dev/null || tar --warning=no-unknown-keyword -xzf /secret-tokens/softhsm-tokens.tar.gz
+              # Copy extracted files to target
+              cp -r tokens/* /var/lib/softhsm/tokens/ || cp -r * /var/lib/softhsm/tokens/
+              # Fix permissions (may fail in restricted environment, which is OK)
+              chmod -R 700 /var/lib/softhsm/tokens || true
               echo "SoftHSM tokens restored:"
               ls -la /var/lib/softhsm/tokens/
               # Verify tokens are accessible

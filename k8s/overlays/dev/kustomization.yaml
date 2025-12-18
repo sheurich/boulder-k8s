@@ -37,21 +37,34 @@ patches:
   - path: patches/boulder-commands.yaml
   # Mount WebPKI certificates for services that need issuer certs
   - path: patches/webpki-certs.yaml
+  # Use golang image for db-migrate (boulder-tools has no arm64 build)
+  - path: patches/db-migrate.yaml
+  # Mount nonce HMAC key secrets in nonce services
+  - path: patches/nonce-secrets.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment
   - name: boulder-wfe2-config
     files:
       - config/wfe2.json
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
   - name: boulder-ra-config
     files:
       - config/ra.json
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
+      - config/ident-policy.yaml
+      - config/ct-log-list.json
   - name: boulder-sa-config
     files:
       - config/sa.json
   - name: boulder-ca-config
     files:
       - config/ca.json
+      - config/ident-policy.yaml
+      - config/zlint.toml
+      - config/ct-log-list.json
   - name: boulder-va-config
     files:
       - config/va.json

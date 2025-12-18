@@ -7,3 +7,33 @@ spec:
   egress:
     # Allow all egress in dev for easier debugging
     - {}
+---
+# Override default-deny-all to allow DNS and internal traffic in dev
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    # Allow DNS lookups
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow all traffic within boulder namespace
+    - to:
+        - podSelector: {}
+  ingress:
+    # Allow all traffic within boulder namespace
+    - from:
+        - podSelector: {}
