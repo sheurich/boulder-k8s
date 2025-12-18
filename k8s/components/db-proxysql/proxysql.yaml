@@ -1,15 +1,18 @@
 # ProxySQL deployment for Boulder dev/CI
 # Proxies connections from Boulder services to MySQL
 # Based on upstream boulder/test/proxysql/proxysql.cnf
+#
+# NOTE: ProxySQL's DNS resolver has issues with K8s DNS.
+# We use an init container to resolve MySQL's IP and generate the config.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: proxysql-config
+  name: proxysql-config-template
   labels:
     app.kubernetes.io/name: proxysql
     app.kubernetes.io/component: database
 data:
-  proxysql.cnf: |
+  proxysql.cnf.template: |
     datadir = "/var/lib/proxysql";
 
     admin_variables = {
@@ -48,8 +51,8 @@ data:
 
     mysql_servers = (
       {
-        # Use K8s DNS name - works across pod restarts
-        address = "mysql.boulder.svc.cluster.local";
+        # IP resolved by init container - ProxySQL has glibc DNS issues with K8s
+        address = "MYSQL_IP_PLACEHOLDER";
         port = 3306;
         hostgroup = 0;
         max_connections = 100;
@@ -111,18 +114,39 @@ spec:
         app.kubernetes.io/component: database
     spec:
       initContainers:
-        # Wait for MySQL to be ready
-        - name: wait-for-mysql
+        # Resolve MySQL IP and generate config
+        # ProxySQL's glibc DNS has timing issues with K8s DNS
+        - name: resolve-mysql
           image: alpine:3.19
           command:
             - sh
             - -c
             - |
-              echo "Waiting for MySQL..."
+              set -e
+              echo "Waiting for MySQL DNS to resolve..."
+              until nslookup mysql.boulder.svc.cluster.local >/dev/null 2>&1; do
+                echo "  DNS not ready, retrying..."
+                sleep 2
+              done
+
+              echo "Waiting for MySQL to accept connections..."
               until nc -z mysql.boulder.svc.cluster.local 3306; do
                 sleep 2
               done
-              echo "MySQL is ready"
+
+              # Resolve MySQL IP
+              MYSQL_IP=$(getent hosts mysql.boulder.svc.cluster.local | awk '{print $1}')
+              echo "MySQL resolved to: $MYSQL_IP"
+
+              # Generate config with resolved IP
+              sed "s/MYSQL_IP_PLACEHOLDER/$MYSQL_IP/" /config-template/proxysql.cnf.template > /config/proxysql.cnf
+              echo "Generated ProxySQL config with MySQL IP: $MYSQL_IP"
+              cat /config/proxysql.cnf | grep -A5 "mysql_servers"
+          volumeMounts:
+            - name: config-template
+              mountPath: /config-template
+            - name: config
+              mountPath: /config
       containers:
         - name: proxysql
           image: proxysql/proxysql:2.7.2
@@ -161,9 +185,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 5
       volumes:
-        - name: config
+        - name: config-template
           configMap:
-            name: proxysql-config
+            name: proxysql-config-template
+        - name: config
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

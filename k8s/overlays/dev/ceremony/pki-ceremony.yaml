@@ -177,6 +177,16 @@ data:
     subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:publisher.boulder
     EOF
           ;;
+        wfe2)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:wfe.boulder
+    EOF
+          ;;
+        sfe)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:sfe.boulder
+    EOF
+          ;;
         *)
           cat > ipki/$service/ext.cnf << EOF
     subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local
