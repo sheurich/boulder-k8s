@@ -50,12 +50,15 @@ configMapGenerator:
   - name: boulder-wfe2-config
     files:
       - config/wfe2.json
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
   - name: boulder-ra-config
     files:
       - config/ra.json
       - config/ratelimit-defaults.yml
       - config/ratelimit-overrides.yml
       - config/ident-policy.yaml
+      - config/ct-log-list.json
   - name: boulder-sa-config
     files:
       - config/sa.json
