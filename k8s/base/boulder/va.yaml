@@ -31,13 +31,15 @@ spec:
               containerPort: 8014
               protocol: TCP
           livenessProbe:
-            grpc:
-              port: 9092
-            initialDelaySeconds: 5
+            httpGet:
+              path: /debug/vars
+              port: 8004
+            initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
-            grpc:
-              port: 9092
+            httpGet:
+              path: /debug/vars
+              port: 8004
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:

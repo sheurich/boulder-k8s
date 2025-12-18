@@ -32,13 +32,15 @@ spec:
               containerPort: 8025
               protocol: TCP
           livenessProbe:
-            grpc:
-              port: 9381
-            initialDelaySeconds: 5
+            httpGet:
+              path: /debug/vars
+              port: 8114
+            initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
-            grpc:
-              port: 9381
+            httpGet:
+              path: /debug/vars
+              port: 8114
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
