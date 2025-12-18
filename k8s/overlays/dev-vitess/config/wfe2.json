@@ -43,10 +43,18 @@
 			"hostOverride": "nonce.boulder"
 		},
 		"redeemNonceService": {
-			"serverAddresses": [
-				"boulder-nonce-a.boulder.svc.cluster.local:9101",
-				"boulder-nonce-b.boulder.svc.cluster.local:9102"
+			"dnsAuthority": "kube-dns.kube-system.svc.cluster.local:53",
+			"srvLookups": [
+				{
+					"service": "grpc",
+					"domain": "boulder-nonce-a.boulder.svc.cluster.local"
+				},
+				{
+					"service": "grpc",
+					"domain": "boulder-nonce-b.boulder.svc.cluster.local"
+				}
 			],
+			"srvResolver": "nonce-srv",
 			"timeout": "15s",
 			"noWaitForReady": true,
 			"hostOverride": "nonce.boulder"
@@ -72,11 +80,11 @@
 				"/certs/webpki/root-ecdsa.cert.pem"
 			],
 			[
-				"/certs/webpki/int-ecdsa-a-cross.cert.pem",
+				"/certs/webpki/int-ecdsa-a.cross.cert.pem",
 				"/certs/webpki/root-rsa.cert.pem"
 			],
 			[
-				"/certs/webpki/int-ecdsa-b-cross.cert.pem",
+				"/certs/webpki/int-ecdsa-b.cross.cert.pem",
 				"/certs/webpki/root-rsa.cert.pem"
 			]
 		],
@@ -85,7 +93,9 @@
 			"redis": {
 				"username": "boulder",
 				"passwordFile": "/secrets/redis_password",
-				"address": "redis-master.boulder.svc.cluster.local:6379",
+				"shardAddrs": {
+					"shard1": "redis-master.boulder.svc.cluster.local:6379"
+				},
 				"readTimeout": "250ms",
 				"writeTimeout": "250ms",
 				"poolSize": 100,

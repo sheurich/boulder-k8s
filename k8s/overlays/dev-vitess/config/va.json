@@ -3,17 +3,16 @@
 		"userAgent": "boulder",
 		"debugAddr": ":8004",
 		"dnsTries": 3,
-		"dnsProvider": {
-			"serverAddress": "8.8.8.8:53"
-		},
+		"dnsStaticResolvers": ["8.8.8.8:53"],
 		"dnsTimeout": "1s",
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {
-			"caCertfile": "/certs/ipki/ca.crt",
+			"caCertFile": "/certs/ipki/ca.crt",
 			"certFile": "/certs/ipki/va/cert.pem",
 			"keyFile": "/certs/ipki/va/key.pem"
 		},
 		"grpc": {
+			"address": ":9092",
 			"maxConnectionAge": "30s",
 			"services": {
 				"va.VA": {

@@ -4,11 +4,18 @@
 			"redis": {
 				"username": "default",
 				"passwordFile": "/secrets/redis_password",
-				"address": "redis-master.boulder.svc.cluster.local:6379",
+				"shardAddrs": {
+					"shard1": "redis-master.boulder.svc.cluster.local:6379"
+				},
 				"readTimeout": "250ms",
 				"writeTimeout": "250ms",
 				"poolSize": 100,
-				"routeRandomly": true
+				"routeRandomly": true,
+				"tls": {
+					"caCertFile": "/certs/ipki/ca.crt",
+					"certFile": "/certs/ipki/ra/cert.pem",
+					"keyFile": "/certs/ipki/ra/key.pem"
+				}
 			},
 			"Defaults": "/config/ratelimit-defaults.yml",
 			"Overrides": "/config/ratelimit-overrides.yml"
@@ -86,6 +93,7 @@
 			"hostOverride": "sa.boulder"
 		},
 		"grpc": {
+			"address": ":9094",
 			"maxConnectionAge": "30s",
 			"services": {
 				"ra.RegistrationAuthority": {

@@ -15,12 +15,13 @@
 			"services": {
 				"nonce.NonceService": {
 					"clientNames": [
-						"wfe.boulder"
+						"boulder-wfe2"
 					]
 				},
 				"grpc.health.v1.Health": {
 					"clientNames": [
-						"health-checker.boulder"
+						"health-checker.boulder",
+						"boulder-wfe2"
 					]
 				}
 			}

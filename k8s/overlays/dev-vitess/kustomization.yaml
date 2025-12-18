@@ -42,6 +42,8 @@ patches:
   - path: patches/boulder-commands.yaml
   # Use Vitess instead of ProxySQL for db-migrate job
   - path: patches/db-migrate.yaml
+  # Mount nonce secrets from wfe2-secrets
+  - path: patches/nonce-secrets.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment
@@ -51,6 +53,9 @@ configMapGenerator:
   - name: boulder-ra-config
     files:
       - config/ra.json
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
+      - config/ident-policy.yaml
   - name: boulder-sa-config
     files:
       - config/sa.json
@@ -58,6 +63,8 @@ configMapGenerator:
     files:
       - config/ca.json
       - config/ident-policy.yaml
+      - config/zlint.toml
+      - config/ct-log-list.json
   - name: boulder-va-config
     files:
       - config/va.json
