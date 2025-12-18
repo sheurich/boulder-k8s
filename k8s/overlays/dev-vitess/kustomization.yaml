@@ -120,10 +120,12 @@ configMapGenerator:
   - name: boulder-db-migrate-config
     files:
       - dbconfig.yml=config/dbconfig.yml
-  # SoftHSM configuration
+  # SoftHSM configuration (no hash suffix - PKI ceremony references by name)
   - name: boulder-softhsm-config
     files:
       - softhsm2.conf=config/softhsm2.conf
+    options:
+      disableNameSuffixHash: true
   # Shared config files used by multiple services
   - name: boulder-shared-config
     files:

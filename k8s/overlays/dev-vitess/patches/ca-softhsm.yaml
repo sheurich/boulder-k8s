@@ -48,7 +48,8 @@ spec:
               cp -r /tmp/softhsm-extract/tokens/* /var/lib/softhsm/tokens/ 2>/dev/null || \
                 cp -a /tmp/softhsm-extract/tokens/* /var/lib/softhsm/tokens/ 2>/dev/null || \
                 (cd /tmp/softhsm-extract && find tokens -type f -exec cp {} /var/lib/softhsm/tokens/ \;)
-              # Fix permissions
+              # Fix permissions - CA runs as boulder user (uid 1000)
+              chown -R 1000:1000 /var/lib/softhsm/tokens
               chmod -R 700 /var/lib/softhsm/tokens
               echo "SoftHSM tokens restored:"
               ls -la /var/lib/softhsm/tokens/
