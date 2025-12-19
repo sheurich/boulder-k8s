@@ -140,16 +140,26 @@ jobs:
           cache-to: type=gha,mode=max,scope=boulder-tools
           build-args: GO_VERSION=1.25.5
 
+      - name: Patch vtcombo MySQL timeout
+        run: |
+          # vtcombo has hardcoded 30s MySQL startup timeout in startMysqld()
+          # Patch the Dockerfile to increase it to 120s before building
+          cd boulder/test/vtcomboserver
+          sed -i '/^RUN git clone/a\
+          \
+          # CI FIX: Increase MySQL startup timeout from 30s to 120s\
+          RUN sed -i "s/30\\*time\\.Second/120*time.Second/" go/cmd/vtcombo/cli/main.go' Dockerfile
+          echo "==> Patched Dockerfile:"
+          grep -A2 "CI FIX" Dockerfile
+
       - name: Build vtcomboserver image
         uses: docker/build-push-action@v6
         with:
           context: boulder/test/vtcomboserver
           load: true
           tags: letsencrypt/boulder-vtcomboserver:latest
-          # NOTE: vtcombo has hardcoded 30s MySQL startup timeout in startMysqld()
-          # that can't be configured via flags. Using tmpfs + cache to speed up init.
-          cache-from: type=gha,scope=vtcomboserver
-          cache-to: type=gha,mode=max,scope=vtcomboserver
+          # Disable cache - patched Dockerfile must be used
+          no-cache: true
           build-args: VITESS_TAG=v23.0.0
 
       - name: Install kind
