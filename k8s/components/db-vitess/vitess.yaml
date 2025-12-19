@@ -68,7 +68,7 @@ spec:
             # Inject fast MySQL config to speed up initialization
             # vtcombo has hardcoded 30s timeout for MySQL startup
             - name: EXTRA_MY_CNF
-              value: /vt/config/fast-startup.cnf
+              value: /vt/extra-config/fast-startup.cnf
           ports:
             # VTGate MySQL protocol port (default 33577)
             - name: mysql
@@ -81,7 +81,7 @@ spec:
             - name: data
               mountPath: /vt/vtdataroot
             - name: config
-              mountPath: /vt/config
+              mountPath: /vt/extra-config
               readOnly: true
           resources:
             requests:
