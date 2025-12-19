@@ -13,21 +13,37 @@ if ! command -v kubeconform &> /dev/null; then
     go install github.com/yannh/kubeconform/cmd/kubeconform@latest
 fi
 
+# Check if kube-score is installed
+if ! command -v kube-score &> /dev/null; then
+    echo "Installing kube-score..."
+    go install github.com/zegl/kube-score/cmd/kube-score@latest
+fi
+
 # Build all overlays and validate
 for overlay in dev dev-vitess staging prod; do
     echo "==> Validating $overlay overlay..."
 
     overlay_dir="$ROOT_DIR/k8s/overlays/$overlay"
     if [ -d "$overlay_dir" ]; then
-        # Build with kustomize and validate
-        kubectl kustomize "$overlay_dir" 2>/dev/null | kubeconform \
+        # Build with kustomize
+        manifests=$(kubectl kustomize "$overlay_dir" 2>/dev/null)
+
+        # Validate with kubeconform
+        echo "$manifests" | kubeconform \
             -strict \
             -ignore-missing-schemas \
             -schema-location default \
             -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
             -summary \
             -
-        echo "  ✓ $overlay overlay valid"
+        echo "  ✓ $overlay overlay structure valid"
+
+        # Validate with kube-score
+        # Use || true to report issues without failing the build (Warning mode)
+        echo "  > Scoring $overlay overlay..."
+        echo "$manifests" | kube-score score - \
+            --ignore-test container-image-pull-policy \
+            --output-format ci || true
     else
         echo "  ⚠ $overlay overlay directory not found, skipping"
     fi
