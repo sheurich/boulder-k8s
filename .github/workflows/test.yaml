@@ -143,6 +143,9 @@ jobs:
           # Patch run.sh to add --init-timeout flag for slow CI runners
           # MySQL can take longer than 1m default timeout to start in CI
           cd boulder/test/vtcomboserver
+          # Add debug output at startup
+          sed -i '/^\/vt\/setup_vschema_folder.sh/i echo "[vtcombo-debug] VTCOMBO_INIT_TIMEOUT=${VTCOMBO_INIT_TIMEOUT:-5m}"' run.sh
+          # Add --init-timeout flag
           sed -i 's|/vt/bin/vtcombo \\|/vt/bin/vtcombo \\\n  --init-timeout "${VTCOMBO_INIT_TIMEOUT:-5m}" \\|' run.sh
           # Show the patched vtcombo invocation
           echo "==> Patched run.sh vtcombo command:"
@@ -191,6 +194,9 @@ jobs:
         run: |
           echo "==> Pod status:"
           kubectl get pods -n boulder -o wide || true
+          echo ""
+          echo "==> Vitess deployment env vars:"
+          kubectl get deployment vitess -n boulder -o jsonpath='{.spec.template.spec.containers[0].env}' 2>&1 | jq . || true
           echo ""
           echo "==> Recent events:"
           kubectl get events -n boulder --sort-by='.lastTimestamp' | tail -50 || true
