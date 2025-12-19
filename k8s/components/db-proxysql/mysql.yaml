@@ -116,8 +116,10 @@ spec:
                 - ping
                 - -h
                 - localhost
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 6
           readinessProbe:
             exec:
               command:
@@ -125,8 +127,10 @@ spec:
                 - ping
                 - -h
                 - localhost
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 5
+            timeoutSeconds: 10
+            failureThreshold: 6
       volumes:
         - name: data
           persistentVolumeClaim:

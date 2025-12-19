@@ -77,6 +77,8 @@ metadata:
 data:
   pardot-test-srv.json: |
     {
-      "oauthListenAddress": ":9601",
-      "apiListenAddress": ":9602"
+      "SalesforceAddr": ":9601",
+      "PardotAddr": ":9602",
+      "ExpectedClientID": "test-client-id",
+      "ExpectedClientSecret": "test-client-secret"
     }
