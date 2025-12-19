@@ -28,6 +28,34 @@ jobs:
         with:
           go-version: '1.25'
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build boulder image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          load: true
+          tags: boulder:latest
+          cache-from: type=gha,scope=boulder
+          cache-to: type=gha,mode=max,scope=boulder
+
+      - name: Build boulder-tools image
+        uses: docker/build-push-action@v6
+        with:
+          context: boulder/test/boulder-tools
+          load: true
+          tags: letsencrypt/boulder-tools:latest
+          cache-from: type=gha,scope=boulder-tools
+          cache-to: type=gha,mode=max,scope=boulder-tools
+          build-args: GO_VERSION=1.25.5
+
+      - name: Pull dependency images
+        run: |
+          docker pull mysql:8.4
+          docker pull proxysql/proxysql:2.7.2
+
       - name: Install kind
         run: |
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.26.0/kind-linux-amd64
@@ -45,6 +73,8 @@ jobs:
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
       - name: Run tests (ProxySQL)
+        env:
+          SKIP_IMAGE_BUILD: "true"
         run: ./scripts/test.sh --setup
 
       - name: Collect logs on failure
@@ -65,7 +95,7 @@ jobs:
   test-vitess:
     name: Test (Vitess)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Free disk space
         run: |
@@ -84,6 +114,39 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build boulder image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          load: true
+          tags: boulder:latest
+          cache-from: type=gha,scope=boulder
+          cache-to: type=gha,mode=max,scope=boulder
+
+      - name: Build boulder-tools image
+        uses: docker/build-push-action@v6
+        with:
+          context: boulder/test/boulder-tools
+          load: true
+          tags: letsencrypt/boulder-tools:latest
+          cache-from: type=gha,scope=boulder-tools
+          cache-to: type=gha,mode=max,scope=boulder-tools
+          build-args: GO_VERSION=1.25.5
+
+      - name: Build vtcomboserver image
+        uses: docker/build-push-action@v6
+        with:
+          context: boulder/test/vtcomboserver
+          load: true
+          tags: letsencrypt/boulder-vtcomboserver:latest
+          cache-from: type=gha,scope=vtcomboserver
+          cache-to: type=gha,mode=max,scope=vtcomboserver
+          build-args: VITESS_TAG=v23.0.0
 
       - name: Install kind
         run: |
@@ -104,6 +167,7 @@ jobs:
       - name: Run tests (Vitess)
         env:
           OVERLAY: dev-vitess
+          SKIP_IMAGE_BUILD: "true"
         run: ./scripts/test.sh --setup
 
       - name: Collect logs on failure

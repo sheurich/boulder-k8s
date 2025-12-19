@@ -20,9 +20,15 @@ fi
 echo "==> Creating namespace $NAMESPACE..."
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
-# Build required images
-echo "==> Building required images..."
-"$SCRIPT_DIR/build-images.sh"
+# Build required images (skip if SKIP_IMAGE_BUILD is set, e.g., in CI with pre-built images)
+if [ "${SKIP_IMAGE_BUILD:-}" = "true" ]; then
+    echo "==> Skipping image build (SKIP_IMAGE_BUILD=true)"
+    echo "==> Loading pre-built images into kind..."
+    "$SCRIPT_DIR/build-images.sh" --load-only
+else
+    echo "==> Building required images..."
+    "$SCRIPT_DIR/build-images.sh"
+fi
 
 # Deploy infrastructure dependencies
 echo "==> Deploying infrastructure..."

@@ -1,26 +1,37 @@
 #!/usr/bin/env bash
-# Build Boulder Docker image and load into kind cluster
+# Build Boulder Docker images and load into kind cluster
+#
+# Usage:
+#   ./build-images.sh              Build all images and load into kind
+#   ./build-images.sh --load-only  Skip building, only load into kind (for CI with pre-built images)
+#
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 KIND_CLUSTER="${KIND_CLUSTER:-boulder-dev}"
+LOAD_ONLY="${1:-}"
 
-echo "==> Building boulder:latest image..."
-docker build --target runtime -t boulder:latest "$ROOT_DIR"
+# Build images (skip if --load-only)
+if [ "$LOAD_ONLY" != "--load-only" ]; then
+    echo "==> Building boulder:latest image..."
+    docker build --target runtime -t boulder:latest "$ROOT_DIR"
 
-echo "==> Building boulder-tools:latest image..."
-docker build -t letsencrypt/boulder-tools:latest --build-arg GO_VERSION=1.25.5 "$ROOT_DIR/boulder/test/boulder-tools/"
+    echo "==> Building boulder-tools:latest image..."
+    docker build -t letsencrypt/boulder-tools:latest --build-arg GO_VERSION=1.25.5 "$ROOT_DIR/boulder/test/boulder-tools/"
 
-echo "==> Building vtcomboserver:latest image..."
-# Build locally for ARM64 support and consistency with other images
-docker build -t letsencrypt/boulder-vtcomboserver:latest \
-    --build-arg VITESS_TAG=v23.0.0 \
-    "$ROOT_DIR/boulder/test/vtcomboserver/"
+    echo "==> Building vtcomboserver:latest image..."
+    # Build locally for ARM64 support and consistency with other images
+    docker build -t letsencrypt/boulder-vtcomboserver:latest \
+        --build-arg VITESS_TAG=v23.0.0 \
+        "$ROOT_DIR/boulder/test/vtcomboserver/"
 
-echo "==> Pre-pulling dependency images..."
-docker pull mysql:8.4 || true
-docker pull proxysql/proxysql:2.7.2 || true
+    echo "==> Pre-pulling dependency images..."
+    docker pull mysql:8.4 || true
+    docker pull proxysql/proxysql:2.7.2 || true
+else
+    echo "==> Skipping image builds (--load-only mode)"
+fi
 
 # Load into kind if cluster exists
 if kind get clusters 2>/dev/null | grep -q "^${KIND_CLUSTER}$"; then
