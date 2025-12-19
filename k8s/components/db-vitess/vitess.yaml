@@ -71,18 +71,19 @@ spec:
               cpu: 2000m
               memory: 2Gi
           # Give MySQL time to start - CI runners can be slow
+          # Total tolerance must exceed init-timeout (5m) + buffer
           livenessProbe:
             tcpSocket:
               port: mysql
-            initialDelaySeconds: 120
-            periodSeconds: 10
-            failureThreshold: 12
+            initialDelaySeconds: 360
+            periodSeconds: 30
+            failureThreshold: 6
           readinessProbe:
             tcpSocket:
               port: mysql
-            initialDelaySeconds: 60
-            periodSeconds: 5
-            failureThreshold: 24
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            failureThreshold: 36
       volumes:
         - name: data
           persistentVolumeClaim:
