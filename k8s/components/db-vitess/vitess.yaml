@@ -1,5 +1,35 @@
 # Vitess vtcomboserver deployment for Boulder dev/CI
 # Uses letsencrypt/boulder-vtcomboserver image
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vitess-config
+  labels:
+    app.kubernetes.io/name: vitess
+    app.kubernetes.io/component: database
+data:
+  # Aggressive MySQL settings to speed up initialization
+  # vtcombo has hardcoded 30s timeout - we need MySQL to start FAST
+  fast-startup.cnf: |
+    [mysqld]
+    # Disable doublewrite buffer (unsafe for prod, fine for testing)
+    innodb_doublewrite=OFF
+    # Minimize buffer pool
+    innodb_buffer_pool_size=64M
+    # Skip buffer pool state save/load
+    innodb_buffer_pool_load_at_startup=OFF
+    innodb_buffer_pool_dump_at_shutdown=OFF
+    # Smaller redo logs = faster init
+    innodb_redo_log_capacity=32M
+    # Fast commits (unsafe for prod)
+    innodb_flush_log_at_trx_commit=0
+    sync_binlog=0
+    # Skip DNS lookups
+    skip-name-resolve
+    # Reduce temp table size
+    tmp_table_size=16M
+    max_heap_table_size=16M
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -35,6 +65,10 @@ spec:
             # MySQL database name for install_trigger.sh
             - name: MYSQL_DATABASE
               value: boulder_sa_test
+            # Inject fast MySQL config to speed up initialization
+            # vtcombo has hardcoded 30s timeout for MySQL startup
+            - name: EXTRA_MY_CNF
+              value: /vt/config/fast-startup.cnf
           ports:
             # VTGate MySQL protocol port (default 33577)
             - name: mysql
@@ -46,6 +80,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /vt/vtdataroot
+            - name: config
+              mountPath: /vt/config
+              readOnly: true
           resources:
             requests:
               cpu: 500m
@@ -73,6 +110,9 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 1Gi
+        - name: config
+          configMap:
+            name: vitess-config
 ---
 apiVersion: v1
 kind: Service
