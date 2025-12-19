@@ -2,9 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main, dec]
   pull_request:
-    branches: [main]
 
 jobs:
   test-proxysql:
@@ -41,6 +39,21 @@ jobs:
       - name: Run tests (ProxySQL)
         run: ./scripts/test.sh --setup
 
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          echo "==> Pod status:"
+          kubectl get pods -n boulder -o wide || true
+          echo ""
+          echo "==> Recent events:"
+          kubectl get events -n boulder --sort-by='.lastTimestamp' | tail -50 || true
+          echo ""
+          echo "==> Failed pod logs:"
+          for pod in $(kubectl get pods -n boulder --no-headers | grep -v Running | grep -v Completed | awk '{print $1}'); do
+            echo "--- $pod ---"
+            kubectl logs "$pod" -n boulder --tail=100 || true
+          done
+
   test-vitess:
     name: Test (Vitess)
     runs-on: ubuntu-latest
@@ -76,6 +89,21 @@ jobs:
         env:
           OVERLAY: dev-vitess
         run: ./scripts/test.sh --setup
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          echo "==> Pod status:"
+          kubectl get pods -n boulder -o wide || true
+          echo ""
+          echo "==> Recent events:"
+          kubectl get events -n boulder --sort-by='.lastTimestamp' | tail -50 || true
+          echo ""
+          echo "==> Failed pod logs:"
+          for pod in $(kubectl get pods -n boulder --no-headers | grep -v Running | grep -v Completed | awk '{print $1}'); do
+            echo "--- $pod ---"
+            kubectl logs "$pod" -n boulder --tail=100 || true
+          done
 
   validate-manifests:
     name: Validate Manifests
