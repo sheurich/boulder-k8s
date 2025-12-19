@@ -144,8 +144,9 @@ jobs:
           # MySQL can take longer than 1m default timeout to start in CI
           cd boulder/test/vtcomboserver
           sed -i 's|/vt/bin/vtcombo \\|/vt/bin/vtcombo \\\n  --init-timeout "${VTCOMBO_INIT_TIMEOUT:-5m}" \\|' run.sh
-          # Verify the patch was applied
-          grep -q "init-timeout" run.sh && echo "Patch applied successfully"
+          # Show the patched vtcombo invocation
+          echo "==> Patched run.sh vtcombo command:"
+          grep -A5 "vtcombo" run.sh | head -20
 
       - name: Build vtcomboserver image
         uses: docker/build-push-action@v6
@@ -153,9 +154,15 @@ jobs:
           context: boulder/test/vtcomboserver
           load: true
           tags: letsencrypt/boulder-vtcomboserver:latest
-          cache-from: type=gha,scope=vtcomboserver
-          cache-to: type=gha,mode=max,scope=vtcomboserver
+          # Disable cache - patched run.sh must be in the image
+          no-cache: true
           build-args: VITESS_TAG=v23.0.0
+
+      - name: Verify vtcomboserver image
+        run: |
+          # Confirm the patched run.sh is in the built image
+          echo "==> Verifying init-timeout is in built image:"
+          docker run --rm letsencrypt/boulder-vtcomboserver:latest grep -o "init-timeout" /vt/run.sh || echo "ERROR: init-timeout not found in image!"
 
       - name: Install kind
         run: |
