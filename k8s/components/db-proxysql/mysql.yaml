@@ -80,6 +80,7 @@ spec:
       labels:
         app.kubernetes.io/name: mysql
         app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: boulder
     spec:
       containers:
         - name: mysql

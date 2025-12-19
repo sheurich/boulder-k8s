@@ -112,6 +112,7 @@ spec:
       labels:
         app.kubernetes.io/name: proxysql
         app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: boulder
     spec:
       initContainers:
         # Resolve MySQL IP and generate config

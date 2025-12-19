@@ -46,32 +46,55 @@ This repository provides production-grade Kubernetes manifests for deploying Bou
 
 ### Prerequisites
 
+- docker
 - kubectl
 - helm 3.x
 - kind (for local development)
-- kustomize (or kubectl with kustomize support)
 
 ### Local Development
 
 ```bash
-# Create kind cluster
+# 1. Create kind cluster (3 nodes + cert-manager)
 ./scripts/kind-create.sh
 
-# Deploy Boulder
+# 2. Build Boulder image and load into kind
+./scripts/build-images.sh
+
+# 3. Deploy Boulder (Redis, PKI ceremony, all services)
 ./scripts/deploy.sh dev
 
-# Wait for services
+# 4. Wait for services to be ready
 ./scripts/wait-ready.sh
 
+# 5. Verify deployment
+kubectl get pods -n boulder | grep -c "1/1.*Running"  # Expect 20+
+```
+
+### Verify ACME Endpoints
+
+```bash
 # Test certificate issuance
 ./scripts/test-issuance.sh
+
+# Or manually check the directory endpoint
+WFE_IP=$(kubectl get svc boulder-wfe2 -n boulder -o jsonpath='{.spec.clusterIP}')
+kubectl run acme-test --rm -it --restart=Never --image=curlimages/curl -n boulder -- \
+  curl -sk "https://${WFE_IP}:4431/directory"
+```
+
+### Validate Manifests (No Cluster Required)
+
+```bash
+./scripts/validate-manifests.sh
 ```
 
 ### Cleanup
 
 ```bash
+# Remove Boulder resources (keep cluster)
 ./scripts/teardown.sh
-# Or to delete the cluster:
+
+# Remove everything including cluster
 DELETE_CLUSTER=true ./scripts/teardown.sh
 ```
 
