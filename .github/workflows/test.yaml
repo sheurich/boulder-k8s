@@ -179,7 +179,10 @@ jobs:
           echo "==> Recent events:"
           kubectl get events -n boulder --sort-by='.lastTimestamp' | tail -50 || true
           echo ""
-          echo "==> Failed pod logs:"
+          echo "==> Vitess pod full logs (first 200 lines):"
+          kubectl logs -n boulder -l app.kubernetes.io/name=vitess --tail=-1 2>&1 | head -200 || true
+          echo ""
+          echo "==> Failed pod logs (last 100 lines each):"
           for pod in $(kubectl get pods -n boulder --no-headers | grep -v Running | grep -v Completed | awk '{print $1}'); do
             echo "--- $pod ---"
             kubectl logs "$pod" -n boulder --tail=100 || true
