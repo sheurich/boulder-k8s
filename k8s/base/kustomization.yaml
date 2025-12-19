@@ -35,9 +35,6 @@ resources:
   - network-policies/default-deny.yaml
   - network-policies/boulder-internal.yaml
 
-  # Observability
-  - observability/servicemonitors.yaml
-
 labels:
   - pairs:
       app.kubernetes.io/part-of: boulder
