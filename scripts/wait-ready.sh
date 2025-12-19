@@ -22,11 +22,19 @@ DEPLOYMENTS=(
     "boulder-nonce-b"
     "mysql"
     "proxysql"
+    "vitess"
 )
 
 for deploy in "${DEPLOYMENTS[@]}"; do
-    echo "  Waiting for $deploy..."
-    kubectl rollout status deployment/"$deploy" -n "$NAMESPACE" --timeout="$TIMEOUT"
+    if kubectl get deployment "$deploy" -n "$NAMESPACE" >/dev/null 2>&1; then
+        echo "  Waiting for $deploy..."
+        kubectl rollout status deployment/"$deploy" -n "$NAMESPACE" --timeout="$TIMEOUT"
+    else
+        # Only log if it's one of the database components, as one or the other is expected
+        if [[ "$deploy" =~ ^(mysql|proxysql|vitess)$ ]]; then
+             echo "  Skipping $deploy (not found)"
+        fi
+    fi
 done
 
 # Check pod health (allow observer to be unhealthy)

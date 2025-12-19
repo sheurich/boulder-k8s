@@ -37,7 +37,7 @@ patches:
   - path: patches/boulder-commands.yaml
   # Mount WebPKI certificates for services that need issuer certs
   - path: patches/webpki-certs.yaml
-  # Use golang image for db-migrate (boulder-tools has no arm64 build)
+  # Use boulder-tools for db-migrate (built locally)
   - path: patches/db-migrate.yaml
   # Mount nonce HMAC key secrets in nonce services
   - path: patches/nonce-secrets.yaml
@@ -145,4 +145,4 @@ images:
 labels:
   - pairs:
       environment: dev
-    includeSelectors: true
+    includeSelectors: false

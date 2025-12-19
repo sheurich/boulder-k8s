@@ -18,6 +18,7 @@ spec:
       labels:
         app.kubernetes.io/name: boulder-pki-ceremony
         app.kubernetes.io/component: bootstrap
+        app.kubernetes.io/part-of: boulder
     spec:
       restartPolicy: Never
       serviceAccountName: boulder-pki-ceremony

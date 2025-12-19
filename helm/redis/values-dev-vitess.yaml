@@ -1,0 +1,55 @@
+# Redis configuration for Boulder dev/CI environment
+# Uses Bitnami Redis chart
+
+# Service name will be redis-master (Bitnami chart default for standalone)
+# Boulder configs updated to use redis-master.boulder.svc.cluster.local
+
+# Architecture: standalone for dev, sentinel for prod
+architecture: standalone
+
+# Authentication
+auth:
+  enabled: true
+  password: boulder-redis-dev
+
+# Master configuration (standalone mode)
+master:
+  persistence:
+    enabled: true
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  # Port configuration
+  containerPorts:
+    redis: 6379
+
+# Replica configuration (not used in standalone)
+replica:
+  replicaCount: 0
+
+# TLS configuration - disabled for dev simplicity
+tls:
+  enabled: false
+
+# Metrics for Prometheus - disabled for dev (requires Prometheus Operator CRDs)
+metrics:
+  enabled: false
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    redis: 6379
+
+# Pod labels for Boulder network policies
+commonLabels:
+  app.kubernetes.io/part-of: boulder
+
+---
+# Second Redis instance for rate limiting (separate from caching)
+# Deploy as separate release: helm install redis-ratelimits bitnami/redis -f values-dev.yaml

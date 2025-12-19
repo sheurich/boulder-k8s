@@ -1,4 +1,4 @@
-# Patch db-migrate job to wait for Vitess instead of ProxySQL
+# Patch db-migrate job to wait for Vitess
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,3 +18,19 @@ spec:
                 sleep 2
               done
               echo "Vitess is ready"
+      containers:
+        - name: db-migrate
+          # Use boulder-tools (built locally)
+          image: letsencrypt/boulder-tools:latest
+          imagePullPolicy: IfNotPresent
+          workingDir: /boulder/sa/db
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              echo "Running Boulder SA migrations..."
+              sql-migrate up -config=/config/dbconfig.yml -env=boulder_sa_test
+              echo "Running Incidents SA migrations..."
+              sql-migrate up -config=/config/dbconfig.yml -env=incidents_sa_test
+              echo "Migrations complete"

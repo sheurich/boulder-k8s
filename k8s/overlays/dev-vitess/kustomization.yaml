@@ -40,10 +40,14 @@ patches:
   - path: patches/image-pull-policy.yaml
   # Fix boulder command/args for local images
   - path: patches/boulder-commands.yaml
+  # Mount WebPKI certificates for services that need issuer certs
+  - path: patches/webpki-certs.yaml
   # Use Vitess instead of ProxySQL for db-migrate job
   - path: patches/db-migrate.yaml
   # Mount nonce secrets from wfe2-secrets
   - path: patches/nonce-secrets.yaml
+  # Relax probe timeouts for dev (kind is slower)
+  - path: patches/probes.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment
@@ -144,4 +148,4 @@ images:
 labels:
   - pairs:
       environment: dev
-    includeSelectors: true
+    includeSelectors: false

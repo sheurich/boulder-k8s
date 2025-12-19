@@ -1,4 +1,4 @@
-# Patch db-migrate for dev environment - use golang image with sql-migrate
+# Patch db-migrate for dev environment
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -8,26 +8,17 @@ spec:
     spec:
       containers:
         - name: db-migrate
-          # Use golang alpine image and install sql-migrate
-          image: golang:1.25-alpine
+          # Use boulder-tools (now locally built for ARM64 support)
+          image: letsencrypt/boulder-tools:latest
           imagePullPolicy: IfNotPresent
-          env:
-            - name: GOBIN
-              value: /usr/local/bin
+          workingDir: /boulder/sa/db
           command:
             - sh
             - -c
             - |
               set -e
-              echo "Installing sql-migrate..."
-              go install github.com/rubenv/sql-migrate/sql-migrate@latest
-
-              cd /boulder/sa/db
-
               echo "Running Boulder SA migrations..."
               sql-migrate up -config=/config/dbconfig.yml -env=boulder_sa_test
-
               echo "Running Incidents SA migrations..."
               sql-migrate up -config=/config/dbconfig.yml -env=incidents_sa_test
-
               echo "Migrations complete"
