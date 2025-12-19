@@ -138,6 +138,15 @@ jobs:
           cache-to: type=gha,mode=max,scope=boulder-tools
           build-args: GO_VERSION=1.25.5
 
+      - name: Patch vtcomboserver for CI
+        run: |
+          # Patch run.sh to add --init-timeout flag for slow CI runners
+          # MySQL can take longer than 1m default timeout to start in CI
+          cd boulder/test/vtcomboserver
+          sed -i 's|/vt/bin/vtcombo \\|/vt/bin/vtcombo \\\n  --init-timeout "${VTCOMBO_INIT_TIMEOUT:-5m}" \\|' run.sh
+          # Verify the patch was applied
+          grep -q "init-timeout" run.sh && echo "Patch applied successfully"
+
       - name: Build vtcomboserver image
         uses: docker/build-push-action@v6
         with:

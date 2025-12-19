@@ -49,6 +49,9 @@ spec:
             # MySQL database name for install_trigger.sh
             - name: MYSQL_DATABASE
               value: boulder_sa_test
+            # Increase init timeout for slow CI runners (default: 1m)
+            - name: VTCOMBO_INIT_TIMEOUT
+              value: "5m"
           ports:
             # VTGate MySQL protocol port (default 33577)
             - name: mysql
@@ -62,21 +65,24 @@ spec:
               mountPath: /vt/vtdataroot
           resources:
             requests:
-              cpu: 200m
-              memory: 512Mi
-            limits:
-              cpu: 1000m
+              cpu: 500m
               memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          # Give MySQL time to start - CI runners can be slow
           livenessProbe:
             tcpSocket:
               port: mysql
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 10
+            failureThreshold: 12
           readinessProbe:
             tcpSocket:
               port: mysql
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 5
+            failureThreshold: 24
       volumes:
         - name: data
           persistentVolumeClaim:
