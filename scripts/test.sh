@@ -6,6 +6,17 @@
 #   ./test.sh --setup   Setup cluster if needed, then run tests
 #   ./test.sh --reset   Teardown, setup, then run tests
 #
+# Environment variables:
+#   OVERLAY       Kustomize overlay to use (default: dev)
+#                 - dev: ProxySQL + MySQL backend
+#                 - dev-vitess: Vitess backend
+#   NAMESPACE     Kubernetes namespace (default: boulder)
+#   CLUSTER_NAME  Kind cluster name (default: boulder-dev)
+#
+# Examples:
+#   ./test.sh --setup                      # ProxySQL backend
+#   OVERLAY=dev-vitess ./test.sh --setup   # Vitess backend
+#
 # Exit codes:
 #   0 - Tests passed
 #   1 - Tests failed
@@ -231,6 +242,15 @@ main() {
                 echo "  --setup   Setup cluster if needed, then run tests"
                 echo "  --reset   Teardown, setup, then run tests"
                 echo ""
+                echo "Environment variables:"
+                echo "  OVERLAY       Kustomize overlay: dev (default), dev-vitess"
+                echo "  NAMESPACE     Kubernetes namespace (default: boulder)"
+                echo "  CLUSTER_NAME  Kind cluster name (default: boulder-dev)"
+                echo ""
+                echo "Examples:"
+                echo "  $0 --setup                      # ProxySQL backend"
+                echo "  OVERLAY=dev-vitess $0 --setup   # Vitess backend"
+                echo ""
                 echo "Exit codes:"
                 echo "  0 - Tests passed"
                 echo "  1 - Tests failed"
@@ -259,7 +279,7 @@ main() {
     fi
 
     # Run tests
-    log_info "Running tests..."
+    log_info "Running tests (overlay: $OVERLAY)..."
     echo ""
 
     log_info "Infrastructure tests"
