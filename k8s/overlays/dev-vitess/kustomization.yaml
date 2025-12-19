@@ -141,5 +141,7 @@ images:
     newName: boulder
     newTag: latest
 
-commonLabels:
-  environment: dev
+labels:
+  - pairs:
+      environment: dev
+    includeSelectors: true

@@ -27,9 +27,6 @@ echo "==> Building required images..."
 # Deploy infrastructure dependencies
 echo "==> Deploying infrastructure..."
 
-# Note: SoftHSM runs as a sidecar in the CA pod (no separate deployment needed)
-# Note: Vitess is deployed via kustomize (k8s/overlays/dev/infra/vitess.yaml)
-
 # Deploy Redis
 echo "  Installing Redis..."
 helm repo add bitnami https://charts.bitnami.com/bitnami 2>/dev/null || true
@@ -40,17 +37,16 @@ helm upgrade --install redis bitnami/redis \
     --wait \
     --timeout 5m
 
-# Run PKI ceremony (dev only)
-if [ "$OVERLAY" = "dev" ]; then
-    echo "==> Running PKI ceremony..."
-    kubectl apply -n "$NAMESPACE" -f "$ROOT_DIR/k8s/overlays/$OVERLAY/ceremony/"
-    kubectl wait --for=condition=complete job/boulder-pki-ceremony \
-        -n "$NAMESPACE" --timeout=300s || true
-fi
-
-# Deploy Boulder services
+# Deploy Boulder services (includes PKI ceremony job)
 echo "==> Deploying Boulder services..."
 kubectl apply -k "$ROOT_DIR/k8s/overlays/$OVERLAY"
+
+# Wait for PKI ceremony to complete (dev/dev-vitess only)
+if [[ "$OVERLAY" == dev* ]]; then
+    echo "==> Waiting for PKI ceremony..."
+    kubectl wait --for=condition=complete job/boulder-pki-ceremony \
+        -n "$NAMESPACE" --timeout=300s
+fi
 
 echo "==> Deployment complete"
 echo "  Namespace: $NAMESPACE"

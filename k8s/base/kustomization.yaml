@@ -38,5 +38,7 @@ resources:
   # Observability
   - observability/servicemonitors.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: boulder
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: boulder
+    includeSelectors: true
