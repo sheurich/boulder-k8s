@@ -109,14 +109,15 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          # Use 127.0.0.1 explicitly - 'localhost' may resolve to IPv6 first
           livenessProbe:
             exec:
               command:
                 - mysqladmin
                 - ping
                 - -h
-                - localhost
-            initialDelaySeconds: 60
+                - "127.0.0.1"
+            initialDelaySeconds: 90
             periodSeconds: 10
             timeoutSeconds: 10
             failureThreshold: 6
@@ -126,9 +127,9 @@ spec:
                 - mysqladmin
                 - ping
                 - -h
-                - localhost
-            initialDelaySeconds: 30
-            periodSeconds: 5
+                - "127.0.0.1"
+            initialDelaySeconds: 60
+            periodSeconds: 10
             timeoutSeconds: 10
             failureThreshold: 6
       volumes:
