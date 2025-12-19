@@ -1,19 +1,5 @@
 # Vitess vtcomboserver deployment for Boulder dev/CI
 # Uses letsencrypt/boulder-vtcomboserver image
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: vitess-data
-  labels:
-    app.kubernetes.io/name: vitess
-    app.kubernetes.io/component: database
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,9 +35,6 @@ spec:
             # MySQL database name for install_trigger.sh
             - name: MYSQL_DATABASE
               value: boulder_sa_test
-            # Increase init timeout for slow CI runners (default: 1m)
-            - name: VTCOMBO_INIT_TIMEOUT
-              value: "5m"
           ports:
             # VTGate MySQL protocol port (default 33577)
             - name: mysql
@@ -86,8 +69,10 @@ spec:
             failureThreshold: 36
       volumes:
         - name: data
-          persistentVolumeClaim:
-            claimName: vitess-data
+          # Use tmpfs for fastest I/O in CI - vtcombo has hardcoded 30s timeout
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
 ---
 apiVersion: v1
 kind: Service

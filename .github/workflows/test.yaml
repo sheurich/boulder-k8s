@@ -138,34 +138,17 @@ jobs:
           cache-to: type=gha,mode=max,scope=boulder-tools
           build-args: GO_VERSION=1.25.5
 
-      - name: Patch vtcomboserver for CI
-        run: |
-          # Patch run.sh to add --init-timeout flag for slow CI runners
-          # MySQL can take longer than 1m default timeout to start in CI
-          cd boulder/test/vtcomboserver
-          # Add debug output at startup
-          sed -i '/^\/vt\/setup_vschema_folder.sh/i echo "[vtcombo-debug] VTCOMBO_INIT_TIMEOUT=${VTCOMBO_INIT_TIMEOUT:-5m}"' run.sh
-          # Add --init-timeout flag
-          sed -i 's|/vt/bin/vtcombo \\|/vt/bin/vtcombo \\\n  --init-timeout "${VTCOMBO_INIT_TIMEOUT:-5m}" \\|' run.sh
-          # Show the patched vtcombo invocation
-          echo "==> Patched run.sh vtcombo command:"
-          grep -A5 "vtcombo" run.sh | head -20
-
       - name: Build vtcomboserver image
         uses: docker/build-push-action@v6
         with:
           context: boulder/test/vtcomboserver
           load: true
           tags: letsencrypt/boulder-vtcomboserver:latest
-          # Disable cache - patched run.sh must be in the image
-          no-cache: true
+          # NOTE: vtcombo has hardcoded 30s MySQL startup timeout in startMysqld()
+          # that can't be configured via flags. Using tmpfs + cache to speed up init.
+          cache-from: type=gha,scope=vtcomboserver
+          cache-to: type=gha,mode=max,scope=vtcomboserver
           build-args: VITESS_TAG=v23.0.0
-
-      - name: Verify vtcomboserver image
-        run: |
-          # Confirm the patched run.sh is in the built image
-          echo "==> Verifying init-timeout is in built image:"
-          docker run --rm letsencrypt/boulder-vtcomboserver:latest grep -o "init-timeout" /vt/run.sh || echo "ERROR: init-timeout not found in image!"
 
       - name: Install kind
         run: |
