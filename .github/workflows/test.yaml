@@ -143,15 +143,15 @@ jobs:
       - name: Patch vtcombo MySQL timeout
         run: |
           # vtcombo has hardcoded 30s MySQL startup timeout in startMysqld()
-          # Patch the Dockerfile to increase it to 300s (5 min) before building
+          # Patch the Dockerfile to increase it to 600s (10 min) before building
           cd boulder/test/vtcomboserver
 
           # Add commands to show the source before/after and perform the patch
           sed -i '/^RUN git clone/a\
           \
-          # CI FIX: Show and patch MySQL startup timeout from 30s to 300s (5 min)\
+          # CI FIX: Show and patch MySQL startup timeout from 30s to 600s (10 min)\
           RUN echo "==> Original timeout line:" && grep -n "time.Second" go/cmd/vtcombo/cli/main.go | head -5\
-          RUN sed -i "s/30\\*time\\.Second/300*time.Second/g" go/cmd/vtcombo/cli/main.go\
+          RUN sed -i "s/30\\*time\\.Second/600*time.Second/g" go/cmd/vtcombo/cli/main.go\
           RUN echo "==> Patched timeout line:" && grep -n "time.Second" go/cmd/vtcombo/cli/main.go | head -5' Dockerfile
 
           echo "==> Patched Dockerfile:"
@@ -169,12 +169,12 @@ jobs:
 
       - name: Patch vtcomboserver image (install_trigger timeout)
         run: |
-          # Increase install_trigger.sh timeout from 120s to 300s
+          # Increase install_trigger.sh timeout from 120s to 600s
           # This script waits for the certificates table to appear
           docker build --tag letsencrypt/boulder-vtcomboserver:latest - <<'DOCKERFILE'
           FROM letsencrypt/boulder-vtcomboserver:latest
           USER root
-          RUN sed -i 's/TIMEOUT=120/TIMEOUT=300/' /vt/install_trigger.sh
+          RUN sed -i 's/TIMEOUT=120/TIMEOUT=600/' /vt/install_trigger.sh
           USER vitess
           DOCKERFILE
           echo "==> Patched install_trigger.sh timeout:"
