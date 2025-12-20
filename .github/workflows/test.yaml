@@ -143,15 +143,15 @@ jobs:
       - name: Patch vtcombo MySQL timeout
         run: |
           # vtcombo has hardcoded 30s MySQL startup timeout in startMysqld()
-          # Patch the Dockerfile to increase it to 120s before building
+          # Patch the Dockerfile to increase it to 300s (5 min) before building
           cd boulder/test/vtcomboserver
 
           # Add commands to show the source before/after and perform the patch
           sed -i '/^RUN git clone/a\
           \
-          # CI FIX: Show and patch MySQL startup timeout from 30s to 120s\
+          # CI FIX: Show and patch MySQL startup timeout from 30s to 300s (5 min)\
           RUN echo "==> Original timeout line:" && grep -n "time.Second" go/cmd/vtcombo/cli/main.go | head -5\
-          RUN sed -i "s/30\\*time\\.Second/120*time.Second/g" go/cmd/vtcombo/cli/main.go\
+          RUN sed -i "s/30\\*time\\.Second/300*time.Second/g" go/cmd/vtcombo/cli/main.go\
           RUN echo "==> Patched timeout line:" && grep -n "time.Second" go/cmd/vtcombo/cli/main.go | head -5' Dockerfile
 
           echo "==> Patched Dockerfile:"
