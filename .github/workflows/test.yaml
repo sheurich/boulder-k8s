@@ -167,6 +167,19 @@ jobs:
           no-cache: true
           build-args: VITESS_TAG=v23.0.0
 
+      - name: Patch vtcomboserver image (install_trigger timeout)
+        run: |
+          # Increase install_trigger.sh timeout from 120s to 300s
+          # This script waits for the certificates table to appear
+          docker build --tag letsencrypt/boulder-vtcomboserver:latest - <<'DOCKERFILE'
+          FROM letsencrypt/boulder-vtcomboserver:latest
+          USER root
+          RUN sed -i 's/TIMEOUT=120/TIMEOUT=300/' /vt/install_trigger.sh
+          USER vitess
+          DOCKERFILE
+          echo "==> Patched install_trigger.sh timeout:"
+          docker run --rm letsencrypt/boulder-vtcomboserver:latest grep TIMEOUT /vt/install_trigger.sh
+
       - name: Install kind
         run: |
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.26.0/kind-linux-amd64
