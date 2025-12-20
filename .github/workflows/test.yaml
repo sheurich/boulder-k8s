@@ -151,7 +151,7 @@ jobs:
           \
           # CI FIX: Show and patch MySQL startup timeout from 30s to 120s\
           RUN echo "==> Original timeout line:" && grep -n "time.Second" go/cmd/vtcombo/cli/main.go | head -5\
-          RUN sed -i "s/30 \\* time\\.Second/120 * time.Second/g" go/cmd/vtcombo/cli/main.go\
+          RUN sed -i "s/30\\*time\\.Second/120*time.Second/g" go/cmd/vtcombo/cli/main.go\
           RUN echo "==> Patched timeout line:" && grep -n "time.Second" go/cmd/vtcombo/cli/main.go | head -5' Dockerfile
 
           echo "==> Patched Dockerfile:"
