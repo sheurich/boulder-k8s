@@ -18,36 +18,58 @@ Supported database architectures:
 
 ```mermaid
 flowchart LR
-  subgraph External["External Clients/Deps"]
-    Client[ACME Client]
-    Operator[Operator / SFE]
-    CT[CT Logs]
-    S3[S3/MinIO]
+  subgraph External["External Clients"]
+    Client["ACME Client"]
+    Operator["Operator (SFE)"]
   end
 
-  subgraph Core["Core Boulder Services"]
-    WFE2[WFE2]
-    SFE[SFE]
-    RA[RA]
-    VA[VA]
-    RVA[Remote VAs]
-    CA[CA]
-    SA[SA]
-    Publisher[Publisher]
+  subgraph Core["Core Services"]
+    direction TB
+    WFE2["WFE2"]
+    SFE["SFE"]
+    RA["RA"]
+    VA["VA"]
+    RVA["Remote VAs"]
+    CA["CA"]
+    SA["SA"]
+    Publisher["Publisher"]
   end
 
-  subgraph Supporting["Supporting/Ops Services"]
-    Nonce[Nonce A/B]
-    Redis[Redis (rate limits)]
-    CRLUpdater[CRL Updater]
-    CRLStorer[CRL Storer]
-    Observer[Observer]
-    HSM[HSM (SoftHSM/Luna)]
+  subgraph Crypto["Crypto and Nonce"]
+    direction TB
+    Nonce["Nonce A/B"]
+    PKCS11["PKCS#11 Library (SoftHSM/Luna)"]
+    Luna["Luna HSM (NTLS)"]
   end
 
-  subgraph DB["Database Backend (choose one)"]
-    ProxySQL[ProxySQL] --> MySQLA[MySQL 8]
-    Vitess[Vitess vtcombo] --> MySQLB[MySQL 8]
+  subgraph DataPlane["Data Plane"]
+    direction TB
+    Redis["Redis"]
+    subgraph DB["DB Backend (choose one)"]
+      direction TB
+      ProxySQL["ProxySQL"] --> MySQLA["MySQL 8"]
+      Vitess["Vitess vtcombo"] --> MySQLB["MySQL 8"]
+    end
+  end
+
+  subgraph Compliance["Compliance and Revocation"]
+    direction TB
+    CRLUpdater["CRL Updater"]
+    CRLStorer["CRL Storer"]
+    CRLStore["CRL Storage (S3/MinIO)"]
+  end
+
+  subgraph Observability["Observability and Audit"]
+    direction TB
+    Observer["Observer"]
+    Logs["Audit Logs"]
+  end
+
+  subgraph Integrations["Third-party Integrations"]
+    direction TB
+    CT["CT Logs"]
+    EmailExporter["Email Exporter"]
+    Pardot["Salesforce Pardot"]
   end
 
   Client --> WFE2
@@ -59,21 +81,32 @@ flowchart LR
   RA --> VA --> RVA
   RA --> CA
   RA --> Publisher --> CT
-  CA --> HSM
+  CA -.-> PKCS11
+  PKCS11 -.-> Luna
   RA --> SA
   CA --> SA
   WFE2 -.-> Nonce
   WFE2 -.-> Redis
+  WFE2 -.-> EmailExporter
+  SFE -.-> EmailExporter
+  EmailExporter -.-> Pardot
   RA -.-> Redis
   CRLUpdater -.-> CA
   CRLUpdater -.-> SA
-  CRLUpdater -.-> CRLStorer -.-> S3
+  CRLUpdater -.-> CRLStorer -.-> CRLStore
   Observer -.-> WFE2
-  SA -->|option A| ProxySQL
-  SA -->|option B| Vitess
+  WFE2 -.-> Logs
+  SA --> ProxySQL
+  SA --> Vitess
+
+  classDef boulder fill:#D9ECFF,stroke:#1F6FEB,color:#0B2F4F;
+  classDef external fill:#FFF4D6,stroke:#B58100,color:#5A3B00;
+  class WFE2,SFE,RA,VA,RVA,CA,SA,Publisher,Nonce,CRLUpdater,CRLStorer,Observer,EmailExporter boulder;
+  class Client,Operator,CT,Pardot,CRLStore,Logs,Redis,PKCS11,Luna,ProxySQL,Vitess,MySQLA,MySQLB external;
 ```
 
-Solid arrows: primary RPC/data flow. Dashed arrows: supporting/ops paths.
+Solid arrows: primary RPC/data flow. Dashed arrows: supporting paths (security, compliance, observability, integrations).
+Blue boxes: Boulder-supplied services (from `k8s/base/boulder`). Amber boxes: external systems/dependencies.
 
 ## Quick Start
 
