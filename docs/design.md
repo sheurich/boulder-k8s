@@ -136,6 +136,8 @@ Services validate peer certificates against the internal CA and expected SANs (v
 
 Two database architectures supported as first-class options:
 
+Upstream Boulder is transitioning from ProxySQL + MariaDB (MariaDB-specific SQL) to Vitess + MySQL 8. This repo supports both during the migration; the ProxySQL overlay here runs on MySQL 8.4.
+
 **MySQL + ProxySQL (default)**
 - Overlay: `k8s/overlays/dev`
 - Connection: `proxysql:6033`

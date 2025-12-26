@@ -10,6 +10,10 @@ This repository provides production-grade Kubernetes manifests for deploying Bou
 - **Staging**: Production-like testing environments
 - **Production**: Full HA deployments with Luna HSM support
 
+Supported database architectures:
+- **ProxySQL + MySQL 8** (default)
+- **Vitess + MySQL 8** (alternative)
+
 ## Architecture
 
 ```
@@ -41,6 +45,8 @@ This repository provides production-grade Kubernetes manifests for deploying Bou
     │or Luna) │
     └─────────┘
 ```
+
+Diagram reflects the default ProxySQL + MySQL layout. The Vitess overlay replaces ProxySQL/MySQL with Vitess vtcomboserver.
 
 ## Quick Start
 
@@ -174,10 +180,12 @@ boulder-k8s/
 
 Two database backends available via Kustomize overlays:
 
+Upstream Boulder is transitioning from ProxySQL + MariaDB (MariaDB-specific SQL) to Vitess + MySQL 8. This repo supports both architectures; the ProxySQL path here runs on MySQL 8.4.
+
 | Overlay | Backend | Use Case |
 |---------|---------|----------|
-| `k8s/overlays/dev` | MySQL 8 + ProxySQL | Default, matches upstream Boulder |
-| `k8s/overlays/dev-vitess` | Vitess | Teams with existing Vitess expertise |
+| `k8s/overlays/dev` | MySQL 8 + ProxySQL | Default; typical scale (<10M certs/month) |
+| `k8s/overlays/dev-vitess` | Vitess | Extreme scale or existing Vitess expertise |
 
 ```bash
 kubectl kustomize k8s/overlays/dev        # ProxySQL (default)
@@ -215,9 +223,11 @@ kubectl kustomize k8s/overlays/dev-vitess # Vitess
 
 GitHub Actions runs on every PR:
 
-1. **validate** - Lint and validate all manifests
-2. **deploy-test** - Deploy to kind, run integration tests
-3. **helm-lint** - Validate Helm charts
+1. **test-proxysql** - Build images, deploy kind, run issuance tests (default overlay)
+2. **validate-manifests** - Validate manifests with kubeconform
+
+Manual-only:
+- **test-vitess** - dev-vitess overlay; disabled in push/PR due to hosted runner resource constraints
 
 ## Documentation
 
