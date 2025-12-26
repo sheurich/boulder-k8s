@@ -41,6 +41,7 @@ Deploy multi-perspective validation in all environments:
 - 3 remote VAs (rva1, rva2, rva3)
 
 CA/Browser Forum requires multi-perspective validation for WebPKI. Running full topology in dev catches integration issues early.
+Planned: deploy rva1/2/3 as separate deployments/placements to better mirror production multi-perspective validation.
 
 ### Certificate Transparency
 
@@ -88,10 +89,9 @@ Client → WFE2 → RA → VA (validation)
 |---------|------|
 | CRL Updater | Generates Certificate Revocation Lists |
 | CRL Storer | Publishes CRLs to storage/CDN |
-| OCSP Updater | Generates OCSP responses |
 | Bad Key Revoker | Revokes certificates using compromised keys |
 | Log Validator | Validates CT log submissions |
-| Email Exporter | Sends expiration notifications |
+| Email Exporter | Sends contact/case data to Salesforce/Pardot (via WFE2/SFE) |
 
 ### Security Model
 
@@ -123,6 +123,17 @@ Services validate peer certificates against the internal CA and expected SANs (v
 - **SA gating**: Only SA accesses database; enforces data access patterns
 - **Nonce validation**: Prevents replay attacks in ACME protocol
 - **NetworkPolicies**: Default-deny with explicit allow rules
+
+### Observability and Audit
+
+Phase 1 uses a dev-only humanlog pod to ingest logs (stdout) and OTLP traces. Audit log markers use `[AUDIT]` from Boulder’s shared logger; tests assert the presence of audit events during end-to-end issuance.
+
+Staging/production observability is TBD; required capabilities include:
+- Append-only or immutable log storage
+- Retention and export controls
+- Queryable audit trail for issuance events
+- Secure transport (mTLS/OTLP)
+- Access controls and tenant isolation
 
 ## Architecture Decisions
 
@@ -227,15 +238,16 @@ Vitess provides MySQL-compatible interface with built-in sharding. Let's Encrypt
 ### Test Infrastructure (Dev/CI only)
 
 These services simulate the external Internet and third-party services for end-to-end testing. Production uses real equivalents.
+Some mocks are planned but not yet implemented.
 
 | Service | Simulates | Purpose |
 |---------|-----------|---------|
 | challtestsrv | Public Internet | Answers DNS queries, hosts HTTP-01/TLS-ALPN-01 challenge responses |
 | ct-test-srv | CT Logs (Google, Cloudflare) | Accepts precertificate submissions |
-| aia-test-srv | AIA endpoints | Serves issuer certificates for chain validation |
-| mail-test-srv | SMTP provider | Captures expiration notification emails |
+| aia-test-srv (planned) | AIA endpoints | Serves issuer certificates for chain validation |
+| mail-test-srv (planned) | SMTP provider | Captures expiration notification emails |
 | pardot-test-srv | Salesforce API | Mocks CRM integration for email-exporter |
-| s3-test-srv | Amazon S3 | Mocks object storage for CRL/backup |
+| s3-test-srv (planned) | Amazon S3 | Mocks object storage for CRL/backup |
 
 **challtestsrv** is the most critical—it acts as the "Internet" for validation, providing both a fake DNS authority and challenge responder that the VA queries during domain validation.
 
@@ -244,10 +256,11 @@ These services simulate the external Internet and third-party services for end-t
 | Component | Role | Dev/CI | Production |
 |-----------|------|--------|------------|
 | Database | Relational storage (registrations, orders, certs) | MySQL+ProxySQL or Vitess | Managed MySQL cluster or Vitess |
-| Redis | Rate limiting, nonce cache, operational state | Single instance | Clustered |
+| Redis | Rate limiting and short-lived operational state | Single instance | Clustered |
 | HSM | CA private key storage | SoftHSM sidecar | Thales Luna |
-| DNS Resolver | DNSSEC-validating recursive resolver for VA | CoreDNS | Unbound |
-| Jaeger | Distributed tracing | Optional | Required |
+| DNS Resolver (VA) | Recursive resolver for VA validation | challtestsrv DNS (dev) + CoreDNS for cluster services | Unbound |
+| Audit logging/tracing | Log/trace ingestion and review | humanlog (dev-only pod) | TBD (see requirements) |
+| Jaeger | Distributed tracing | Planned (Phase 2+) | Planned (Phase 2+) |
 | Prometheus | Metrics scraping | ServiceMonitors | ServiceMonitors |
 
 **MySQL + ProxySQL** follows upstream Boulder's docker-compose architecture. ProxySQL handles connection pooling, query timeout management, and enables future read/write splitting with replicas. **Vitess** follows Let's Encrypt's production architecture with horizontal sharding for extreme scale.
@@ -258,11 +271,11 @@ These services simulate the external Internet and third-party services for end-t
 
 ### Phase 1: MVP (Dev/CI)
 
-Deploy Boulder to kind with automated PKI and mock services. Validate end-to-end certificate issuance.
+Deploy Boulder to kind with automated PKI and mock services. Add dev-only humanlog for logs/traces and validate end-to-end issuance with audit log assertions.
 
 ### Phase 2: Staging/Production
 
-Add Luna HSM overlay, ESO integration, real CT log configuration, production Vitess/Redis configs.
+Add Luna HSM overlay, ESO integration, real CT log configuration, production Vitess/Redis configs, and select a staging/production audit logging/tracing stack.
 
 ### Phase 3: Operational
 

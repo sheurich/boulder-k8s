@@ -7,8 +7,8 @@ A reference implementation for deploying [Boulder](https://github.com/letsencryp
 This repository provides production-grade Kubernetes manifests for deploying Boulder, supporting:
 
 - **Dev/CI**: Local development with kind clusters
-- **Staging**: Production-like testing environments
-- **Production**: Full HA deployments with Luna HSM support
+- **Planned Staging**: Production-like testing environments (Phase 2)
+- **Planned Production**: Full HA deployments with Luna HSM support (Phase 2+)
 
 Supported database architectures:
 - **ProxySQL + MySQL 8** (default)
@@ -107,6 +107,7 @@ flowchart LR
 
 Solid arrows: primary RPC/data flow. Dashed arrows: supporting paths (security, compliance, observability, integrations).
 Blue boxes: Boulder-supplied services (from `k8s/base/boulder`). Amber boxes: external systems/dependencies.
+Phase 1 dev/CI uses a dev-only humanlog pod for logs and traces. Audit log events use `[AUDIT]` from Boulder’s shared logger and can be asserted in tests.
 
 ## Quick Start
 
@@ -189,11 +190,11 @@ boulder-k8s/
 │       │   ├── mocks/       # Test mock services
 │       │   └── secrets/     # Dev secrets
 │       ├── dev-vitess/      # Kind + SoftHSM + Vitess
-│       ├── staging/         # Production-like
-│       └── prod/            # Luna HSM + real CT
 ├── scripts/                 # Deployment scripts
 └── docs/                    # Documentation
 ```
+
+Planned overlays: `k8s/overlays/staging` and `k8s/overlays/prod` (see `docs/design.md` Phase 2).
 
 ## Components
 
@@ -215,6 +216,8 @@ boulder-k8s/
 | email-exporter | Salesforce integration |
 | sfe | Self-service frontend |
 
+Email exporter is optional; when enabled, WFE2/SFE send contact/case data to Salesforce/Pardot.
+
 ### Compliance CronJobs
 
 | Job | Schedule | Purpose |
@@ -235,6 +238,8 @@ boulder-k8s/
 | CT logs | Mock | Mock | Real |
 | Secrets | K8s Secrets | K8s or ESO | ESO |
 | Replicas | 1 | 2+ | HA |
+
+Only `dev` and `dev-vitess` overlays are implemented today; staging/prod are planned (Phase 2).
 
 ### Database Configuration
 
