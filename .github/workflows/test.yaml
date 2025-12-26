@@ -3,6 +3,7 @@ name: Test
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test-proxysql:
@@ -95,6 +96,9 @@ jobs:
 
   test-vitess:
     name: Test (Vitess)
+    # Disabled by default in CI; run manually via workflow_dispatch until
+    # resource-related flakiness on hosted runners is resolved.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
