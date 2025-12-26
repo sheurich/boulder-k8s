@@ -16,45 +16,64 @@ Supported database architectures:
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        External Traffic                          │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-                       ┌───────▼───────┐
-                       │   WFE2        │  ACME API
-                       │ (LoadBalancer)│
-                       └───────┬───────┘
-                               │
-        ┌──────────────────────┼──────────────────────┐
-        │                      │                      │
-   ┌────▼────┐           ┌─────▼─────┐          ┌─────▼─────┐
-   │   RA    │           │    SA     │          │ Publisher │
-   │         │           │           │          │           │
-   └────┬────┘           └─────┬─────┘          └───────────┘
-        │                      │
-   ┌────┼────┐            ┌────▼────┐
-   │    │    │            │ProxySQL │
-┌──▼─┐┌─▼──┐┌▼──┐         │ (pool)  │
-│ VA ││ CA ││...│         └────┬────┘
-└────┘└──┬─┘└───┘              │
-         │                ┌────▼────┐
-    ┌────▼────┐           │ MySQL 8 │
-    │   HSM   │           │  (DB)   │
-    │(SoftHSM │           └─────────┘
-    │or Luna) │
-    └─────────┘
+```mermaid
+flowchart LR
+  subgraph External["External Clients/Deps"]
+    Client[ACME Client]
+    Operator[Operator / SFE]
+    CT[CT Logs]
+    S3[S3/MinIO]
+  end
+
+  subgraph Core["Core Boulder Services"]
+    WFE2[WFE2]
+    SFE[SFE]
+    RA[RA]
+    VA[VA]
+    RVA[Remote VAs]
+    CA[CA]
+    SA[SA]
+    Publisher[Publisher]
+  end
+
+  subgraph Supporting["Supporting/Ops Services"]
+    Nonce[Nonce A/B]
+    Redis[Redis (rate limits)]
+    CRLUpdater[CRL Updater]
+    CRLStorer[CRL Storer]
+    Observer[Observer]
+    HSM[HSM (SoftHSM/Luna)]
+  end
+
+  subgraph DB["Database Backend (choose one)"]
+    ProxySQL[ProxySQL] --> MySQLA[MySQL 8]
+    Vitess[Vitess vtcombo] --> MySQLB[MySQL 8]
+  end
+
+  Client --> WFE2
+  Operator --> SFE
+  WFE2 --> RA
+  WFE2 --> SA
+  SFE --> RA
+  SFE --> SA
+  RA --> VA --> RVA
+  RA --> CA
+  RA --> Publisher --> CT
+  CA --> HSM
+  RA --> SA
+  CA --> SA
+  WFE2 -.-> Nonce
+  WFE2 -.-> Redis
+  RA -.-> Redis
+  CRLUpdater -.-> CA
+  CRLUpdater -.-> SA
+  CRLUpdater -.-> CRLStorer -.-> S3
+  Observer -.-> WFE2
+  SA -->|option A| ProxySQL
+  SA -->|option B| Vitess
 ```
 
-Diagram reflects the default ProxySQL + MySQL layout. The Vitess overlay replaces ProxySQL/MySQL with Vitess vtcomboserver.
-
-Vitess variant (dev-vitess):
-```
-        ┌────▼────┐
-        │ Vitess  │
-        │(vtcombo)│
-        └─────────┘
-```
+Solid arrows: primary RPC/data flow. Dashed arrows: supporting/ops paths.
 
 ## Quick Start
 
