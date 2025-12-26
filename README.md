@@ -48,6 +48,14 @@ Supported database architectures:
 
 Diagram reflects the default ProxySQL + MySQL layout. The Vitess overlay replaces ProxySQL/MySQL with Vitess vtcomboserver.
 
+Vitess variant (dev-vitess):
+```
+        ┌────▼────┐
+        │ Vitess  │
+        │(vtcombo)│
+        └─────────┘
+```
+
 ## Quick Start
 
 ### Prerequisites
