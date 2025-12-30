@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-log-validator
+  labels:
+    app.kubernetes.io/name: boulder-log-validator
+    app.kubernetes.io/component: compliance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: boulder-log-validator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: boulder-log-validator
+        app.kubernetes.io/component: compliance
+    spec:
+      containers:
+        - name: boulder-log-validator
+          image: letsencrypt/boulder:latest
+          args:
+            - boulder
+            - log-validator
+            - --config
+            - /config/log-validator.json
+          ports:
+            - name: debug
+              containerPort: 8021
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /debug/vars
+              port: 8021
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /debug/vars
+              port: 8021
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: boulder-log-validator-config

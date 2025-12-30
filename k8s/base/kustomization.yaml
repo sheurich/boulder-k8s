@@ -21,13 +21,13 @@ resources:
   - boulder/observer.yaml
   - boulder/email-exporter.yaml
   - boulder/sfe.yaml
+  - boulder/log-validator.yaml
 
   # Bootstrap jobs
   - bootstrap/db-migrate.yaml
 
   # CronJobs
   - cronjobs/bad-key-revoker.yaml
-  - cronjobs/log-validator.yaml
   - cronjobs/cert-checker.yaml
   - cronjobs/crl-checker.yaml
 

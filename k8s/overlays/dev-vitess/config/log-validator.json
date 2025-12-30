@@ -1,4 +1,7 @@
 {
+	"logValidator": {
+		"debugAddr": ":8021"
+	},
 	"syslog": {
 		"stdoutlevel": 7,
 		"sysloglevel": -1
