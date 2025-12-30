@@ -138,7 +138,9 @@ run_test() {
 
 test_manifests() {
     # Validate manifests build without errors
-    kubectl kustomize "$ROOT_DIR/k8s/overlays/$OVERLAY" >/dev/null 2>&1
+    kubectl kustomize "$ROOT_DIR/k8s/overlays/$OVERLAY" \
+        --load-restrictor LoadRestrictionsNone \
+        >/dev/null 2>&1
 }
 
 test_pod_health() {
