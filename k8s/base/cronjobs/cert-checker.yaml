@@ -38,9 +38,6 @@ spec:
                 - name: config
                   mountPath: /config
                   readOnly: true
-                - name: grpc-tls
-                  mountPath: /certs/grpc
-                  readOnly: true
                 - name: secrets
                   mountPath: /secrets
                   readOnly: true
@@ -48,9 +45,6 @@ spec:
             - name: config
               configMap:
                 name: boulder-cert-checker-config
-            - name: grpc-tls
-              secret:
-                secretName: boulder-cert-checker-grpc-tls
             - name: secrets
               secret:
                 secretName: boulder-cert-checker-secrets
