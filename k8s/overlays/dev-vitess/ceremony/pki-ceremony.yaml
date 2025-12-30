@@ -138,7 +138,7 @@ data:
 
     # Generate certificates for each service
     for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
-                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker; do
+                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker challtestsrv; do
       mkdir -p ipki/$service
       openssl ecparam -name prime256v1 -genkey -noout -out ipki/$service/key.pem
       openssl req -new -key ipki/$service/key.pem -out ipki/$service/csr.pem \
@@ -176,6 +176,12 @@ data:
         publisher)
           cat > ipki/$service/ext.cnf << EOF
     subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:publisher.boulder
+    EOF
+          ;;
+        challtestsrv)
+          # challtestsrv uses DNS-based DoH endpoints; avoid fixed IP SANs.
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:challtestsrv,DNS:challtestsrv.boulder.svc.cluster.local
     EOF
           ;;
         *)
@@ -464,7 +470,7 @@ data:
     # Create service TLS secrets
     # Use generic secrets with cert.pem/key.pem keys to match Boulder config expectations
     for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
-                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker; do
+                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker challtestsrv; do
       kubectl create secret generic boulder-$service-grpc-tls \
         --from-file=cert.pem=ipki/$service/cert.pem \
         --from-file=key.pem=ipki/$service/key.pem \

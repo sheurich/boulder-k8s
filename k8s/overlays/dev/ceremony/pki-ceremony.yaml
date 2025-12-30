@@ -191,9 +191,9 @@ data:
     EOF
           ;;
         challtestsrv)
-          # challtestsrv needs IP SAN for DoH TLS validation (VA connects via service IP)
+          # challtestsrv uses DNS-based DoH endpoints; avoid fixed IP SANs.
           cat > ipki/$service/ext.cnf << EOF
-    subjectAltName=DNS:challtestsrv,DNS:challtestsrv.boulder.svc.cluster.local,IP:10.96.99.195
+    subjectAltName=DNS:challtestsrv,DNS:challtestsrv.boulder.svc.cluster.local
     EOF
           ;;
         rva1)

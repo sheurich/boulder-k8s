@@ -3,8 +3,9 @@
 		"userAgent": "remoteva-b",
 		"debugAddr": ":8212",
 		"dnsTries": 3,
-		"dnsStaticResolvers": ["8.8.8.8:53"],
+		"dnsStaticResolvers": ["challtestsrv.boulder.svc.cluster.local:8443"],
 		"dnsTimeout": "1s",
+		"dnsAllowLoopbackAddresses": true,
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {
 			"caCertFile": "/certs/ipki/ca.crt",

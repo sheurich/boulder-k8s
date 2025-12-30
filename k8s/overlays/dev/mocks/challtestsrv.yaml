@@ -92,7 +92,6 @@ metadata:
     app.kubernetes.io/component: test-mock
 spec:
   type: ClusterIP
-  clusterIP: 10.96.99.195
   ports:
     - name: management
       port: 8055

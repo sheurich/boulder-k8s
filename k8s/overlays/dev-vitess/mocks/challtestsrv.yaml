@@ -33,6 +33,14 @@ spec:
             - ":5001"
             - -dns01
             - ":8053"
+            - -doh
+            - ":8443"
+            - -doh-cert
+            - /certs/ipki/challtestsrv/cert.pem
+            - -doh-cert-key
+            - /certs/ipki/challtestsrv/key.pem
+            - -defaultIPv6
+            - ""
           ports:
             - name: management
               containerPort: 8055
@@ -49,6 +57,13 @@ spec:
             - name: dns-tcp
               containerPort: 8053
               protocol: TCP
+            - name: doh
+              containerPort: 8443
+              protocol: TCP
+          volumeMounts:
+            - name: ipki-service
+              mountPath: /certs/ipki/challtestsrv
+              readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -56,6 +71,10 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
+      volumes:
+        - name: ipki-service
+          secret:
+            secretName: boulder-challtestsrv-grpc-tls
 ---
 apiVersion: v1
 kind: Service
@@ -83,6 +102,10 @@ spec:
     - name: dns-tcp
       port: 8053
       targetPort: dns-tcp
+      protocol: TCP
+    - name: doh
+      port: 8443
+      targetPort: doh
       protocol: TCP
   selector:
     app.kubernetes.io/name: challtestsrv
