@@ -24,22 +24,6 @@ spec:
             - log-validator
             - --config
             - /config/log-validator.json
-          ports:
-            - name: debug
-              containerPort: 8021
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /debug/vars
-              port: 8021
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /debug/vars
-              port: 8021
-            initialDelaySeconds: 5
-            periodSeconds: 5
           resources:
             requests:
               cpu: 100m
