@@ -29,7 +29,9 @@
 						"admin.boulder",
 						"ca.boulder",
 						"crl-updater.boulder",
-						"ra.boulder"
+						"ra.boulder",
+						"wfe.boulder",
+						"boulder-wfe2"
 					]
 				},
 				"sa.StorageAuthorityReadOnly": {

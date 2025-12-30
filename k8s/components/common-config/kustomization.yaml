@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+configMapGenerator:
+  - name: boulder-wfe2-config
+    behavior: merge
+    files:
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
+  - name: boulder-ra-config
+    behavior: merge
+    files:
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
+      - config/ident-policy.yaml
+      - config/ct-log-list.json
+  - name: boulder-ca-config
+    behavior: merge
+    files:
+      - config/ident-policy.yaml
+      - config/zlint.toml
+      - config/ct-log-list.json
+  - name: boulder-cert-checker-config
+    behavior: merge
+    files:
+      - config/ident-policy.yaml
+      - config/ct-log-list.json
+  - name: boulder-shared-config
+    files:
+      - config/ratelimit-defaults.yml
+      - config/ratelimit-overrides.yml
+      - config/ident-policy.yaml
+      - config/zlint.toml
+      - config/ct-log-list.json
+      - config/crl-storer.ini

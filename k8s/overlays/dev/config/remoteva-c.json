@@ -3,7 +3,7 @@
 		"userAgent": "remoteva-c",
 		"debugAddr": ":8213",
 		"dnsTries": 3,
-		"dnsStaticResolvers": ["10.96.99.195:8443"],
+		"dnsStaticResolvers": ["challtestsrv.boulder.svc.cluster.local:8443"],
 		"dnsTimeout": "1s",
 		"dnsAllowLoopbackAddresses": true,
 		"issuerDomain": "happy-hacker-ca.invalid",

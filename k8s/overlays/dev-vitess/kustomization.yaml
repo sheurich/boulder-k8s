@@ -12,6 +12,7 @@ namespace: boulder
 # Only config/dbconfig.yml differs (uses vitess:3306 instead of proxysql:6033).
 components:
   - ../../components/db-vitess
+  - ../../components/common-config
 
 resources:
   - ../../base
@@ -54,24 +55,15 @@ configMapGenerator:
   - name: boulder-wfe2-config
     files:
       - config/wfe2.json
-      - config/ratelimit-defaults.yml
-      - config/ratelimit-overrides.yml
   - name: boulder-ra-config
     files:
       - config/ra.json
-      - config/ratelimit-defaults.yml
-      - config/ratelimit-overrides.yml
-      - config/ident-policy.yaml
-      - config/ct-log-list.json
   - name: boulder-sa-config
     files:
       - config/sa.json
   - name: boulder-ca-config
     files:
       - config/ca.json
-      - config/ident-policy.yaml
-      - config/zlint.toml
-      - config/ct-log-list.json
   - name: boulder-va-config
     files:
       - config/va.json
@@ -130,16 +122,6 @@ configMapGenerator:
       - softhsm2.conf=config/softhsm2.conf
     options:
       disableNameSuffixHash: true
-  # Shared config files used by multiple services
-  - name: boulder-shared-config
-    files:
-      - config/ratelimit-defaults.yml
-      - config/ratelimit-overrides.yml
-      - config/ident-policy.yaml
-      - config/zlint.toml
-      - config/ct-log-list.json
-      - config/crl-storer.ini
-
 images:
   - name: letsencrypt/boulder
     newName: boulder

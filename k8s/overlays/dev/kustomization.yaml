@@ -7,6 +7,8 @@ namespace: boulder
 # Use dev-vitess overlay for Vitess alternative
 components:
   - ../../components/db-proxysql
+  - ../../components/humanlog
+  - ../../components/common-config
 
 resources:
   - ../../base
@@ -49,24 +51,15 @@ configMapGenerator:
   - name: boulder-wfe2-config
     files:
       - config/wfe2.json
-      - config/ratelimit-defaults.yml
-      - config/ratelimit-overrides.yml
   - name: boulder-ra-config
     files:
       - config/ra.json
-      - config/ratelimit-defaults.yml
-      - config/ratelimit-overrides.yml
-      - config/ident-policy.yaml
-      - config/ct-log-list.json
   - name: boulder-sa-config
     files:
       - config/sa.json
   - name: boulder-ca-config
     files:
       - config/ca.json
-      - config/ident-policy.yaml
-      - config/zlint.toml
-      - config/ct-log-list.json
   - name: boulder-va-config
     files:
       - config/va.json
@@ -112,8 +105,6 @@ configMapGenerator:
   - name: boulder-cert-checker-config
     files:
       - config/cert-checker.json
-      - config/ident-policy.yaml
-      - config/ct-log-list.json
   - name: boulder-crl-checker-config
     files:
       - config/crl-checker.json
@@ -127,16 +118,6 @@ configMapGenerator:
       - softhsm2.conf=config/softhsm2.conf
     options:
       disableNameSuffixHash: true
-  # Shared config files used by multiple services
-  - name: boulder-shared-config
-    files:
-      - config/ratelimit-defaults.yml
-      - config/ratelimit-overrides.yml
-      - config/ident-policy.yaml
-      - config/zlint.toml
-      - config/ct-log-list.json
-      - config/crl-storer.ini
-
 images:
   - name: letsencrypt/boulder
     newName: boulder

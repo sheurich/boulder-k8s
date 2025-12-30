@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: humanlog
+  labels:
+    app: humanlog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: humanlog
+  template:
+    metadata:
+      labels:
+        app: humanlog
+    spec:
+      containers:
+        - name: humanlog
+          image: otel/opentelemetry-collector-contrib:0.114.0
+          args:
+            - "--config=/conf/collector.yaml"
+          ports:
+            - containerPort: 4317 # OTLP gRPC
+            - containerPort: 4318 # OTLP HTTP
+          volumeMounts:
+            - name: humanlog-config
+              mountPath: /conf
+      volumes:
+        - name: humanlog-config
+          configMap:
+            name: humanlog-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: humanlog
+  labels:
+    app: humanlog
+spec:
+  selector:
+    app: humanlog
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
