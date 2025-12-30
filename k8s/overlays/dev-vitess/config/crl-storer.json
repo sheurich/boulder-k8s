@@ -30,7 +30,7 @@
 			"/certs/webpki/int-ecdsa-b.cert.pem",
 			"/certs/webpki/int-ecdsa-c.cert.pem"
 		],
-		"s3Endpoint": "http://minio.boulder.svc.cluster.local:9000",
+		"s3Endpoint": "http://s3-test-srv.boulder.svc.cluster.local:4501",
 		"s3Bucket": "lets-encrypt-crls",
 		"awsConfigFile": "/config/crl-storer.ini",
 		"awsCredsFile": "/secrets/aws_creds.ini"

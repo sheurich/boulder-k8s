@@ -23,6 +23,7 @@ resources:
   - mocks/challtestsrv.yaml
   - mocks/ct-test-srv.yaml
   - mocks/pardot-test-srv.yaml
+  - mocks/s3-test-srv.yaml
   # PKI ceremony job
   - ceremony/pki-ceremony.yaml
 
