@@ -43,15 +43,53 @@ helm upgrade --install redis bitnami/redis \
     --wait \
     --timeout 5m
 
+# Cleanup immutable jobs before applying
+echo "==> Cleaning up old jobs..."
+kubectl delete job boulder-pki-ceremony boulder-db-migrate -n "$NAMESPACE" --ignore-not-found=true --wait=true
+
 # Deploy Boulder services (includes PKI ceremony job)
 echo "==> Deploying Boulder services..."
-kubectl apply -k "$ROOT_DIR/k8s/overlays/$OVERLAY"
+kubectl kustomize "$ROOT_DIR/k8s/overlays/$OVERLAY" --load-restrictor LoadRestrictionsNone | kubectl apply -f -
 
 # Wait for PKI ceremony to complete (dev/dev-vitess only)
 if [[ "$OVERLAY" == dev* ]]; then
     echo "==> Waiting for PKI ceremony..."
     kubectl wait --for=condition=complete job/boulder-pki-ceremony \
         -n "$NAMESPACE" --timeout=300s
+
+    echo "==> Waiting for DB migrations..."
+    if kubectl get job -n "$NAMESPACE" boulder-db-migrate >/dev/null 2>&1; then
+        kubectl wait --for=condition=complete job/boulder-db-migrate \
+            -n "$NAMESPACE" --timeout=600s
+    fi
+
+    echo "==> Restarting Boulder deployments to pick up new certs..."
+    mapfile -t boulder_deploys < <(
+        kubectl get deployment -n "$NAMESPACE" -l app.kubernetes.io/part-of=boulder -o name \
+            | grep -v '/vitess$'
+    )
+    for deploy in "${boulder_deploys[@]}"; do
+        kubectl rollout restart -n "$NAMESPACE" "$deploy"
+    done
+    kubectl rollout restart -n "$NAMESPACE" deployment/challtestsrv
+
+    echo "==> Waiting for core Boulder deployments..."
+    core_deploys=(
+        boulder-ca
+        boulder-ra
+        boulder-va
+        boulder-rva1
+        boulder-rva2
+        boulder-rva3
+        boulder-sa
+        boulder-wfe2
+        challtestsrv
+    )
+    for deploy in "${core_deploys[@]}"; do
+        if kubectl get deployment -n "$NAMESPACE" "$deploy" >/dev/null 2>&1; then
+            kubectl rollout status -n "$NAMESPACE" "deployment/$deploy" --timeout=120s
+        fi
+    done
 fi
 
 echo "==> Deployment complete"

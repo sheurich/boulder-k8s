@@ -29,8 +29,28 @@ spec:
             - -c
             - |
               set -e
-              echo "Running Boulder SA migrations..."
-              sql-migrate up -config=/config/dbconfig.yml -env=boulder_sa_test
-              echo "Running Incidents SA migrations..."
-              sql-migrate up -config=/config/dbconfig.yml -env=incidents_sa_test
+              migrate_with_retry() {
+                local name="$1"
+                local attempts=60
+                local delay=2
+                local success=0
+
+                echo "Running ${name} migrations with retry..."
+                for attempt in $(seq 1 "${attempts}"); do
+                  if sql-migrate up -config=/config/dbconfig.yml -env="${name}"; then
+                    success=1
+                    break
+                  fi
+                  echo "Vitess not ready for ${name} (attempt ${attempt}/${attempts})"
+                  sleep "${delay}"
+                done
+
+                if [ "${success}" -ne 1 ]; then
+                  echo "Migrations failed for ${name} after ${attempts} attempts" >&2
+                  return 1
+                fi
+              }
+
+              migrate_with_retry boulder_sa_test
+              migrate_with_retry incidents_sa_test
               echo "Migrations complete"
