@@ -1,4 +1,5 @@
 # Challenge test server - mock DNS and HTTP challenge responder
+# HTTP-01 binds to port 80 (required by ACME spec) with NET_BIND_SERVICE capability
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,21 +17,23 @@ spec:
       labels:
         app.kubernetes.io/name: challtestsrv
         app.kubernetes.io/component: test-mock
+        environment: dev
     spec:
       containers:
         - name: challtestsrv
-          image: letsencrypt/boulder:latest
+          image: boulder:latest
+          imagePullPolicy: Never
           command:
-            - challtestsrv
+            - chall-test-srv
           args:
             - -management
             - ":8055"
             - -http01
-            - ":5002"
+            - ":80"
             - -https01
-            - ":5001"
+            - ":443"
             - -tlsalpn01
-            - ":5001"
+            - ":443"
             - -dns01
             - ":8053"
             - -doh
@@ -41,15 +44,19 @@ spec:
             - /certs/ipki/challtestsrv/key.pem
             - -defaultIPv6
             - ""
+          securityContext:
+            capabilities:
+              add:
+                - NET_BIND_SERVICE
           ports:
             - name: management
               containerPort: 8055
               protocol: TCP
             - name: http01
-              containerPort: 5002
+              containerPort: 80
               protocol: TCP
             - name: https01
-              containerPort: 5001
+              containerPort: 443
               protocol: TCP
             - name: dns
               containerPort: 8053
@@ -90,10 +97,10 @@ spec:
       port: 8055
       targetPort: management
     - name: http01
-      port: 5002
+      port: 80
       targetPort: http01
     - name: https01
-      port: 5001
+      port: 443
       targetPort: https01
     - name: dns
       port: 8053

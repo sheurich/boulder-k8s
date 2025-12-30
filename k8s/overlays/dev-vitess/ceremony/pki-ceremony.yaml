@@ -7,6 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: boulder-pki-ceremony
     app.kubernetes.io/component: bootstrap
+    app.kubernetes.io/part-of: boulder
   annotations:
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "-10"
@@ -19,6 +20,7 @@ spec:
         app.kubernetes.io/name: boulder-pki-ceremony
         app.kubernetes.io/component: bootstrap
         app.kubernetes.io/part-of: boulder
+        environment: dev
     spec:
       restartPolicy: Never
       serviceAccountName: boulder-pki-ceremony
@@ -138,7 +140,7 @@ data:
 
     # Generate certificates for each service
     for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
-                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker challtestsrv; do
+                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker cert-checker challtestsrv; do
       mkdir -p ipki/$service
       openssl ecparam -name prime256v1 -genkey -noout -out ipki/$service/key.pem
       openssl req -new -key ipki/$service/key.pem -out ipki/$service/csr.pem \
@@ -178,10 +180,38 @@ data:
     subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:publisher.boulder
     EOF
           ;;
+        wfe2)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:wfe.boulder
+    EOF
+          ;;
+        sfe)
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-$service,DNS:boulder-$service.boulder.svc.cluster.local,DNS:sfe.boulder
+    EOF
+          ;;
         challtestsrv)
           # challtestsrv uses DNS-based DoH endpoints; avoid fixed IP SANs.
           cat > ipki/$service/ext.cnf << EOF
     subjectAltName=DNS:challtestsrv,DNS:challtestsrv.boulder.svc.cluster.local
+    EOF
+          ;;
+        rva1)
+          # Remote VA 1 needs hostOverride SAN
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-rva1,DNS:boulder-rva1.boulder.svc.cluster.local,DNS:rva1.boulder
+    EOF
+          ;;
+        rva2)
+          # Remote VA 2 needs hostOverride SAN
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-rva2,DNS:boulder-rva2.boulder.svc.cluster.local,DNS:rva2.boulder
+    EOF
+          ;;
+        rva3)
+          # Remote VA 3 needs hostOverride SAN
+          cat > ipki/$service/ext.cnf << EOF
+    subjectAltName=DNS:boulder-rva3,DNS:boulder-rva3.boulder.svc.cluster.local,DNS:rva3.boulder
     EOF
           ;;
         *)
@@ -470,7 +500,7 @@ data:
     # Create service TLS secrets
     # Use generic secrets with cert.pem/key.pem keys to match Boulder config expectations
     for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
-                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker challtestsrv; do
+                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker cert-checker challtestsrv; do
       kubectl create secret generic boulder-$service-grpc-tls \
         --from-file=cert.pem=ipki/$service/cert.pem \
         --from-file=key.pem=ipki/$service/key.pem \

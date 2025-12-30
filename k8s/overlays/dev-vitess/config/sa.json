@@ -29,14 +29,18 @@
 						"admin.boulder",
 						"ca.boulder",
 						"crl-updater.boulder",
-						"ra.boulder"
+						"ra.boulder",
+						"wfe.boulder",
+						"boulder-wfe2"
 					]
 				},
 				"sa.StorageAuthorityReadOnly": {
 					"clientNames": [
 						"admin.boulder",
 						"wfe.boulder",
-						"sfe.boulder"
+						"boulder-wfe2",
+						"sfe.boulder",
+						"boulder-sfe"
 					]
 				},
 				"grpc.health.v1.Health": {

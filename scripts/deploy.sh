@@ -49,7 +49,7 @@ kubectl delete job boulder-pki-ceremony boulder-db-migrate -n "$NAMESPACE" --ign
 
 # Deploy Boulder services (includes PKI ceremony job)
 echo "==> Deploying Boulder services..."
-kubectl kustomize "$ROOT_DIR/k8s/overlays/$OVERLAY" --load-restrictor LoadRestrictionsNone | kubectl apply -f -
+kubectl kustomize "$ROOT_DIR/k8s/overlays/$OVERLAY" | kubectl apply -f -
 
 # Wait for PKI ceremony to complete (dev/dev-vitess only)
 if [[ "$OVERLAY" == dev* ]]; then
