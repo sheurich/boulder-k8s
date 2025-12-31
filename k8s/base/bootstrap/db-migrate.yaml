@@ -39,7 +39,7 @@ spec:
             - sh
             - -c
             - |
-              git clone --depth 1 https://github.com/letsencrypt/boulder.git /boulder
+              git clone --depth 1 --branch v0.20251216.0 https://github.com/letsencrypt/boulder.git /boulder
           volumeMounts:
             - name: boulder-source
               mountPath: /boulder
