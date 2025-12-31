@@ -14,6 +14,7 @@ resources:
   - ../../base
   # cert-manager internal PKI
   - cert-manager/internal-ca.yaml
+  - cert-manager/certificates.yaml
   # Redis secrets
   - secrets/redis-password.yaml
   # Test mocks
