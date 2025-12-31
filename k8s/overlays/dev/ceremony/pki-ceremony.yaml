@@ -47,9 +47,9 @@ spec:
               echo "Initializing SoftHSM..."
               /scripts/init-softhsm.sh
 
-              # Create Kubernetes secrets
+              # Create Kubernetes secrets (WebPKI + application secrets; internal PKI handled by cert-manager)
               echo "Creating Kubernetes secrets..."
-              /scripts/create-secrets.sh
+              /scripts/create-webpki-secrets.sh
 
               echo "PKI ceremony completed successfully"
           env:
@@ -484,35 +484,13 @@ data:
 
     echo "SoftHSM initialization complete"
 
-  create-secrets.sh: |
+  create-webpki-secrets.sh: |
     #!/bin/sh
-    # Create Kubernetes secrets from generated certificates and SoftHSM tokens
+    # Create Kubernetes secrets for WebPKI, SoftHSM, and application configs
+    # Note: Internal PKI (gRPC mTLS) secrets are now managed by cert-manager
 
     set -e
     cd /output
-
-    # Create internal CA secret
-    kubectl create secret generic boulder-internal-ca \
-      --from-file=ca.crt=ipki/ca.crt \
-      --from-file=ca.key=ipki/ca.key \
-      --dry-run=client -o yaml | kubectl apply -f -
-
-    # Create service TLS secrets
-    # Use generic secrets with cert.pem/key.pem keys to match Boulder config expectations
-    for service in wfe2 ra sa ca va rva1 rva2 rva3 publisher nonce-a nonce-b \
-                   crl-updater crl-storer observer email-exporter sfe bad-key-revoker cert-checker challtestsrv; do
-      kubectl create secret generic boulder-$service-grpc-tls \
-        --from-file=cert.pem=ipki/$service/cert.pem \
-        --from-file=key.pem=ipki/$service/key.pem \
-        --dry-run=client -o yaml | kubectl apply -f -
-    done
-
-    # Create WFE2 web TLS secret (for HTTPS endpoint)
-    # In dev, reuse the internal PKI cert; in prod, use a real cert
-    kubectl create secret generic boulder-wfe2-web-tls \
-      --from-file=cert.pem=ipki/wfe2/cert.pem \
-      --from-file=key.pem=ipki/wfe2/key.pem \
-      --dry-run=client -o yaml | kubectl apply -f -
 
     # Create SoftHSM tokens secret (contains the token directory contents)
     # This will be mounted in CA pods to restore SoftHSM state
