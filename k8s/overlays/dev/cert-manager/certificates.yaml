@@ -453,3 +453,25 @@ spec:
     name: boulder-internal-ca
     kind: Issuer
     group: cert-manager.io
+---
+# Redis Server TLS
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-tls
+  namespace: boulder
+spec:
+  secretName: redis-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: redis-master
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - redis-master
+    - redis-master.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io

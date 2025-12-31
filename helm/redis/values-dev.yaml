@@ -32,9 +32,15 @@ master:
 replica:
   replicaCount: 0
 
-# TLS configuration - disabled for dev simplicity
+# TLS configuration - enabled for mTLS with Boulder services
+# Uses cert-manager Certificate resource (redis-tls secret)
 tls:
-  enabled: false
+  enabled: true
+  existingSecret: redis-tls
+  certFilename: tls.crt
+  certKeyFilename: tls.key
+  certCAFilename: ca.crt
+  authClients: true
 
 # Metrics for Prometheus - disabled for dev (requires Prometheus Operator CRDs)
 metrics:
