@@ -238,16 +238,14 @@ Vitess provides MySQL-compatible interface with built-in sharding. Let's Encrypt
 ### Test Infrastructure (Dev/CI only)
 
 These services simulate the external Internet and third-party services for end-to-end testing. Production uses real equivalents.
-Some mocks are planned but not yet implemented.
 
 | Service | Simulates | Purpose |
 |---------|-----------|---------|
 | challtestsrv | Public Internet | Answers DNS queries, hosts HTTP-01/TLS-ALPN-01 challenge responses |
 | ct-test-srv | CT Logs (Google, Cloudflare) | Accepts precertificate submissions |
-| aia-test-srv (planned) | AIA endpoints | Serves issuer certificates for chain validation |
-| mail-test-srv (planned) | SMTP provider | Captures expiration notification emails |
 | pardot-test-srv | Salesforce API | Mocks CRM integration for email-exporter |
-| s3-test-srv (planned) | Amazon S3 | Mocks object storage for CRL/backup |
+| s3-test-srv | Amazon S3 | Mocks object storage for CRL/backup |
+| aia-test-srv (planned) | AIA endpoints | Serves issuer certificates for chain validation |
 
 **challtestsrv** is the most critical—it acts as the "Internet" for validation, providing both a fake DNS authority and challenge responder that the VA queries during domain validation.
 

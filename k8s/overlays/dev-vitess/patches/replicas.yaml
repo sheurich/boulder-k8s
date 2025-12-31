@@ -75,3 +75,11 @@ metadata:
   name: boulder-nonce-b
 spec:
   replicas: 1
+---
+# Observer disabled: requires syslog sidecar (Phase 2)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-observer
+spec:
+  replicas: 0
