@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
         - name: aia-test-srv
-          image: letsencrypt/boulder:latest
+          image: boulder:latest
+          imagePullPolicy: Never
           command:
             - aia-test-srv
           args:
