@@ -393,3 +393,36 @@ spec:
                 path: cert.pem
               - key: tls.key
                 path: key.pem
+---
+# Cert Checker (CronJob)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-cert-checker
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: cert-checker
+              volumeMounts:
+                - name: ipki
+                  mountPath: /certs/ipki
+                  readOnly: true
+          volumes:
+            - name: ipki
+              projected:
+                sources:
+                  - secret:
+                      name: boulder-internal-ca
+                      items:
+                        - key: tls.crt
+                          path: ca.crt
+                  - secret:
+                      name: boulder-cert-checker-grpc-tls
+                      items:
+                        - key: tls.crt
+                          path: cert-checker/cert.pem
+                        - key: tls.key
+                          path: cert-checker/key.pem
