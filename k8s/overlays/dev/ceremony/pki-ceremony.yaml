@@ -475,4 +475,15 @@ data:
       --from-literal=placeholder="dev-mode" \
       --dry-run=client -o yaml | kubectl apply -f -
 
+    # Create CRL-Storer application secrets (AWS credentials for S3 test)
+    cat > /tmp/aws_creds.ini << 'AWSCREDS'
+    [default]
+    aws_access_key_id = test
+    aws_secret_access_key = test
+    AWSCREDS
+    kubectl create secret generic boulder-crl-storer-secrets \
+      --from-file=aws_creds.ini=/tmp/aws_creds.ini \
+      --dry-run=client -o yaml | kubectl apply -f -
+    rm /tmp/aws_creds.ini
+
     echo "Kubernetes secrets created successfully"
