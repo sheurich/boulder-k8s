@@ -6,4 +6,5 @@ kind: Component
 
 resources:
   - vitess.yaml
+  - vitess-certificate.yaml
   - secrets/db-urls.yaml

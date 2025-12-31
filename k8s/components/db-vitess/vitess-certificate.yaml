@@ -1,0 +1,23 @@
+# Vitess server TLS certificate
+# Used for MySQL client connections to vtgate
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vitess-tls
+  namespace: boulder
+spec:
+  secretName: vitess-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  commonName: vitess
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - vitess
+    - vitess.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
