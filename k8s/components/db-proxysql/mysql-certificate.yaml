@@ -1,0 +1,23 @@
+# MySQL server TLS certificate
+# Used for ProxySQL backend connections to MySQL
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mysql-tls
+  namespace: boulder
+spec:
+  secretName: mysql-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  commonName: mysql
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - mysql
+    - mysql.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io

@@ -8,4 +8,5 @@ resources:
   - mysql.yaml
   - proxysql.yaml
   - proxysql-certificate.yaml
+  - mysql-certificate.yaml
   - secrets/db-urls.yaml
