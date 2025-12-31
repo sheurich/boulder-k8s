@@ -91,6 +91,11 @@ spec:
             - --slow-query-log=ON
             - --long-query-time=2
             - --mysql-native-password=ON
+            # TLS settings
+            - --ssl-cert=/certs/tls.crt
+            - --ssl-key=/certs/tls.key
+            - --ssl-ca=/certs/ca.crt
+            - --require_secure_transport=ON
           env:
             - name: MYSQL_ALLOW_EMPTY_PASSWORD
               value: "yes"
@@ -102,6 +107,9 @@ spec:
               mountPath: /var/lib/mysql
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
+            - name: tls-certs
+              mountPath: /certs
+              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -139,6 +147,21 @@ spec:
         - name: init-scripts
           configMap:
             name: mysql-init
+        - name: tls-certs
+          projected:
+            sources:
+              - secret:
+                  name: mysql-tls
+                  items:
+                    - key: tls.crt
+                      path: tls.crt
+                    - key: tls.key
+                      path: tls.key
+              - secret:
+                  name: boulder-internal-ca
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
 ---
 apiVersion: v1
 kind: Service
