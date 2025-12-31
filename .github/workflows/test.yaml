@@ -79,6 +79,9 @@ jobs:
           SKIP_IMAGE_BUILD: "true"
         run: ./scripts/test.sh --setup
 
+      - name: Run issuance test
+        run: ./scripts/test-issuance.sh
+
       - name: Collect logs on failure
         if: failure()
         run: |
@@ -250,3 +253,31 @@ jobs:
 
       - name: Validate manifests
         run: ./scripts/validate-manifests.sh
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
+      - name: Run unit tests
+        run: |
+          for test in scripts/tests/*.sh; do
+            echo "==> Running $test"
+            bash "$test"
+          done

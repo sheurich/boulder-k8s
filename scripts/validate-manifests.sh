@@ -19,12 +19,15 @@ if ! command -v kube-score &> /dev/null; then
     go install github.com/zegl/kube-score/cmd/kube-score@latest
 fi
 
+# Track validated overlays
+validated_overlays=()
+
 # Build all overlays and validate
 for overlay in dev dev-vitess staging prod; do
-    echo "==> Validating $overlay overlay..."
-
     overlay_dir="$ROOT_DIR/k8s/overlays/$overlay"
     if [ -d "$overlay_dir" ]; then
+        echo "==> Validating $overlay overlay..."
+
         # Build with kustomize
         manifests=$(kubectl kustomize "$overlay_dir" 2>/dev/null)
 
@@ -44,8 +47,8 @@ for overlay in dev dev-vitess staging prod; do
         echo "$manifests" | kube-score score - \
             --ignore-test container-image-pull-policy \
             --output-format ci || true
-    else
-        echo "  ⚠ $overlay overlay directory not found, skipping"
+
+        validated_overlays+=("$overlay")
     fi
 done
 
@@ -58,4 +61,4 @@ for values_dir in redis; do
     fi
 done
 
-echo "==> All manifests validated successfully"
+echo "==> Validated overlays: ${validated_overlays[*]}"

@@ -148,12 +148,10 @@ test_pod_health() {
 }
 
 test_no_crashloops() {
-    # Exclude known failing pods: observer (needs syslog), cronjobs (may fail between runs)
+    # Exclude known failing pods: observer (needs syslog, intentionally disabled)
     local crashloops
     crashloops=$(kubectl get pods -n "$NAMESPACE" --no-headers 2>/dev/null \
         | grep -v "boulder-observer" \
-        | grep -v "boulder-log-validator" \
-        | grep -v "boulder-cert-checker" \
         | grep -c "CrashLoopBackOff") || crashloops=0
     [ "$crashloops" -eq 0 ]
 }
@@ -175,8 +173,8 @@ test_nonce_endpoint() {
         curl -sfI http://localhost:4001/acme/new-nonce 2>&1 | grep -qi "200"
 }
 
-test_dns01_issuance() {
-    # Verify DNS-01 flow works from within cluster
+test_dns01_connectivity() {
+    # Verify DNS-01 connectivity from within cluster
     # Tests: service DNS resolution, WFE connectivity, challtestsrv connectivity
 
     # Clean up any leftover test pod
@@ -295,7 +293,7 @@ main() {
 
     echo ""
     log_info "Integration tests"
-    run_test "DNS-01 challenge flow" test_dns01_issuance || true
+    run_test "DNS-01 connectivity" test_dns01_connectivity || true
 
     # Summary
     echo ""
