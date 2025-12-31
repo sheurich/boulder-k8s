@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: boulder-nonce-a
     app.kubernetes.io/component: nonce-service
+    app.kubernetes.io/part-of: boulder
 spec:
   replicas: 1
   selector:
@@ -16,6 +17,7 @@ spec:
       labels:
         app.kubernetes.io/name: boulder-nonce-a
         app.kubernetes.io/component: nonce-service
+        app.kubernetes.io/part-of: boulder
     spec:
       containers:
         - name: boulder-nonce
@@ -109,6 +111,7 @@ metadata:
   labels:
     app.kubernetes.io/name: boulder-nonce-b
     app.kubernetes.io/component: nonce-service
+    app.kubernetes.io/part-of: boulder
 spec:
   replicas: 1
   selector:
@@ -119,6 +122,7 @@ spec:
       labels:
         app.kubernetes.io/name: boulder-nonce-b
         app.kubernetes.io/component: nonce-service
+        app.kubernetes.io/part-of: boulder
     spec:
       containers:
         - name: boulder-nonce

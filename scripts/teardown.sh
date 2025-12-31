@@ -14,7 +14,7 @@ echo "==> Tearing down Boulder deployment..."
 
 # Delete Boulder resources
 echo "  Deleting Boulder resources..."
-for overlay in dev staging prod; do
+for overlay in dev dev-vitess staging prod; do
     if [ -d "$ROOT_DIR/k8s/overlays/$overlay" ]; then
         kubectl delete -k "$ROOT_DIR/k8s/overlays/$overlay" --ignore-not-found || true
     fi

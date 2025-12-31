@@ -26,7 +26,7 @@ spec:
             - /config/email-exporter.json
           ports:
             - name: grpc
-              containerPort: 9381
+              containerPort: 9603
               protocol: TCP
             - name: metrics
               containerPort: 8025
@@ -89,7 +89,7 @@ spec:
   type: ClusterIP
   ports:
     - name: grpc
-      port: 9381
+      port: 9603
       targetPort: grpc
     - name: metrics
       port: 8025

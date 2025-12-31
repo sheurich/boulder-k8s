@@ -579,10 +579,11 @@ data:
       --dry-run=client -o yaml | kubectl apply -f -
 
     # Create SA application secrets (database URLs)
+    # Note: Dev overlay uses ProxySQL; db-urls secret from db-proxysql component overrides this
     kubectl create secret generic boulder-sa-secrets \
-      --from-literal=sa_dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/boulder_sa_test" \
-      --from-literal=sa_ro_dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/boulder_sa_test" \
-      --from-literal=incidents_dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/incidents_sa_test" \
+      --from-literal=sa_dburl="sa@tcp(proxysql.boulder.svc.cluster.local:6033)/boulder_sa_test" \
+      --from-literal=sa_ro_dburl="sa@tcp(proxysql.boulder.svc.cluster.local:6033)/boulder_sa_test" \
+      --from-literal=incidents_dburl="sa@tcp(proxysql.boulder.svc.cluster.local:6033)/incidents_sa_test" \
       --dry-run=client -o yaml | kubectl apply -f -
 
     # Create email-exporter secrets
@@ -592,8 +593,9 @@ data:
       --dry-run=client -o yaml | kubectl apply -f -
 
     # Create database credentials secret (for db-migrate job)
+    # Note: Dev overlay uses ProxySQL; db-urls secret from db-proxysql component overrides this
     kubectl create secret generic boulder-db-credentials \
-      --from-literal=dburl="mysql://boulder:boulder-dev-password@vitess.boulder.svc.cluster.local:3306/boulder_sa_test" \
+      --from-literal=dburl="sa@tcp(proxysql.boulder.svc.cluster.local:6033)/boulder_sa_test" \
       --dry-run=client -o yaml | kubectl apply -f -
 
     # Create CA secrets (empty placeholder for dev)
