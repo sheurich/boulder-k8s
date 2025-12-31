@@ -33,6 +33,45 @@ fi
 # Deploy infrastructure dependencies
 echo "==> Deploying infrastructure..."
 
+# Deploy cert-manager CA infrastructure first (needed for Redis TLS)
+echo "  Setting up cert-manager CA for TLS certificates..."
+kubectl apply -f "$ROOT_DIR/k8s/overlays/$OVERLAY/cert-manager/internal-ca.yaml"
+
+# Wait for internal CA to be ready
+echo "  Waiting for internal CA certificate..."
+kubectl wait --for=condition=ready certificate/boulder-internal-ca \
+    -n "$NAMESPACE" --timeout=120s 2>/dev/null || true
+
+# Deploy Redis TLS certificate
+echo "  Creating Redis TLS certificate..."
+cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-tls
+  namespace: $NAMESPACE
+spec:
+  secretName: redis-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: redis-master
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - redis-master
+    - redis-master.$NAMESPACE.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+EOF
+
+# Wait for Redis TLS certificate to be ready
+echo "  Waiting for Redis TLS certificate..."
+kubectl wait --for=condition=ready certificate/redis-tls \
+    -n "$NAMESPACE" --timeout=120s
+
 # Deploy Redis
 echo "  Installing Redis..."
 helm repo add bitnami https://charts.bitnami.com/bitnami 2>/dev/null || true
