@@ -34,10 +34,7 @@ spec:
             - |
               set -e
               echo "Starting PKI ceremony..."
-
-              # Generate internal PKI (gRPC mTLS)
-              echo "Generating internal PKI certificates..."
-              /scripts/generate-internal-pki.sh
+              # Note: Internal PKI (gRPC mTLS) is now managed by cert-manager
 
               # Generate WebPKI hierarchy (root + intermediates)
               echo "Generating WebPKI hierarchy..."
