@@ -26,6 +26,9 @@ resources:
   - mocks/s3-test-srv.yaml
   # PKI ceremony job
   - ceremony/pki-ceremony.yaml
+  # cert-manager for internal PKI
+  - cert-manager/internal-ca.yaml
+  - cert-manager/certificates.yaml
 
 # Patches for dev-specific settings
 patches:
@@ -33,6 +36,8 @@ patches:
   - path: patches/ca-softhsm.yaml
   # Mount DB URL secrets
   - path: patches/db-secrets.yaml
+  # Map cert-manager TLS secrets to Boulder format
+  - path: patches/ipki-cert-manager.yaml
   # Reduce replicas for dev
   - path: patches/replicas.yaml
   # Reduce resource limits for dev

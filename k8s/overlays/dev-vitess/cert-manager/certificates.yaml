@@ -1,0 +1,455 @@
+# Certificate resources for Boulder service-to-service mTLS
+# Replaces the service certificates from generate-internal-pki.sh
+---
+# WFE2 (Web Frontend) - hostOverride: wfe.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-wfe2-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-wfe2-grpc-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  commonName: boulder-wfe2
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-wfe2
+    - boulder-wfe2.boulder.svc.cluster.local
+    - wfe.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# RA (Registration Authority) - hostOverride: ra.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-ra-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-ra-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-ra
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-ra
+    - boulder-ra.boulder.svc.cluster.local
+    - ra.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# SA (Storage Authority) - hostOverride: sa.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-sa-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-sa-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-sa
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-sa
+    - boulder-sa.boulder.svc.cluster.local
+    - sa.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# CA (Certificate Authority) - hostOverride: ca.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-ca-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-ca-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-ca
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-ca
+    - boulder-ca.boulder.svc.cluster.local
+    - ca.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# VA (Validation Authority) - hostOverride: va.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-va-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-va-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-va
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-va
+    - boulder-va.boulder.svc.cluster.local
+    - va.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# RVA1 (Remote Validation Authority 1) - hostOverride: rva1.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-rva1-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-rva1-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-rva1
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-rva1
+    - boulder-rva1.boulder.svc.cluster.local
+    - rva1.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# RVA2 (Remote Validation Authority 2) - hostOverride: rva2.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-rva2-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-rva2-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-rva2
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-rva2
+    - boulder-rva2.boulder.svc.cluster.local
+    - rva2.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# RVA3 (Remote Validation Authority 3) - hostOverride: rva3.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-rva3-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-rva3-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-rva3
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-rva3
+    - boulder-rva3.boulder.svc.cluster.local
+    - rva3.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Publisher - hostOverride: publisher.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-publisher-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-publisher-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-publisher
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-publisher
+    - boulder-publisher.boulder.svc.cluster.local
+    - publisher.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Nonce-A - hostOverride: nonce.boulder (shared with nonce-b)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-nonce-a-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-nonce-a-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-nonce-a
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-nonce-a
+    - boulder-nonce-a.boulder.svc.cluster.local
+    - nonce.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Nonce-B - hostOverride: nonce.boulder (shared with nonce-a)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-nonce-b-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-nonce-b-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-nonce-b
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-nonce-b
+    - boulder-nonce-b.boulder.svc.cluster.local
+    - nonce.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# CRL Updater - no hostOverride
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-crl-updater-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-crl-updater-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-crl-updater
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-crl-updater
+    - boulder-crl-updater.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# CRL Storer - no hostOverride
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-crl-storer-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-crl-storer-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-crl-storer
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-crl-storer
+    - boulder-crl-storer.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Observer - no hostOverride (currently disabled)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-observer-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-observer-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-observer
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-observer
+    - boulder-observer.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Email Exporter - no hostOverride
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-email-exporter-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-email-exporter-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-email-exporter
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-email-exporter
+    - boulder-email-exporter.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# SFE (Self-Service Frontend) - hostOverride: sfe.boulder
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-sfe-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-sfe-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-sfe
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-sfe
+    - boulder-sfe.boulder.svc.cluster.local
+    - sfe.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Bad Key Revoker - no hostOverride
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-bad-key-revoker-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-bad-key-revoker-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-bad-key-revoker
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-bad-key-revoker
+    - boulder-bad-key-revoker.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Cert Checker - no hostOverride
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-cert-checker-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-cert-checker-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-cert-checker
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-cert-checker
+    - boulder-cert-checker.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# Challtestsrv (Test Challenge Server) - no hostOverride
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-challtestsrv-grpc-tls
+  namespace: boulder
+spec:
+  secretName: boulder-challtestsrv-grpc-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: challtestsrv
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - challtestsrv
+    - challtestsrv.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+# WFE2 Web TLS (for HTTPS endpoint, reuses same pattern in dev)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-wfe2-web-tls
+  namespace: boulder
+spec:
+  secretName: boulder-wfe2-web-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: boulder-wfe2
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-wfe2
+    - boulder-wfe2.boulder.svc.cluster.local
+    - wfe.boulder
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io
