@@ -56,12 +56,6 @@ spec:
         - name: vtcombo
           image: letsencrypt/boulder-vtcomboserver:latest
           imagePullPolicy: Never
-          args:
-            # MySQL TLS settings
-            - --mysql_server_ssl_cert=/certs/tls.crt
-            - --mysql_server_ssl_key=/certs/tls.key
-            - --mysql_server_ssl_ca=/certs/ca.crt
-            - --mysql_server_require_secure_transport=true
           env:
             # Create keyspaces for Boulder databases
             - name: KEYSPACES
@@ -88,9 +82,6 @@ spec:
               mountPath: /vt/vtdataroot
             - name: config
               mountPath: /vt/extra-config
-              readOnly: true
-            - name: tls-certs
-              mountPath: /certs
               readOnly: true
           resources:
             requests:
@@ -122,21 +113,6 @@ spec:
         - name: config
           configMap:
             name: vitess-config
-        - name: tls-certs
-          projected:
-            sources:
-              - secret:
-                  name: vitess-tls
-                  items:
-                    - key: tls.crt
-                      path: tls.crt
-                    - key: tls.key
-                      path: tls.key
-              - secret:
-                  name: boulder-internal-ca
-                  items:
-                    - key: ca.crt
-                      path: ca.crt
 ---
 apiVersion: v1
 kind: Service
