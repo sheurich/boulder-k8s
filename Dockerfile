@@ -53,6 +53,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
         -ldflags="-s -w" \
         -mod=vendor \
         -o /go/bin/ \
+        ./test/aia-test-srv \
         ./test/chall-test-srv \
         ./test/ct-test-srv \
         ./test/pardot-test-srv \
