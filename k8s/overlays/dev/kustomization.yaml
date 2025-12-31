@@ -18,6 +18,7 @@ resources:
   # Redis secrets
   - secrets/redis-password.yaml
   # Test mocks
+  - mocks/aia-test-srv.yaml
   - mocks/challtestsrv.yaml
   - mocks/ct-test-srv.yaml
   - mocks/pardot-test-srv.yaml

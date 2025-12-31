@@ -94,8 +94,8 @@
 						"legacy"
 					],
 					"crlShards": 10,
-					"issuerURL": "http://ca.example.org:4502/int-ecdsa-a",
-					"crlURLBase": "http://ca.example.org:4501/lets-encrypt-crls/43104258997432926/",
+					"issuerURL": "http://aia-test-srv.boulder.svc.cluster.local:4502/int-ecdsa-a",
+					"crlURLBase": "http://s3-test-srv.boulder.svc.cluster.local:4501/lets-encrypt-crls/43104258997432926/",
 					"location": {
 						"configFile": "/hsm/int-ecdsa-a.pkcs11.json",
 						"certFile": "/certs/webpki/int-ecdsa-a.cert.pem",
@@ -110,8 +110,8 @@
 						"shortlived"
 					],
 					"crlShards": 10,
-					"issuerURL": "http://ca.example.org:4502/int-ecdsa-b",
-					"crlURLBase": "http://ca.example.org:4501/lets-encrypt-crls/17302365692836921/",
+					"issuerURL": "http://aia-test-srv.boulder.svc.cluster.local:4502/int-ecdsa-b",
+					"crlURLBase": "http://s3-test-srv.boulder.svc.cluster.local:4501/lets-encrypt-crls/17302365692836921/",
 					"location": {
 						"configFile": "/hsm/int-ecdsa-b.pkcs11.json",
 						"certFile": "/certs/webpki/int-ecdsa-b.cert.pem",
@@ -121,8 +121,8 @@
 				{
 					"active": false,
 					"crlShards": 10,
-					"issuerURL": "http://ca.example.org:4502/int-ecdsa-c",
-					"crlURLBase": "http://ca.example.org:4501/lets-encrypt-crls/56560759852043581/",
+					"issuerURL": "http://aia-test-srv.boulder.svc.cluster.local:4502/int-ecdsa-c",
+					"crlURLBase": "http://s3-test-srv.boulder.svc.cluster.local:4501/lets-encrypt-crls/56560759852043581/",
 					"location": {
 						"configFile": "/hsm/int-ecdsa-c.pkcs11.json",
 						"certFile": "/certs/webpki/int-ecdsa-c.cert.pem",
@@ -135,8 +135,8 @@
 						"legacy"
 					],
 					"crlShards": 10,
-					"issuerURL": "http://ca.example.org:4502/int-rsa-a",
-					"crlURLBase": "http://ca.example.org:4501/lets-encrypt-crls/29947985078257530/",
+					"issuerURL": "http://aia-test-srv.boulder.svc.cluster.local:4502/int-rsa-a",
+					"crlURLBase": "http://s3-test-srv.boulder.svc.cluster.local:4501/lets-encrypt-crls/29947985078257530/",
 					"location": {
 						"configFile": "/hsm/int-rsa-a.pkcs11.json",
 						"certFile": "/certs/webpki/int-rsa-a.cert.pem",
@@ -151,8 +151,8 @@
 						"shortlived"
 					],
 					"crlShards": 10,
-					"issuerURL": "http://ca.example.org:4502/int-rsa-b",
-					"crlURLBase": "http://ca.example.org:4501/lets-encrypt-crls/6762885421992935/",
+					"issuerURL": "http://aia-test-srv.boulder.svc.cluster.local:4502/int-rsa-b",
+					"crlURLBase": "http://s3-test-srv.boulder.svc.cluster.local:4501/lets-encrypt-crls/6762885421992935/",
 					"location": {
 						"configFile": "/hsm/int-rsa-b.pkcs11.json",
 						"certFile": "/certs/webpki/int-rsa-b.cert.pem",
@@ -162,8 +162,8 @@
 				{
 					"active": false,
 					"crlShards": 10,
-					"issuerURL": "http://ca.example.org:4502/int-rsa-c",
-					"crlURLBase": "http://ca.example.org:4501/lets-encrypt-crls/56183656833365902/",
+					"issuerURL": "http://aia-test-srv.boulder.svc.cluster.local:4502/int-rsa-c",
+					"crlURLBase": "http://s3-test-srv.boulder.svc.cluster.local:4501/lets-encrypt-crls/56183656833365902/",
 					"location": {
 						"configFile": "/hsm/int-rsa-c.pkcs11.json",
 						"certFile": "/certs/webpki/int-rsa-c.cert.pem",

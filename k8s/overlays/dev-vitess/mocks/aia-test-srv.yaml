@@ -1,0 +1,77 @@
+# Mock AIA server for serving issuer certificates
+# Serves Authority Information Access (AIA) URLs for certificate validation
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aia-test-srv
+  labels:
+    app.kubernetes.io/name: aia-test-srv
+    app.kubernetes.io/component: test-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aia-test-srv
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aia-test-srv
+        app.kubernetes.io/component: test-mock
+    spec:
+      containers:
+        - name: aia-test-srv
+          image: letsencrypt/boulder:latest
+          command:
+            - aia-test-srv
+          args:
+            - --addr
+            - ":4502"
+            - --hierarchy
+            - /certs/webpki/
+          ports:
+            - name: http
+              containerPort: 4502
+              protocol: TCP
+          volumeMounts:
+            - name: webpki-certs
+              mountPath: /certs/webpki
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+      volumes:
+        - name: webpki-certs
+          secret:
+            secretName: boulder-webpki-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aia-test-srv
+  labels:
+    app.kubernetes.io/name: aia-test-srv
+    app.kubernetes.io/component: test-mock
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 4502
+      targetPort: http
+  selector:
+    app.kubernetes.io/name: aia-test-srv
