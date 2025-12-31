@@ -47,6 +47,11 @@ data:
       connect_retries_on_failure = 10;
       free_connections_pct = 90;
       connection_warming = True;
+      # Frontend TLS (client connections to ProxySQL)
+      have_ssl = True;
+      ssl_p2c_cert = "/certs/tls.crt";
+      ssl_p2c_key = "/certs/tls.key";
+      ssl_p2c_ca = "/certs/ca.crt";
     };
 
     mysql_servers = (
@@ -168,6 +173,9 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/proxysql
+            - name: tls-certs
+              mountPath: /certs
+              readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -191,6 +199,21 @@ spec:
             name: proxysql-config-template
         - name: config
           emptyDir: {}
+        - name: tls-certs
+          projected:
+            sources:
+              - secret:
+                  name: proxysql-tls
+                  items:
+                    - key: tls.crt
+                      path: tls.crt
+                    - key: tls.key
+                      path: tls.key
+              - secret:
+                  name: boulder-internal-ca
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
 ---
 apiVersion: v1
 kind: Service
