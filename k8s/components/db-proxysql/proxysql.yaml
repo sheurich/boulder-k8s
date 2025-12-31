@@ -52,6 +52,10 @@ data:
       ssl_p2c_cert = "/certs/tls.crt";
       ssl_p2c_key = "/certs/tls.key";
       ssl_p2c_ca = "/certs/ca.crt";
+      # Backend TLS (ProxySQL connections to MySQL)
+      ssl_p2s_cert = "/certs/tls.crt";
+      ssl_p2s_key = "/certs/tls.key";
+      ssl_p2s_ca = "/certs/ca.crt";
     };
 
     mysql_servers = (
@@ -62,6 +66,7 @@ data:
         hostgroup = 0;
         max_connections = 100;
         max_latency_ms = 200;
+        use_ssl = 1;
       }
     );
 
