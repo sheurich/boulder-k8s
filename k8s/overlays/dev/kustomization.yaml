@@ -49,6 +49,8 @@ patches:
   - path: patches/nonce-secrets.yaml
   # Relax probe timeouts for dev (kind is slower)
   - path: patches/probes.yaml
+  # Map cert-manager secret format (tls.crt/tls.key) to Boulder format (cert.pem/key.pem)
+  - path: patches/ipki-cert-manager.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment

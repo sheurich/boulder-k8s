@@ -1,0 +1,395 @@
+# Patch to map cert-manager secret format to Boulder expected format
+# cert-manager: tls.crt, tls.key, ca.crt
+# Boulder expects: cert.pem, key.pem for services; ca.crt for CA
+---
+# WFE2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-wfe2
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-wfe2-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+        - name: web-tls
+          secret:
+            secretName: boulder-wfe2-web-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# RA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ra
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-ra-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# SA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sa
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-sa-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# CA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-ca
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-ca-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# VA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-va
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-va-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# RVA1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva1
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-rva1-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# RVA2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva2
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-rva2-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# RVA3
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-rva3
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-rva3-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# Publisher
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-publisher
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-publisher-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# Nonce-A
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-a
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-nonce-a-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# Nonce-B
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-nonce-b
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-nonce-b-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# CRL Updater
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-crl-updater
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-crl-updater-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# CRL Storer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-crl-storer
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-crl-storer-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# Email Exporter
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-email-exporter
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-email-exporter-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# SFE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boulder-sfe
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-sfe-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+---
+# Challtestsrv (mock)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: challtestsrv
+spec:
+  template:
+    spec:
+      volumes:
+        - name: ipki-ca
+          secret:
+            secretName: boulder-internal-ca
+            items:
+              - key: tls.crt
+                path: ca.crt
+        - name: ipki-service
+          secret:
+            secretName: boulder-challtestsrv-grpc-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
