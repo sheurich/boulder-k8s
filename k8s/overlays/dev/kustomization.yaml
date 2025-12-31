@@ -52,6 +52,8 @@ patches:
   - path: patches/probes.yaml
   # Map cert-manager secret format (tls.crt/tls.key) to Boulder format (cert.pem/key.pem)
   - path: patches/ipki-cert-manager.yaml
+  # Use NodePort for Kind cluster (extraPortMappings 30001/30431 → 4001/4431)
+  - path: patches/wfe2-nodeport.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment

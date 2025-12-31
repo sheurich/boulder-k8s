@@ -57,6 +57,8 @@ patches:
   - path: patches/nonce-secrets.yaml
   # Relax probe timeouts for dev (kind is slower)
   - path: patches/probes.yaml
+  # Use NodePort for Kind cluster (extraPortMappings 30001/30431 → 4001/4431)
+  - path: patches/wfe2-nodeport.yaml
 
 configMapGenerator:
   # Boulder configs for dev environment
