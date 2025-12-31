@@ -1,0 +1,23 @@
+# ProxySQL server TLS certificate
+# Used for MySQL client connections to ProxySQL
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: proxysql-tls
+  namespace: boulder
+spec:
+  secretName: proxysql-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  commonName: boulder-proxysql
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  dnsNames:
+    - boulder-proxysql
+    - boulder-proxysql.boulder.svc.cluster.local
+  issuerRef:
+    name: boulder-internal-ca
+    kind: Issuer
+    group: cert-manager.io

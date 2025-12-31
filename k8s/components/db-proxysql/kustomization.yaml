@@ -7,4 +7,5 @@ kind: Component
 resources:
   - mysql.yaml
   - proxysql.yaml
+  - proxysql-certificate.yaml
   - secrets/db-urls.yaml
