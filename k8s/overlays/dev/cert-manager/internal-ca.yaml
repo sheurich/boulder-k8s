@@ -1,0 +1,40 @@
+# Internal PKI CA infrastructure for Boulder service-to-service mTLS
+# Replaces generate-internal-pki.sh (OpenSSL-based PKI)
+---
+# Step 1: Self-signed ClusterIssuer for bootstrapping the CA
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: boulder-internal-selfsigned
+spec:
+  selfSigned: {}
+---
+# Step 2: Internal CA certificate (self-signed, isCA: true)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: boulder-internal-ca
+  namespace: boulder
+spec:
+  isCA: true
+  commonName: Boulder Internal CA
+  secretName: boulder-internal-ca-tls
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: boulder-internal-selfsigned
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# Step 3: Issuer that uses the CA certificate to sign service certificates
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: boulder-internal-ca
+  namespace: boulder
+spec:
+  ca:
+    secretName: boulder-internal-ca-tls
