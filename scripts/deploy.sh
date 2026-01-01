@@ -113,8 +113,18 @@ if [[ "$OVERLAY" == dev* ]]; then
 
     echo "==> Waiting for DB migrations..."
     if kubectl get job -n "$NAMESPACE" boulder-db-migrate >/dev/null 2>&1; then
-        kubectl wait --for=condition=complete job/boulder-db-migrate \
-            -n "$NAMESPACE" --timeout=600s
+        # Stream job logs in background to capture output before pod is deleted
+        (sleep 30 && kubectl logs -f job/boulder-db-migrate -n "$NAMESPACE" --all-containers 2>&1 || true) &
+        LOG_PID=$!
+
+        if ! kubectl wait --for=condition=complete job/boulder-db-migrate \
+            -n "$NAMESPACE" --timeout=600s; then
+            echo "==> DB migration failed! Getting final logs..."
+            kubectl logs job/boulder-db-migrate -n "$NAMESPACE" --all-containers 2>&1 || true
+            kill $LOG_PID 2>/dev/null || true
+            exit 1
+        fi
+        kill $LOG_PID 2>/dev/null || true
     fi
 
     echo "==> Restarting Boulder deployments to pick up new certs..."
