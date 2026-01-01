@@ -13,6 +13,12 @@ KIND_CLUSTER="${KIND_CLUSTER:-boulder-dev}"
 LOAD_ONLY="${1:-}"
 LOAD_REMOTE_IMAGES="${LOAD_REMOTE_IMAGES:-false}"
 
+# Ensure boulder submodule is initialized
+if [ ! -f "$ROOT_DIR/boulder/go.mod" ]; then
+    echo "==> Boulder submodule not initialized, running git submodule update --init..."
+    git -C "$ROOT_DIR" submodule update --init boulder
+fi
+
 # Build images (skip if --load-only)
 if [ "$LOAD_ONLY" != "--load-only" ]; then
     echo "==> Building boulder:latest image..."

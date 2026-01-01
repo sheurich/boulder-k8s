@@ -426,3 +426,29 @@ spec:
                           path: cert-checker/cert.pem
                         - key: tls.key
                           path: cert-checker/key.pem
+---
+# Bad Key Revoker (CronJob)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: boulder-bad-key-revoker
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: ipki-ca
+              secret:
+                secretName: boulder-internal-ca
+                items:
+                  - key: tls.crt
+                    path: ca.crt
+            - name: ipki-service
+              secret:
+                secretName: boulder-bad-key-revoker-grpc-tls
+                items:
+                  - key: tls.crt
+                    path: cert.pem
+                  - key: tls.key
+                    path: key.pem
