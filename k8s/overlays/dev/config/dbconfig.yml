@@ -5,10 +5,10 @@
 
 boulder_sa_test:
   dialect: mysql
-  datasource: root@tcp(proxysql:6033)/boulder_sa_test?parseTime=true&tls=skip-verify
+  datasource: root@tcp(proxysql:6033)/boulder_sa_test?parseTime=true
   dir: boulder_sa
 
 incidents_sa_test:
   dialect: mysql
-  datasource: root@tcp(proxysql:6033)/incidents_sa_test?parseTime=true&tls=skip-verify
+  datasource: root@tcp(proxysql:6033)/incidents_sa_test?parseTime=true
   dir: incidents_sa

@@ -11,7 +11,7 @@ metadata:
     helm.sh/hook-weight: "-5"
     helm.sh/hook-delete-policy: before-hook-creation
 spec:
-  backoffLimit: 3
+  backoffLimit: 5
   template:
     metadata:
       labels:
@@ -52,19 +52,22 @@ spec:
             - sh
             - -c
             - |
-              set -ex
+              set -x
+              # Trap to capture errors and flush logs
+              trap 'echo "==> ERROR: Command failed with exit code $?"; sleep 5' EXIT
               echo "==> Debug info"
               echo "Working dir: $(pwd)"
               ls -la
               echo "==> Config file:"
               cat /config/dbconfig.yml
               echo "==> Testing ProxySQL connectivity..."
-              nc -zv proxysql 6033 || echo "ProxySQL not reachable"
+              nc -zv proxysql 6033 || { echo "ProxySQL not reachable"; exit 1; }
               echo "==> Running Boulder SA migrations..."
-              sql-migrate up -config=/config/dbconfig.yml -env=boulder_sa_test
+              sql-migrate up -config=/config/dbconfig.yml -env=boulder_sa_test || { echo "Boulder SA migration failed"; exit 1; }
               echo "==> Running Incidents SA migrations..."
-              sql-migrate up -config=/config/dbconfig.yml -env=incidents_sa_test
+              sql-migrate up -config=/config/dbconfig.yml -env=incidents_sa_test || { echo "Incidents SA migration failed"; exit 1; }
               echo "==> Migrations complete"
+              trap - EXIT
           resources:
             requests:
               cpu: 100m
