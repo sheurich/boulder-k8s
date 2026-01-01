@@ -72,6 +72,21 @@ echo "  Waiting for Redis TLS certificate..."
 kubectl wait --for=condition=ready certificate/redis-tls \
     -n "$NAMESPACE" --timeout=120s
 
+# Create MySQL TLS certificate (needed by MySQL before it starts)
+echo "  Creating MySQL TLS certificate..."
+kubectl apply -f "$ROOT_DIR/k8s/components/db-proxysql/mysql-certificate.yaml"
+
+# Create ProxySQL TLS certificate (needed by ProxySQL before it starts)
+echo "  Creating ProxySQL TLS certificate..."
+kubectl apply -f "$ROOT_DIR/k8s/components/db-proxysql/proxysql-certificate.yaml"
+
+# Wait for database TLS certificates to be ready
+echo "  Waiting for database TLS certificates..."
+kubectl wait --for=condition=ready certificate/mysql-tls \
+    -n "$NAMESPACE" --timeout=120s
+kubectl wait --for=condition=ready certificate/proxysql-tls \
+    -n "$NAMESPACE" --timeout=120s
+
 # Deploy Redis
 echo "  Installing Redis..."
 helm repo add bitnami https://charts.bitnami.com/bitnami 2>/dev/null || true
