@@ -52,7 +52,8 @@
 					"ignoredLints": [
 						"w_subject_common_name_included",
 						"e_dnsname_not_valid_tld",
-						"w_ext_subject_key_identifier_not_recommended_subscriber"
+						"w_ext_subject_key_identifier_not_recommended_subscriber",
+						"w_sub_cert_aia_contains_internal_names"
 					]
 				},
 				"shortlived": {
@@ -65,7 +66,8 @@
 					"lintConfig": "/config/zlint.toml",
 					"ignoredLints": [
 						"w_ext_subject_key_identifier_missing_sub_cert",
-						"e_dnsname_not_valid_tld"
+						"e_dnsname_not_valid_tld",
+						"w_sub_cert_aia_contains_internal_names"
 					]
 				},
 				"modern": {
@@ -78,7 +80,8 @@
 					"lintConfig": "/config/zlint.toml",
 					"ignoredLints": [
 						"w_ext_subject_key_identifier_missing_sub_cert",
-						"e_dnsname_not_valid_tld"
+						"e_dnsname_not_valid_tld",
+						"w_sub_cert_aia_contains_internal_names"
 					]
 				}
 			},
