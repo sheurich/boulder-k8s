@@ -52,12 +52,19 @@ spec:
             - sh
             - -c
             - |
-              set -e
-              echo "Running Boulder SA migrations..."
+              set -ex
+              echo "==> Debug info"
+              echo "Working dir: $(pwd)"
+              ls -la
+              echo "==> Config file:"
+              cat /config/dbconfig.yml
+              echo "==> Testing ProxySQL connectivity..."
+              nc -zv proxysql 6033 || echo "ProxySQL not reachable"
+              echo "==> Running Boulder SA migrations..."
               sql-migrate up -config=/config/dbconfig.yml -env=boulder_sa_test
-              echo "Running Incidents SA migrations..."
+              echo "==> Running Incidents SA migrations..."
               sql-migrate up -config=/config/dbconfig.yml -env=incidents_sa_test
-              echo "Migrations complete"
+              echo "==> Migrations complete"
           resources:
             requests:
               cpu: 100m
