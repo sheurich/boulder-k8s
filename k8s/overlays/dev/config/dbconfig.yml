@@ -1,13 +1,14 @@
 # sql-migrate configuration for Boulder K8s dev environment
 # https://github.com/rubenv/sql-migrate#readme
 # Connects through ProxySQL to MySQL (passwordless in dev mode)
+# Note: TLS is optional through ProxySQL (have_ssl=True but not required)
 
 boulder_sa_test:
   dialect: mysql
-  datasource: root@tcp(proxysql:6033)/boulder_sa_test?parseTime=true
+  datasource: root@tcp(proxysql:6033)/boulder_sa_test?parseTime=true&tls=skip-verify
   dir: boulder_sa
 
 incidents_sa_test:
   dialect: mysql
-  datasource: root@tcp(proxysql:6033)/incidents_sa_test?parseTime=true
+  datasource: root@tcp(proxysql:6033)/incidents_sa_test?parseTime=true&tls=skip-verify
   dir: incidents_sa
