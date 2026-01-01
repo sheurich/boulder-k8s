@@ -163,5 +163,9 @@
 	"syslog": {
 		"stdoutlevel": 6,
 		"sysloglevel": -1
+	},
+	"openTelemetry": {
+		"endpoint": "humanlog.boulder.svc.cluster.local:4317",
+		"sampleratio": 1
 	}
 }

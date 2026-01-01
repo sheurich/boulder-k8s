@@ -53,7 +53,7 @@ echo "==> Waiting for cluster to be ready..."
 kubectl wait --for=condition=Ready nodes --all --timeout=120s
 
 echo "==> Installing cert-manager..."
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.0/cert-manager.yaml
+kubectl apply -f "$ROOT_DIR/k8s/base/cert-manager/cert-manager.yaml"
 kubectl wait --for=condition=Available deployment --all -n cert-manager --timeout=120s
 
 echo "==> Kind cluster $CLUSTER_NAME is ready"
