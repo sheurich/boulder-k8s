@@ -7,7 +7,7 @@ namespace: boulder
 # Use dev-vitess overlay for Vitess alternative
 components:
   - ../../components/db-proxysql
-  - ../../components/humanlog
+  - ../../components/jaeger
   - ../../components/common-config
 
 resources:

@@ -131,7 +131,7 @@ echo "==> Certificate issuance successful"
 # 5. Verify Audit Logs
 # ---------------------------------------------------------------------
 echo "==> Verifying Audit Logs..."
-# Fetch logs from all Boulder components (humanlog aggregates them in dev)
+# Fetch logs from Boulder components
 # We look for the logs in the last 2 minutes to catch this run
 # Pull only the relevant component logs to avoid failures from unrelated pods.
 LOGS_RA=$(kubectl logs -n "$NAMESPACE" deploy/boulder-ra --tail=500 2>/dev/null || true)

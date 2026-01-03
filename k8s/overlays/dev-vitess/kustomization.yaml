@@ -13,7 +13,7 @@ namespace: boulder
 components:
   - ../../components/db-vitess
   - ../../components/common-config
-  - ../../components/humanlog
+  - ../../components/jaeger
 
 resources:
   - ../../base

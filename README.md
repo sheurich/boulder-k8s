@@ -107,7 +107,7 @@ flowchart LR
 
 Solid arrows: primary RPC/data flow. Dashed arrows: supporting paths (security, compliance, observability, integrations).
 Blue boxes: Boulder-supplied services (from `k8s/base/boulder`). Amber boxes: external systems/dependencies.
-Phase 1 dev/CI uses a dev-only humanlog pod for logs and traces. Audit log events use `[AUDIT]` from Boulder’s shared logger and can be asserted in tests.
+Phase 1 dev/CI uses Jaeger for distributed tracing (OTLP on port 4317). Audit log events use `[AUDIT]` from Boulder's shared logger and can be asserted in tests. Access Jaeger UI via `kubectl port-forward svc/jaeger 16686:16686 -n boulder`.
 
 ## Quick Start
 

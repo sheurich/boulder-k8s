@@ -126,7 +126,7 @@ Services validate peer certificates against the internal CA and expected SANs (v
 
 ### Observability and Audit
 
-Phase 1 uses a dev-only humanlog pod to ingest logs (stdout) and OTLP traces. Audit log markers use `[AUDIT]` from Boulder’s shared logger; tests assert the presence of audit events during end-to-end issuance.
+Phase 1 uses Jaeger all-in-one for distributed tracing (OTLP ingestion on port 4317, UI on port 16686). Audit log markers use `[AUDIT]` from Boulder's shared logger; tests assert the presence of audit events during end-to-end issuance.
 
 Staging/production observability is TBD; required capabilities include:
 - Append-only or immutable log storage
@@ -257,8 +257,7 @@ These services simulate the external Internet and third-party services for end-t
 | Redis | Rate limiting and short-lived operational state | Single instance | Clustered |
 | HSM | CA private key storage | SoftHSM sidecar | Thales Luna |
 | DNS Resolver (VA) | Recursive resolver for VA validation | challtestsrv DNS (dev) + CoreDNS for cluster services | Unbound |
-| Audit logging/tracing | Log/trace ingestion and review | humanlog (dev-only pod) | TBD (see requirements) |
-| Jaeger | Distributed tracing | Planned (Phase 2+) | Planned (Phase 2+) |
+| Jaeger | Distributed tracing | all-in-one (dev-only) | TBD (see requirements) |
 | Prometheus | Metrics scraping | ServiceMonitors | ServiceMonitors |
 
 **MySQL + ProxySQL** follows upstream Boulder's docker-compose architecture. ProxySQL handles connection pooling, query timeout management, and enables future read/write splitting with replicas. **Vitess** follows Let's Encrypt's production architecture with horizontal sharding for extreme scale.
@@ -269,7 +268,7 @@ These services simulate the external Internet and third-party services for end-t
 
 ### Phase 1: MVP (Dev/CI)
 
-Deploy Boulder to kind with automated PKI and mock services. Add dev-only humanlog for logs/traces and validate end-to-end issuance with audit log assertions.
+Deploy Boulder to kind with automated PKI and mock services. Add Jaeger for distributed tracing and validate end-to-end issuance with audit log assertions.
 
 ### Phase 2: Staging/Production
 
