@@ -5,6 +5,7 @@
 #   ./test.sh           Run tests (requires cluster to be ready)
 #   ./test.sh --setup   Setup cluster if needed, then run tests
 #   ./test.sh --reset   Teardown, setup, then run tests
+#   ./test.sh --bail    Stop on first test failure
 #
 # Environment variables:
 #   OVERLAY       Kustomize overlay to use (default: dev)
@@ -16,6 +17,7 @@
 # Examples:
 #   ./test.sh --setup                      # ProxySQL backend
 #   OVERLAY=dev-vitess ./test.sh --setup   # Vitess backend
+#   ./test.sh --bail                       # Fail fast
 #
 # Exit codes:
 #   0 - Tests passed
@@ -27,25 +29,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# shellcheck source=scripts/lib.sh
+source "$SCRIPT_DIR/lib.sh"
+
 NAMESPACE="${NAMESPACE:-boulder}"
 CLUSTER_NAME="${CLUSTER_NAME:-boulder-dev}"
 OVERLAY="${OVERLAY:-dev}"
+BAIL_ON_FAILURE=false
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
-
-#
-# Utility functions
-#
-
-log_info() { echo -e "${GREEN}==>${NC} $*"; }
-log_warn() { echo -e "${YELLOW}==>${NC} $*"; }
-log_error() { echo -e "${RED}==>${NC} $*"; }
+# Test-specific logging
 log_test() { echo -e "  ${GREEN}✓${NC} $*"; }
-log_fail() { echo -e "  ${RED}✗${NC} $*"; }
 
 #
 # Setup functions
@@ -132,6 +125,10 @@ run_test() {
     else
         log_fail "$name"
         TESTS_FAILED=$((TESTS_FAILED + 1))
+        if [ "$BAIL_ON_FAILURE" = true ]; then
+            log_error "Bail: stopping on first failure"
+            exit 1
+        fi
         return 1
     fi
 }
@@ -233,12 +230,17 @@ main() {
                 do_reset_flag=true
                 shift
                 ;;
+            --bail)
+                BAIL_ON_FAILURE=true
+                shift
+                ;;
             -h|--help)
-                echo "Usage: $0 [--setup|--reset]"
+                echo "Usage: $0 [--setup|--reset|--bail]"
                 echo ""
                 echo "Options:"
                 echo "  --setup   Setup cluster if needed, then run tests"
                 echo "  --reset   Teardown, setup, then run tests"
+                echo "  --bail    Stop on first test failure (fail fast)"
                 echo ""
                 echo "Environment variables:"
                 echo "  OVERLAY       Kustomize overlay: dev (default), dev-vitess"
@@ -248,6 +250,7 @@ main() {
                 echo "Examples:"
                 echo "  $0 --setup                      # ProxySQL backend"
                 echo "  OVERLAY=dev-vitess $0 --setup   # Vitess backend"
+                echo "  $0 --bail                       # Fail fast"
                 echo ""
                 echo "Exit codes:"
                 echo "  0 - Tests passed"
