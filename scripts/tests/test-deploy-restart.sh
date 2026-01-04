@@ -8,7 +8,7 @@ if [[ ! -f "$script" ]]; then
   exit 1
 fi
 
-grep -q "Restarting Boulder deployments to pick up new certs" "$script"
+grep -q "Restarting Boulder deployments" "$script"
 grep -q "mapfile -t boulder_deploys" "$script"
 grep -q "grep -v '/vitess$'" "$script"
 grep -q 'rollout restart -n "$NAMESPACE" "$deploy"' "$script"
