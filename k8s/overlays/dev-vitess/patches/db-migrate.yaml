@@ -28,14 +28,23 @@ spec:
             - sh
             - -c
             - |
-              set -e
+              set -ex
+              # Trap to capture errors and ensure logs are flushed
+              trap 'echo "==> ERROR: Command failed with exit code $?"; sleep 10' EXIT
+
+              echo "==> Debug info"
+              echo "Working dir: $(pwd)"
+              ls -la
+              echo "==> Config file:"
+              cat /config/dbconfig.yml
+
               migrate_with_retry() {
                 local name="$1"
                 local attempts=60
                 local delay=2
                 local success=0
 
-                echo "Running ${name} migrations with retry..."
+                echo "==> Running ${name} migrations with retry..."
                 for attempt in $(seq 1 "${attempts}"); do
                   if sql-migrate up -config=/config/dbconfig.yml -env="${name}"; then
                     success=1
@@ -53,4 +62,5 @@ spec:
 
               migrate_with_retry boulder_sa_test
               migrate_with_retry incidents_sa_test
-              echo "Migrations complete"
+              echo "==> Migrations complete"
+              trap - EXIT
