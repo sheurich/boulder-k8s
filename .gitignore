@@ -1,5 +1,9 @@
-.claude/
-.codex/
-.gemini/
-.serena/
-.mcp.json
+/.claude/
+/.codex/
+/.gemini/
+/.serena/
+/.mcp.json
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/PROMPT.md
