@@ -8,6 +8,7 @@ on:
 jobs:
   test-proxysql:
     name: Test (ProxySQL)
+    needs: [validate-manifests, unit-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -77,10 +78,19 @@ jobs:
       - name: Run tests (ProxySQL)
         env:
           SKIP_IMAGE_BUILD: "true"
-        run: ./scripts/test.sh --setup
+          JUNIT_FILE: test-results.xml
+        run: ./test.sh full
 
       - name: Run issuance test
-        run: ./scripts/test-issuance.sh
+        run: ./test.sh issuance
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results (ProxySQL)
+          path: test-results.xml
+          reporter: java-junit
 
       - name: Collect logs on failure
         if: failure()
@@ -99,6 +109,7 @@ jobs:
 
   test-vitess:
     name: Test (Vitess)
+    needs: [validate-manifests, unit-tests]
     # Disabled by default in CI; run manually via workflow_dispatch until
     # resource-related flakiness on hosted runners is resolved.
     if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -205,9 +216,17 @@ jobs:
 
       - name: Run tests (Vitess)
         env:
-          OVERLAY: dev-vitess
           SKIP_IMAGE_BUILD: "true"
-        run: ./scripts/test.sh --setup
+          JUNIT_FILE: test-results.xml
+        run: ./test.sh full --overlay dev-vitess
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results (Vitess)
+          path: test-results.xml
+          reporter: java-junit
 
       - name: Collect logs on failure
         if: failure()
@@ -252,7 +271,7 @@ jobs:
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Validate manifests
-        run: ./scripts/validate-manifests.sh
+        run: ./test.sh validate
 
   unit-tests:
     name: Unit Tests
@@ -276,8 +295,4 @@ jobs:
           sudo mv kubectl /usr/local/bin/kubectl
 
       - name: Run unit tests
-        run: |
-          for test in scripts/tests/*.sh; do
-            echo "==> Running $test"
-            bash "$test"
-          done
+        run: ./test.sh unit

@@ -121,48 +121,36 @@ Phase 1 dev/CI uses Jaeger for distributed tracing (OTLP on port 4317). Audit lo
 ### Local Development
 
 ```bash
-# 1. Create kind cluster (3 nodes + cert-manager)
-./scripts/kind-create.sh
+# 1. Setup cluster and deploy Boulder
+./test.sh setup
 
-# 2. Build Boulder image and load into kind
-./scripts/build-images.sh
+# 2. Run tests
+./test.sh
 
-# 3. Deploy Boulder (Redis, PKI ceremony, all services)
-./scripts/deploy.sh dev
-
-# 4. Wait for services to be ready
-./scripts/wait-ready.sh
-
-# 5. Verify deployment
-kubectl get pods -n boulder | grep -c "1/1.*Running"  # Expect 20+
+# 3. Verify ACME endpoints
+./test.sh issuance
 ```
 
-### Verify ACME Endpoints
+Or run everything in one command:
 
 ```bash
-# Test certificate issuance
-./scripts/test-issuance.sh
-
-# Or manually check the directory endpoint
-WFE_IP=$(kubectl get svc boulder-wfe2 -n boulder -o jsonpath='{.spec.clusterIP}')
-kubectl run acme-test --rm -it --restart=Never --image=curlimages/curl -n boulder -- \
-  curl -sk "https://${WFE_IP}:4431/directory"
+./test.sh full
 ```
 
 ### Validate Manifests (No Cluster Required)
 
 ```bash
-./scripts/validate-manifests.sh
+./test.sh validate
 ```
 
 ### Cleanup
 
 ```bash
 # Remove Boulder resources (keep cluster)
-./scripts/teardown.sh
+./test.sh teardown
 
 # Remove everything including cluster
-DELETE_CLUSTER=true ./scripts/teardown.sh
+./test.sh teardown --cluster
 ```
 
 ## Repository Structure

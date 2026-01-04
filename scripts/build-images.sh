@@ -54,7 +54,7 @@ if kind get clusters 2>/dev/null | grep -q "^${KIND_CLUSTER}$"; then
     fi
 else
     echo "==> Kind cluster '${KIND_CLUSTER}' not found"
-    echo "    Run ./scripts/kind-create.sh first, then re-run this script"
+    echo "    Run ./scripts/create-cluster.sh first, then re-run this script"
 fi
 
 echo "==> Done"

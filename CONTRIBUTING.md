@@ -5,7 +5,7 @@
 Before committing, verify:
 
 1. **Research external dependencies** — Check if upstream components support your feature (e.g., vtcombo TLS flags)
-2. **Test new components locally** — Run `./scripts/test.sh` before committing new deployments
+2. **Test new components locally** — Run `./test.sh` before committing new deployments
 3. **Complete multi-file changes atomically** — Don't commit partial features that require follow-up fixes
 4. **Squash debug commits** — Rebase to remove `debug:` commits before merging
 
@@ -58,10 +58,10 @@ These patterns caused commit churn in this repo. Avoid them.
 ## Testing
 
 ```bash
-./scripts/test.sh              # Run tests (cluster must exist)
-./scripts/test.sh --setup      # Setup + test
-./scripts/test.sh --reset      # Teardown + setup + test
-OVERLAY=dev-vitess ./scripts/test.sh --reset  # Test Vitess backend
+./test.sh              # Run tests (cluster must exist)
+./test.sh full         # Setup + test
+./test.sh reset        # Teardown + setup + test
+./test.sh reset --overlay dev-vitess  # Test Vitess backend
 ```
 
 All 7 tests must pass before committing feature work.
