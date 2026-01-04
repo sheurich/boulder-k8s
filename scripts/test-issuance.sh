@@ -136,7 +136,8 @@ echo "==> Verifying Audit Logs..."
 # Pull only the relevant component logs to avoid failures from unrelated pods.
 LOGS_RA=$(kubectl logs -n "$NAMESPACE" deploy/boulder-ra --tail=500 2>/dev/null || true)
 LOGS_VA=$(kubectl logs -n "$NAMESPACE" deploy/boulder-va --tail=500 2>/dev/null || true)
-LOGS="${LOGS_RA}"$'\n'"${LOGS_VA}"
+LOGS_CA=$(kubectl logs -n "$NAMESPACE" deploy/boulder-ca --tail=500 2>/dev/null || true)
+LOGS="${LOGS_RA}"$'\n'"${LOGS_VA}"$'\n'"${LOGS_CA}"
 
 # Check for successful issuance event (from RA)
 if echo "$LOGS" | grep -q "\[AUDIT\] Certificate request - successful"; then
@@ -153,5 +154,29 @@ if echo "$LOGS" | grep -q "\[AUDIT\] Checked CAA records"; then
     echo "PASS: Found 'Checked CAA records' audit event."
 else
     echo "FAIL: Missing 'Checked CAA records' audit event."
+    exit 1
+fi
+
+# Check for validation result (from VA)
+if echo "$LOGS" | grep -q "\[AUDIT\] Validation result"; then
+    echo "PASS: Found 'Validation result' audit event."
+else
+    echo "FAIL: Missing 'Validation result' audit event."
+    exit 1
+fi
+
+# Check for precertificate signing (from CA)
+if echo "$LOGS" | grep -q "\[AUDIT\] Signing precert success"; then
+    echo "PASS: Found 'Signing precert success' audit event."
+else
+    echo "FAIL: Missing 'Signing precert success' audit event."
+    exit 1
+fi
+
+# Check for certificate signing (from CA)
+if echo "$LOGS" | grep -q "\[AUDIT\] Signing cert success"; then
+    echo "PASS: Found 'Signing cert success' audit event."
+else
+    echo "FAIL: Missing 'Signing cert success' audit event."
     exit 1
 fi
