@@ -157,6 +157,7 @@ Or run everything in one command:
 
 ```
 boulder-k8s/
+├── test.sh                  # Test orchestrator
 ├── boulder/                 # Boulder submodule (for reference)
 ├── helm/                    # Helm values files
 │   └── redis/               # Redis values
@@ -276,8 +277,9 @@ kubectl kustomize k8s/overlays/dev-vitess # Vitess
 
 GitHub Actions runs on every PR:
 
-1. **test-proxysql** - Build images, deploy kind, run issuance tests (default overlay)
-2. **validate-manifests** - Validate manifests with kubeconform
+1. **validate-manifests** - Validate manifests with kubeconform
+2. **unit-tests** - Run static verification tests
+3. **test-proxysql** - Build images, deploy kind, run issuance tests (default overlay)
 
 Manual-only:
 - **test-vitess** - dev-vitess overlay; disabled in push/PR due to hosted runner resource constraints
@@ -292,7 +294,7 @@ Manual-only:
 1. Fork the repository
 2. Create a feature branch
 3. Make changes
-4. Run `./scripts/validate-manifests.sh`
+4. Run `./test.sh validate`
 5. Submit a pull request
 
 ## License
