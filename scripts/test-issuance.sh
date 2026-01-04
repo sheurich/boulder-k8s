@@ -134,9 +134,29 @@ echo "==> Verifying Audit Logs..."
 # Fetch logs from Boulder components
 # We look for the logs in the last 2 minutes to catch this run
 # Pull only the relevant component logs to avoid failures from unrelated pods.
+fetch_required_logs() {
+    local deployment="$1"
+    local logs
+
+    if ! logs=$(kubectl logs -n "$NAMESPACE" "deploy/${deployment}" --tail=500 2>/dev/null); then
+        echo "FAIL: Unable to fetch logs for ${deployment}"
+        exit 1
+    fi
+
+    if [ -z "$logs" ]; then
+        echo "FAIL: Empty logs for ${deployment}"
+        exit 1
+    fi
+
+    echo "$logs"
+}
+
 LOGS_RA=$(kubectl logs -n "$NAMESPACE" deploy/boulder-ra --tail=500 2>/dev/null || true)
 LOGS_VA=$(kubectl logs -n "$NAMESPACE" deploy/boulder-va --tail=500 2>/dev/null || true)
 LOGS_CA=$(kubectl logs -n "$NAMESPACE" deploy/boulder-ca --tail=500 2>/dev/null || true)
+LOGS_RVA1=$(fetch_required_logs "boulder-rva1")
+LOGS_RVA2=$(fetch_required_logs "boulder-rva2")
+LOGS_RVA3=$(fetch_required_logs "boulder-rva3")
 LOGS="${LOGS_RA}"$'\n'"${LOGS_VA}"$'\n'"${LOGS_CA}"
 
 # Check for successful issuance event (from RA)
@@ -162,6 +182,28 @@ if echo "$LOGS" | grep -q "\[AUDIT\] Validation result"; then
     echo "PASS: Found 'Validation result' audit event."
 else
     echo "FAIL: Missing 'Validation result' audit event."
+    exit 1
+fi
+
+# Check for validation result from each RVA
+if echo "$LOGS_RVA1" | grep -q "\[AUDIT\] Validation result"; then
+    echo "PASS: Found 'Validation result' audit event in boulder-rva1."
+else
+    echo "FAIL: Missing 'Validation result' audit event in boulder-rva1."
+    exit 1
+fi
+
+if echo "$LOGS_RVA2" | grep -q "\[AUDIT\] Validation result"; then
+    echo "PASS: Found 'Validation result' audit event in boulder-rva2."
+else
+    echo "FAIL: Missing 'Validation result' audit event in boulder-rva2."
+    exit 1
+fi
+
+if echo "$LOGS_RVA3" | grep -q "\[AUDIT\] Validation result"; then
+    echo "PASS: Found 'Validation result' audit event in boulder-rva3."
+else
+    echo "FAIL: Missing 'Validation result' audit event in boulder-rva3."
     exit 1
 fi
 
