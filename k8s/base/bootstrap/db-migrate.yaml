@@ -20,18 +20,20 @@ spec:
     spec:
       restartPolicy: OnFailure
       initContainers:
-        # Wait for MySQL to be ready (direct connection for migrations)
+        # Wait for MySQL to be ready with TLS (direct connection for migrations)
         - name: wait-for-db
-          image: alpine:3.19
+          image: mysql:8.4
           command:
             - sh
             - -c
             - |
-              echo "Waiting for MySQL..."
-              until nc -z mysql.boulder.svc.cluster.local 3306; do
-                sleep 2
+              echo "Waiting for MySQL with TLS..."
+              # Keep trying until MySQL accepts a TLS connection
+              until mysql -h mysql.boulder.svc.cluster.local -u root --ssl-mode=REQUIRED -e "SELECT 1" >/dev/null 2>&1; do
+                echo "  MySQL not ready or TLS not enabled, retrying..."
+                sleep 3
               done
-              echo "MySQL is ready"
+              echo "MySQL is ready with TLS"
         # Copy Boulder SQL files from boulder image (faster than git clone)
         - name: copy-sql-files
           image: boulder:latest
