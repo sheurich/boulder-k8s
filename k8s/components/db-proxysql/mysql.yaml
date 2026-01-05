@@ -25,38 +25,39 @@ data:
   init-boulder.sql: |
     -- Boulder database initialization for dev/CI
     -- Creates databases and users required by Boulder services
+    -- All users REQUIRE X509 for mTLS from ProxySQL
 
     -- Create databases
     CREATE DATABASE IF NOT EXISTS boulder_sa_test;
     CREATE DATABASE IF NOT EXISTS incidents_sa_test;
 
     -- SA user - primary read/write access to boulder_sa_test
-    CREATE USER IF NOT EXISTS 'sa'@'%' IDENTIFIED WITH mysql_native_password BY '';
+    CREATE USER IF NOT EXISTS 'sa'@'%' IDENTIFIED WITH mysql_native_password BY '' REQUIRE X509;
     GRANT ALL PRIVILEGES ON boulder_sa_test.* TO 'sa'@'%';
 
     -- SA read-only user
-    CREATE USER IF NOT EXISTS 'sa_ro'@'%' IDENTIFIED WITH mysql_native_password BY '';
+    CREATE USER IF NOT EXISTS 'sa_ro'@'%' IDENTIFIED WITH mysql_native_password BY '' REQUIRE X509;
     GRANT SELECT ON boulder_sa_test.* TO 'sa_ro'@'%';
 
     -- Incidents SA user - access to incidents_sa_test, read-only to boulder_sa_test
-    CREATE USER IF NOT EXISTS 'incidents_sa'@'%' IDENTIFIED WITH mysql_native_password BY '';
+    CREATE USER IF NOT EXISTS 'incidents_sa'@'%' IDENTIFIED WITH mysql_native_password BY '' REQUIRE X509;
     GRANT ALL PRIVILEGES ON incidents_sa_test.* TO 'incidents_sa'@'%';
     GRANT SELECT ON boulder_sa_test.* TO 'incidents_sa'@'%';
 
     -- Cert checker user (read-only)
-    CREATE USER IF NOT EXISTS 'cert_checker'@'%' IDENTIFIED WITH mysql_native_password BY '';
+    CREATE USER IF NOT EXISTS 'cert_checker'@'%' IDENTIFIED WITH mysql_native_password BY '' REQUIRE X509;
     GRANT SELECT ON boulder_sa_test.* TO 'cert_checker'@'%';
 
     -- Bad key revoker user
-    CREATE USER IF NOT EXISTS 'badkeyrevoker'@'%' IDENTIFIED WITH mysql_native_password BY '';
+    CREATE USER IF NOT EXISTS 'badkeyrevoker'@'%' IDENTIFIED WITH mysql_native_password BY '' REQUIRE X509;
     GRANT SELECT, UPDATE ON boulder_sa_test.* TO 'badkeyrevoker'@'%';
 
     -- Revoker user
-    CREATE USER IF NOT EXISTS 'revoker'@'%' IDENTIFIED WITH mysql_native_password BY '';
+    CREATE USER IF NOT EXISTS 'revoker'@'%' IDENTIFIED WITH mysql_native_password BY '' REQUIRE X509;
     GRANT SELECT, UPDATE ON boulder_sa_test.* TO 'revoker'@'%';
 
     -- ProxySQL monitor user
-    CREATE USER IF NOT EXISTS 'proxysql'@'%' IDENTIFIED WITH mysql_native_password BY '';
+    CREATE USER IF NOT EXISTS 'proxysql'@'%' IDENTIFIED WITH mysql_native_password BY '' REQUIRE X509;
     GRANT USAGE ON *.* TO 'proxysql'@'%';
 
     FLUSH PRIVILEGES;
