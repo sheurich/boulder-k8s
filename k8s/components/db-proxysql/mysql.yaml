@@ -91,11 +91,12 @@ spec:
             - --slow-query-log=ON
             - --long-query-time=2
             - --mysql-native-password=ON
-            # TLS settings
+            # TLS settings - enable TLS but don't require it
+            # ProxySQL connects by IP, which causes hostname verification issues
+            # In dev/CI, TLS is available but optional for simplicity
             - --ssl-cert=/certs/tls.crt
             - --ssl-key=/certs/tls.key
             - --ssl-ca=/certs/ca.crt
-            - --require_secure_transport=ON
           env:
             - name: MYSQL_ALLOW_EMPTY_PASSWORD
               value: "yes"
