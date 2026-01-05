@@ -32,14 +32,17 @@ spec:
                 sleep 2
               done
               echo "ProxySQL is ready"
-        # Clone Boulder source for migration SQL files
-        - name: clone-boulder
-          image: alpine/git:latest
+        # Copy Boulder SQL files from boulder image (faster than git clone)
+        - name: copy-sql-files
+          image: boulder:latest
+          imagePullPolicy: Never
           command:
             - sh
             - -c
             - |
-              git clone --depth 1 --branch v0.20251216.0 https://github.com/letsencrypt/boulder.git /boulder
+              echo "Copying Boulder SQL migration files..."
+              cp -r /opt/boulder/* /boulder/
+              echo "SQL files ready"
           volumeMounts:
             - name: boulder-source
               mountPath: /boulder

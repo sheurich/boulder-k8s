@@ -18,6 +18,20 @@ spec:
                 sleep 2
               done
               echo "Vitess is ready"
+        # Copy Boulder SQL files from boulder image (faster than git clone)
+        - name: copy-sql-files
+          image: boulder:latest
+          imagePullPolicy: Never
+          command:
+            - sh
+            - -c
+            - |
+              echo "Copying Boulder SQL migration files..."
+              cp -r /opt/boulder/* /boulder/
+              echo "SQL files ready"
+          volumeMounts:
+            - name: boulder-source
+              mountPath: /boulder
       containers:
         - name: db-migrate
           # Use boulder-tools (built locally)
