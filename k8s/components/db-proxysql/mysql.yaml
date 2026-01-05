@@ -91,12 +91,11 @@ spec:
             - --slow-query-log=ON
             - --long-query-time=2
             - --mysql-native-password=ON
-            # TLS settings - enable TLS but don't require it
-            # ProxySQL connects by IP, which causes hostname verification issues
-            # In dev/CI, TLS is available but optional for simplicity
+            # TLS settings - require secure transport for all connections
             - --ssl-cert=/certs/tls.crt
             - --ssl-key=/certs/tls.key
             - --ssl-ca=/certs/ca.crt
+            - --require_secure_transport=ON
           env:
             - name: MYSQL_ALLOW_EMPTY_PASSWORD
               value: "yes"
@@ -161,7 +160,8 @@ spec:
               - secret:
                   name: boulder-internal-ca
                   items:
-                    - key: ca.crt
+                    # CA cert is in tls.crt for self-signed CA certificates
+                    - key: tls.crt
                       path: ca.crt
 ---
 apiVersion: v1

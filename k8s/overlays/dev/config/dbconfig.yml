@@ -1,8 +1,6 @@
 # sql-migrate configuration for Boulder K8s dev environment
 # https://github.com/rubenv/sql-migrate#readme
 # Connects through ProxySQL to MySQL (passwordless in dev mode)
-# TLS is available but optional in dev; ProxySQL connects to MySQL by IP
-# which causes hostname verification issues with cert-manager issued certs
 
 boulder_sa_test:
   dialect: mysql

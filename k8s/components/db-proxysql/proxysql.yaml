@@ -217,7 +217,8 @@ spec:
               - secret:
                   name: boulder-internal-ca
                   items:
-                    - key: ca.crt
+                    # CA cert is in tls.crt for self-signed CA certificates
+                    - key: tls.crt
                       path: ca.crt
 ---
 apiVersion: v1
