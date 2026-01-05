@@ -95,18 +95,20 @@ Client → WFE2 → RA → VA (validation)
 
 ### Security Model
 
-**Principle:** All internal communication uses mTLS. No plaintext connections between components.
+**Principle:** mTLS where supported; TLS encryption elsewhere. No plaintext connections between components.
 
 #### Transport Security Matrix
 
 | Connection | Protocol | TLS Required | Client Auth | Notes |
 |------------|----------|--------------|-------------|-------|
 | Boulder service ↔ service | gRPC | mTLS | Certificate | Internal PKI certs per service |
-| Boulder → ProxySQL | MySQL | TLS | Certificate | ProxySQL terminates, re-encrypts to MySQL |
-| ProxySQL → MySQL | MySQL | TLS | Certificate | Backend connection encryption |
-| Boulder → Redis | Redis | TLS | Certificate | Rate limiter connections |
-| Boulder → Vitess | MySQL | TLS | Certificate | vtgate connection |
+| Boulder → ProxySQL | MySQL | TLS | None | Boulder lacks MySQL client cert support† |
+| ProxySQL → MySQL | MySQL | mTLS | Certificate | Backend connection encryption |
+| Boulder → Redis | Redis | mTLS | Certificate | Rate limiter connections |
+| Boulder → Vitess | MySQL | TLS | None | Boulder lacks MySQL client cert support† |
 | WFE2 → Internet | HTTPS | TLS | None | Server-side TLS only |
+
+† Boulder's MySQL driver integration doesn't register client certificates. Upstream uses network isolation; we use server-verified TLS.
 
 #### Internal PKI
 
