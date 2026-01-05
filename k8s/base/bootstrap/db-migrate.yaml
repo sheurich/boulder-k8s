@@ -28,9 +28,17 @@ spec:
             - -c
             - |
               echo "Waiting for MySQL with TLS..."
+              attempt=1
+              max_attempts=60
               # Wait for MySQL to accept TLS connections (--ssl-mode=REQUIRED for MySQL 8.4+)
-              until mysql -h mysql.boulder.svc.cluster.local -u root --ssl-mode=REQUIRED -e "SELECT 1" >/dev/null 2>&1; do
-                sleep 3
+              until mysql -h mysql.boulder.svc.cluster.local -u root --ssl-mode=REQUIRED -e "SELECT 1" 2>&1; do
+                if [ $attempt -ge $max_attempts ]; then
+                  echo "ERROR: MySQL TLS connection failed after $max_attempts attempts"
+                  exit 1
+                fi
+                echo "  Attempt $attempt/$max_attempts failed, retrying in 5s..."
+                attempt=$((attempt + 1))
+                sleep 5
               done
               echo "MySQL is ready with TLS"
         # Copy Boulder SQL files from boulder image (faster than git clone)
