@@ -105,9 +105,23 @@ if [[ "$OVERLAY" == dev* ]]; then
 
     if kubectl get job -n "$NAMESPACE" boulder-db-migrate >/dev/null 2>&1; then
         log_info "Running DB migrations..."
+        # Wait for the db-migrate pod to exist and start
+        for i in {1..60}; do
+            if kubectl get pod -n "$NAMESPACE" -l app.kubernetes.io/name=boulder-db-migrate -o name 2>/dev/null | grep -q pod; then
+                break
+            fi
+            sleep 1
+        done
         # Stream logs in background while waiting for completion
-        # This ensures we capture output even if the job fails and pod is deleted
-        kubectl logs -f job/boulder-db-migrate -n "$NAMESPACE" --all-containers 2>&1 &
+        # Retry log streaming if container is still initializing
+        (
+            for attempt in {1..30}; do
+                if kubectl logs -f job/boulder-db-migrate -n "$NAMESPACE" --all-containers 2>&1; then
+                    break
+                fi
+                sleep 2
+            done
+        ) &
         LOG_PID=$!
         if ! kubectl wait --for=condition=complete job/boulder-db-migrate \
             -n "$NAMESPACE" --timeout=600s >/dev/null 2>&1; then
@@ -115,8 +129,12 @@ if [[ "$OVERLAY" == dev* ]]; then
             sleep 5
             kill $LOG_PID 2>/dev/null || true
             log_fail "DB migration failed"
-            # Try to get any remaining logs
-            kubectl logs job/boulder-db-migrate -n "$NAMESPACE" --all-containers --previous 2>&1 || true
+            # Try to get any remaining logs from any pod
+            for pod in $(kubectl get pod -n "$NAMESPACE" -l app.kubernetes.io/name=boulder-db-migrate -o name 2>/dev/null); do
+                echo "==> Logs from $pod:"
+                kubectl logs "$pod" -n "$NAMESPACE" --all-containers --previous 2>&1 || true
+                kubectl logs "$pod" -n "$NAMESPACE" --all-containers 2>&1 || true
+            done
             exit 1
         fi
         kill $LOG_PID 2>/dev/null || true
