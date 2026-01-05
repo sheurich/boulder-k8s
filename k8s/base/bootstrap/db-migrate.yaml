@@ -28,9 +28,8 @@ spec:
             - -c
             - |
               echo "Waiting for MySQL with TLS..."
-              # Keep trying until MySQL accepts a TLS connection
+              # Wait for MySQL to accept TLS connections (--ssl-mode=REQUIRED for MySQL 8.4+)
               until mysql -h mysql.boulder.svc.cluster.local -u root --ssl-mode=REQUIRED -e "SELECT 1" >/dev/null 2>&1; do
-                echo "  MySQL not ready or TLS not enabled, retrying..."
                 sleep 3
               done
               echo "MySQL is ready with TLS"
