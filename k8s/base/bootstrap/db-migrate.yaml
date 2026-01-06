@@ -29,7 +29,7 @@ spec:
             - |
               echo "Waiting for MySQL with TLS..."
               attempt=1
-              max_attempts=24  # Reduced: MySQL readiness probe now verifies TLS
+              max_attempts=180  # 15 minutes - CI runners are slow
               # Wait for MySQL to accept TLS connections (--ssl-mode=REQUIRED for MySQL 8.4+)
               until mysql -h mysql.boulder.svc.cluster.local -u root --ssl-mode=REQUIRED -e "SELECT 1" 2>&1; do
                 if [ $attempt -ge $max_attempts ]; then
