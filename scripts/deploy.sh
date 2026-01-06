@@ -124,11 +124,13 @@ if [[ "$OVERLAY" == dev* ]]; then
 
         if [ -n "$POD_NAME" ]; then
             # Wait for completion in background, stream logs in foreground
-            (kubectl wait --for=condition=complete job/boulder-db-migrate -n "$NAMESPACE" --timeout=600s >/dev/null 2>&1) &
+            # Timeout must exceed wait-for-db init container: 180 attempts × 5s = 900s
+            (kubectl wait --for=condition=complete job/boulder-db-migrate -n "$NAMESPACE" --timeout=1200s >/dev/null 2>&1) &
             WAIT_PID=$!
 
             # Wait for main container to be running before streaming logs
-            for i in {1..60}; do
+            # wait-for-db init container can take up to 15 minutes in CI
+            for i in {1..500}; do
                 status=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.status.containerStatuses[?(@.name=="db-migrate")].state}' 2>/dev/null || echo "")
                 [[ -n "$status" && "$status" != *"waiting"* ]] && break
                 sleep 2
