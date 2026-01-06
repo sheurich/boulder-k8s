@@ -103,6 +103,12 @@ if [[ "$OVERLAY" == dev* ]]; then
     run_silent "PKI ceremony complete" kubectl wait --for=condition=complete job/boulder-pki-ceremony \
         -n "$NAMESPACE" --timeout=300s
 
+    # Wait for MySQL to be ready (TLS-verified readiness probe)
+    if kubectl get deployment -n "$NAMESPACE" mysql >/dev/null 2>&1; then
+        run_silent "MySQL ready" kubectl wait --for=condition=available deployment/mysql \
+            -n "$NAMESPACE" --timeout=600s
+    fi
+
     if kubectl get job -n "$NAMESPACE" boulder-db-migrate >/dev/null 2>&1; then
         log_info "Running DB migrations..."
         # Wait for the db-migrate pod to exist
