@@ -121,9 +121,16 @@ if [[ "$OVERLAY" == dev* ]]; then
             (kubectl wait --for=condition=complete job/boulder-db-migrate -n "$NAMESPACE" --timeout=600s >/dev/null 2>&1) &
             WAIT_PID=$!
 
-            # Stream logs with retries until wait completes or fails
+            # Wait for main container to be running before streaming logs
+            for i in {1..60}; do
+                status=$(kubectl get pod "$POD_NAME" -n "$NAMESPACE" -o jsonpath='{.status.containerStatuses[?(@.name=="db-migrate")].state}' 2>/dev/null || echo "")
+                [[ -n "$status" && "$status" != *"waiting"* ]] && break
+                sleep 2
+            done
+
+            # Stream only the main db-migrate container (not init containers)
             while kill -0 $WAIT_PID 2>/dev/null; do
-                kubectl logs -f "$POD_NAME" -n "$NAMESPACE" --all-containers 2>&1 && break
+                kubectl logs -f "$POD_NAME" -n "$NAMESPACE" -c db-migrate 2>&1 && break
                 sleep 2
             done
 

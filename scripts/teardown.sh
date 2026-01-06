@@ -10,15 +10,30 @@ DELETE_NAMESPACE="${DELETE_NAMESPACE:-false}"
 DELETE_CLUSTER="${DELETE_CLUSTER:-false}"
 CLUSTER_NAME="${CLUSTER_NAME:-boulder-dev}"
 
+# Check if namespace exists
+namespace_exists() {
+    kubectl get namespace "$NAMESPACE" &>/dev/null
+}
+
+# Check if cert-manager CRDs exist (needed for kustomize delete)
+cert_manager_crds_exist() {
+    kubectl get crd certificates.cert-manager.io &>/dev/null
+}
+
 echo "==> Tearing down Boulder deployment..."
 
 # Delete Boulder resources
 echo "  Deleting Boulder resources..."
-for overlay in dev dev-vitess staging prod; do
-    if [ -d "$ROOT_DIR/k8s/overlays/$overlay" ]; then
-        kubectl delete -k "$ROOT_DIR/k8s/overlays/$overlay" --ignore-not-found || true
-    fi
-done
+if namespace_exists && cert_manager_crds_exist; then
+    for overlay in dev dev-vitess staging prod; do
+        if [ -d "$ROOT_DIR/k8s/overlays/$overlay" ]; then
+            timeout 60 kubectl delete -k "$ROOT_DIR/k8s/overlays/$overlay" --ignore-not-found 2>/dev/null || true
+        fi
+    done
+elif namespace_exists; then
+    # CRDs missing but namespace exists, just delete namespace
+    kubectl delete namespace "$NAMESPACE" --ignore-not-found 2>/dev/null || true
+fi
 
 # Delete Helm releases
 echo "  Deleting Helm releases..."
